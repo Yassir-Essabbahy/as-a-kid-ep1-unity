@@ -309,6 +309,7 @@ MonoBehaviour:
   teacherIntroLines: {fileID: 11400000, guid: 7921fc18757002344b55e20e1bdf6420, type: 2}
   entityLines: {fileID: 11400000, guid: 66b333120253892409917ff784d39e23, type: 2}
   teacherCatchesHimLines: {fileID: 11400000, guid: 94c8e8fd7f7c6024088b2431e998856f, type: 2}
+  lookBackAtBookLines: {fileID: 11400000, guid: be1f073cfd6638241a2c342ea541bd7c, type: 2}
   bookTransform: {fileID: 565939451}
   startAngleX: 90.2
   endAngleX: 269

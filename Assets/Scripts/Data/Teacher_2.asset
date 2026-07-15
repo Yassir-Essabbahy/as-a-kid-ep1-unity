@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 892b6c0b7f647f64ab15ce12ae973507, type: 3}
   m_Name: Teacher_Catch
   m_EditorClassIdentifier: Assembly-CSharp::DialogueSequence
-  sequenceId: TeacherCatchesHim
+  sequenceId: Teacher2
   lines:
   - speakerName: Teacher
-    text: you wasn't looking
+    key: 
     voiceClip: {fileID: 0}
     eventId: 

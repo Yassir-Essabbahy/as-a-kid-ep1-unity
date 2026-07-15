@@ -28,7 +28,7 @@ public class DialogueManager : MonoBehaviour
         Instance = this;
     }
 
-    public void PlaySequence(DialogueSequence sequence)
+    public void PlaySequence(DialogueSequence sequence, bool showFade = true)
     {
         if (sequence == null || sequence.lines.Count == 0) return;
 
@@ -36,7 +36,8 @@ public class DialogueManager : MonoBehaviour
         currentIndex = -1;
         isPlaying = true;
         dialogueBox.SetActive(true);
-        DialogueEvents.RaiseSequenceStart(sequence.sequenceId);
+        if (showFade)
+            DialogueEvents.RaiseSequenceStart(sequence.sequenceId);
         Advance();
     }
 

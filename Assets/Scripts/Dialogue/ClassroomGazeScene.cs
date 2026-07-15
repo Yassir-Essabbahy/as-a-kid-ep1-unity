@@ -36,7 +36,8 @@ public class ClassroomGazeScene : MonoBehaviour
     [Header("Dialogue")]
     [SerializeField] private DialogueSequence teacherIntroLines;
     [SerializeField] private DialogueSequence entityLines;
-    [SerializeField] private DialogueSequence teacherCatchesHimLines;
+    [SerializeField] private DialogueSequence teacher2Lines;
+    [SerializeField] private DialogueSequence player2Lines;
 
     [Header("Book")]
 [SerializeField] private Transform bookTransform;
@@ -90,11 +91,8 @@ private Coroutine rotateCoroutine;
                 teacherVCam.gameObject.SetActive(true);
                 bookVCam.gameObject.SetActive(false);
                 if (catchImpulse != null) catchImpulse.GenerateImpulse();
-                // But do NOT start the next sequence here - this line is still
-                // being shown to the player. Starting a new sequence now would
-                // overwrite it before they ever get to read it or press Space.
-                // teacherCatchesHimLines starts from HandleSequenceComplete
-                // instead, once entityLines has actually been advanced past.
+                // teacher2Lines starts from HandleSequenceComplete once
+                // entityLines has actually been advanced past.
                 break;
         }
     }
@@ -102,12 +100,22 @@ private Coroutine rotateCoroutine;
     /// Wired in the Inspector to BookVCam's Cinemachine Camera Events -> Blend Finished Event.
     public void OnBookBlendFinished()
     {
-        DialogueManager.Instance.PlaySequence(entityLines);
+        DialogueManager.Instance.PlaySequence(entityLines, showFade: false);
     }
 
     private void HandleSequenceComplete(string sequenceId)
     {
-        if (sequenceId == teacherCatchesHimLines.sequenceId)
+        if (sequenceId == entityLines.sequenceId)
+        {
+            DialogueManager.Instance.PlaySequence(teacher2Lines, showFade: false);
+        }
+        else if (sequenceId == teacher2Lines.sequenceId)
+        {
+            bookVCam.gameObject.SetActive(true);
+            teacherVCam.gameObject.SetActive(false);
+            DialogueManager.Instance.PlaySequence(player2Lines, showFade: false);
+        }
+        else if (sequenceId == player2Lines.sequenceId)
         {
             GiveControlToPlayer();
         }
