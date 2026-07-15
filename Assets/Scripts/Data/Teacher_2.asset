@@ -15,6 +15,6 @@ MonoBehaviour:
   sequenceId: Teacher2
   lines:
   - speakerName: Teacher
-    key: 
+    key: teacher_2_01
     voiceClip: {fileID: 0}
     eventId: 

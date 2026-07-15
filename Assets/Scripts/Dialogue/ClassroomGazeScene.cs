@@ -1,29 +1,19 @@
 using UnityEngine;
+using UnityEngine.Events;
 using Unity.Cinemachine;
 
 /// <summary>
 /// Wires the classroom scene using Cinemachine: teacher talks -> switch to
-/// BookVCam (Brain blends smoothly, per the Default Blend on the Brain) ->
-/// entity talks -> switch to TeacherVCam (a zero-length Custom Blend = an
-/// instant cut) -> caught -> player rig handed control.
-///
-/// The book switch is NOT instant, so entity dialogue can't just start
-/// right after SetActive - it needs to wait until the blend has actually
-/// finished. That's wired through the Inspector, not code:
-///   1. Add a "Cinemachine Camera Events" component to BookVCam.
-///   2. Drag this script into its "Blend Finished Event" slot.
-///   3. Pick OnBookBlendFinished() from the dropdown.
-///
-/// The teacher-catch switch uses a zero-length blend, so BlendFinishedEvent
-/// won't even fire for it (Cinemachine skips that event for zero-length
-/// blends) - which is fine, since a cut has nothing to wait for. Dialogue
-/// fires immediately in that branch instead.
+/// BookVCam (Brain blends smoothly) -> entity talks -> switch to TeacherVCam
+/// (instant cut) -> teacher2 -> back to book -> player2 -> zoom into book
+/// picture -> onZoomComplete fires for the scene transition.
 /// </summary>
 public class ClassroomGazeScene : MonoBehaviour
 {
     [Header("Cameras")]
     [SerializeField] private CinemachineCamera teacherVCam;
     [SerializeField] private CinemachineCamera bookVCam;
+    [SerializeField] private CinemachineCamera bookZoomVCam;
     [Tooltip("Optional - add a CinemachineImpulseSource to this object for a shake on the catch moment.")]
     [SerializeField] private CinemachineImpulseSource catchImpulse;
 
@@ -40,14 +30,21 @@ public class ClassroomGazeScene : MonoBehaviour
     [SerializeField] private DialogueSequence player2Lines;
 
     [Header("Book")]
-[SerializeField] private Transform bookTransform;
-[SerializeField] private float startAngleX = -269.45f;
-[SerializeField] private float endAngleX = -89f;
-[SerializeField] private float openDuration = 1.2f;
-private Coroutine rotateCoroutine;
+    [SerializeField] private Transform bookTransform;
+    [SerializeField] private float startAngleX = -269.45f;
+    [SerializeField] private float endAngleX = -89f;
+    [SerializeField] private float openDuration = 1.2f;
 
+    [Header("Zoom transition")]
+    [Tooltip("Position and rotation the zoom camera will snap to before blending in. Move this in the Scene view to frame the desired spot.")]
+    [SerializeField] private Transform bookZoomPoint;
+    [Tooltip("Fired once the zoom-into-book blend finishes. Wire your scene transition here.")]
+    [SerializeField] private UnityEvent onZoomComplete;
 
+    private Coroutine _rotateCoroutine;
 
+    // Prevents OnBookBlendFinished from re-triggering entityLines on later book camera switches.
+    private bool _entityLinesStarted;
 
     // Set these exact strings as the eventId on the relevant DialogueLine in the Inspector.
     private const string EVENT_LOOK_AT_BOOK = "look_at_book";
@@ -71,6 +68,9 @@ private Coroutine rotateCoroutine;
 
         teacherVCam.gameObject.SetActive(true);
         bookVCam.gameObject.SetActive(false);
+        bookZoomVCam.gameObject.SetActive(false);
+
+        _entityLinesStarted = false;
 
         DialogueManager.Instance.PlaySequence(teacherIntroLines);
     }
@@ -97,9 +97,11 @@ private Coroutine rotateCoroutine;
         }
     }
 
-    /// Wired in the Inspector to BookVCam's Cinemachine Camera Events -> Blend Finished Event.
+    /// <summary>Wired in the Inspector to BookVCam's CinemachineCameraEvents -> Blend Finished Event.</summary>
     public void OnBookBlendFinished()
     {
+        if (_entityLinesStarted) return;
+        _entityLinesStarted = true;
         DialogueManager.Instance.PlaySequence(entityLines, showFade: false);
     }
 
@@ -117,38 +119,54 @@ private Coroutine rotateCoroutine;
         }
         else if (sequenceId == player2Lines.sequenceId)
         {
-            GiveControlToPlayer();
+            StartZoom();
         }
+    }
+
+    private void StartZoom()
+    {
+        if (bookZoomPoint != null)
+            bookZoomVCam.transform.SetPositionAndRotation(bookZoomPoint.position, bookZoomPoint.rotation);
+
+        bookVCam.gameObject.SetActive(false);
+        bookZoomVCam.gameObject.SetActive(true);
+    }
+
+    /// <summary>Wired in the Inspector to BookZoomVCam's CinemachineCameraEvents -> Blend Finished Event.</summary>
+    public void OnBookZoomBlendFinished()
+    {
+        onZoomComplete?.Invoke();
     }
 
     private void GiveControlToPlayer()
     {
         playerRig.transform.SetPositionAndRotation(playerHandoffPoint.position, playerHandoffPoint.rotation);
-        playerRig.SetActive(true); // turns its own Camera + AudioListener on
+        playerRig.SetActive(true);
 
         teacherVCam.gameObject.SetActive(false);
         bookVCam.gameObject.SetActive(false);
+        bookZoomVCam.gameObject.SetActive(false);
     }
 
-
-public void OnLookAtBook()
-{
-    if (rotateCoroutine != null) StopCoroutine(rotateCoroutine);
-    rotateCoroutine = StartCoroutine(RotateBook());
-}
-
-private System.Collections.IEnumerator RotateBook()
-{
-    Quaternion start = Quaternion.Euler(startAngleX, 0f, 0f);
-    Quaternion end = Quaternion.Euler(endAngleX, 0f, 0f);
-    float t = 0f;
-
-    while (t < openDuration)
+    public void OnLookAtBook()
     {
-        t += Time.deltaTime;
-        bookTransform.localRotation = Quaternion.Slerp(start, end, t / openDuration);
-        yield return null;
+        if (_rotateCoroutine != null) StopCoroutine(_rotateCoroutine);
+        _rotateCoroutine = StartCoroutine(RotateBook());
     }
-    bookTransform.localRotation = end;
-}
+
+    private System.Collections.IEnumerator RotateBook()
+    {
+        Quaternion start = Quaternion.Euler(startAngleX, 0f, 0f);
+        Quaternion end = Quaternion.Euler(endAngleX, 0f, 0f);
+        float t = 0f;
+
+        while (t < openDuration)
+        {
+            t += Time.deltaTime;
+            bookTransform.localRotation = Quaternion.Slerp(start, end, t / openDuration);
+            yield return null;
+        }
+
+        bookTransform.localRotation = end;
+    }
 }
