@@ -6,7 +6,7 @@ using Unity.Cinemachine;
 /// Wires the classroom scene using Cinemachine: teacher talks -> switch to
 /// BookVCam (Brain blends smoothly) -> entity talks -> switch to TeacherVCam
 /// (instant cut) -> teacher2 -> back to book -> player2 -> zoom into book
-/// picture -> onZoomComplete fires for the scene transition.
+/// picture -> fade to black -> teleport player to metro station -> fade in.
 /// </summary>
 public class ClassroomGazeScene : MonoBehaviour
 {
@@ -20,8 +20,10 @@ public class ClassroomGazeScene : MonoBehaviour
     [Header("Player handoff")]
     [Tooltip("The FPS rig, pre-placed in the scene but left INACTIVE until handoff.")]
     [SerializeField] private GameObject playerRig;
-    [Tooltip("Where the player rig should stand once given control.")]
+    [Tooltip("Where the player rig should stand once given control - position this at the metro station.")]
     [SerializeField] private Transform playerHandoffPoint;
+    [Tooltip("Fade-to-black / fade-in duration for the teleport, in seconds.")]
+    [SerializeField] private float teleportFadeDuration = 0.75f;
 
     [Header("Dialogue")]
     [SerializeField] private DialogueSequence teacherIntroLines;
@@ -38,7 +40,7 @@ public class ClassroomGazeScene : MonoBehaviour
     [Header("Zoom transition")]
     [Tooltip("Position and rotation the zoom camera will snap to before blending in. Move this in the Scene view to frame the desired spot.")]
     [SerializeField] private Transform bookZoomPoint;
-    [Tooltip("Fired once the zoom-into-book blend finishes. Wire your scene transition here.")]
+    [Tooltip("Fired after the teleport fade-in completes. Wire any extra on-arrival stuff here (ambient audio, UI prompt, etc.).")]
     [SerializeField] private UnityEvent onZoomComplete;
 
     private Coroutine _rotateCoroutine;
@@ -83,16 +85,12 @@ public class ClassroomGazeScene : MonoBehaviour
                 bookVCam.gameObject.SetActive(true);
                 teacherVCam.gameObject.SetActive(false);
                 OnLookAtBook();
-                // Entity dialogue starts from OnBookBlendFinished(), not here.
                 break;
 
             case EVENT_LOOK_AT_TEACHER:
-                // Camera cut + shake happen immediately - that's the jolt.
                 teacherVCam.gameObject.SetActive(true);
                 bookVCam.gameObject.SetActive(false);
                 if (catchImpulse != null) catchImpulse.GenerateImpulse();
-                // teacher2Lines starts from HandleSequenceComplete once
-                // entityLines has actually been advanced past.
                 break;
         }
     }
@@ -135,17 +133,25 @@ public class ClassroomGazeScene : MonoBehaviour
     /// <summary>Wired in the Inspector to BookZoomVCam's CinemachineCameraEvents -> Blend Finished Event.</summary>
     public void OnBookZoomBlendFinished()
     {
+        ScreenFader.Instance.FadeToBlack(teleportFadeDuration, OnTeleportFadeOutComplete);
+    }
+
+    private void OnTeleportFadeOutComplete()
+    {
+        GiveControlToPlayer();
+        ScreenFader.Instance.FadeFromBlack(teleportFadeDuration);
         onZoomComplete?.Invoke();
     }
 
+    /// <summary>Swaps every VCam off, drops the player at the metro station, and hands over control. Only ever called while the screen is black.</summary>
     private void GiveControlToPlayer()
     {
-        playerRig.transform.SetPositionAndRotation(playerHandoffPoint.position, playerHandoffPoint.rotation);
-        playerRig.SetActive(true);
-
         teacherVCam.gameObject.SetActive(false);
         bookVCam.gameObject.SetActive(false);
         bookZoomVCam.gameObject.SetActive(false);
+
+        playerRig.transform.SetPositionAndRotation(playerHandoffPoint.position, playerHandoffPoint.rotation);
+        playerRig.SetActive(true);
     }
 
     public void OnLookAtBook()
