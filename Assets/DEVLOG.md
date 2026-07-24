@@ -148,3 +148,12 @@ All cameras are Cinemachine VCams managed by `ClassroomGazeScene.cs`.
 - Updated `NpcInteractionText` to disable the `FirstPersonController` component when a talk sequence starts, preventing movement and camera look input during dialogue.
 - Re-enabled the player controller when the dialogue and camera reset complete.
 - Added a public `playerController` reference with an automatic same-object fallback for `FirstPersonController`.
+
+
+---
+
+### 2025-02-14 — Teddy Bear Carry Setup
+
+- Created `CarryPoint` under `FirstPersonController/Joint/PlayerCamera` at local position `(0.3, -0.2, 0.5)` for held-item positioning.
+- Prepared the scene for the carry-after-dialogue teddy bear configuration.
+- No teddy bear object was found in `TestScene.unity`, so `Rigidbody`, collider, `CarryableItem`, and `NpcConversation` carry settings could not be assigned. Expected object path: `/TeddyBear` (or another clearly named teddy bear GameObject) once it is added to the scene.
