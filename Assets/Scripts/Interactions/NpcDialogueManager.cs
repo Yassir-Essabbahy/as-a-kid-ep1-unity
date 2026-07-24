@@ -20,8 +20,14 @@ public class NpcDialogueManager : MonoBehaviour
         choicePack.SetActive(false);
     }
 
-    public IEnumerator ShowDialogue(string[] lines, bool hasChoice)
+    public IEnumerator ShowDialogue(string[] lines, bool hasChoice, Color dialogueColor, TMP_FontAsset dialogueFont)
     {
+        dialogueText.color = dialogueColor;
+        if (dialogueFont != null)
+        {
+            dialogueText.font = dialogueFont;
+        }
+
         talkPanel.SetActive(true);
 
         foreach (string line in lines)
@@ -36,6 +42,11 @@ public class NpcDialogueManager : MonoBehaviour
         }
 
         talkPanel.SetActive(false);
+    }
+
+    public IEnumerator ShowDialogue(string[] lines, bool hasChoice)
+    {
+        return ShowDialogue(lines, hasChoice, Color.white, null);
     }
 
     IEnumerator TypeLine(string line)

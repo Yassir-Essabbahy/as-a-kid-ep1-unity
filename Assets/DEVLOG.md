@@ -115,3 +115,36 @@ All cameras are Cinemachine VCams managed by `ClassroomGazeScene.cs`.
 - Fill in `fr` and `ar` translations for `teacher_2_01`, `lookback_book_01`, `lookback_book_02` in `dialogue.csv`
 - Position `BookZoomPoint` to frame the target picture in the book
 - Add voice clips to `DialogueLine` assets if needed
+
+
+---
+
+### 2025-02-14 — NPC Dialogue Setup in TestScene
+
+- Added the NPC dialogue UI under `Canvas`: inactive `TalkPanel` with `DialogueText`, inactive `ChoicePack`, and three choice buttons wired to `NpcDialogueManager.MakeChoice(int)`.
+- Created `NpcDialogueManager` and assigned the dialogue panel, choice container, and text field.
+- Added `NpcInteractionText` to `FirstPersonController` with a HUD interaction prompt.
+- Created `PlayerVcam` and priority-0 `TalkZoomVcam` for dialogue camera switching.
+- Created `LocalizationManager` configured to load `Resources/Localization/dialogue.csv`.
+- Added the `InteractNPC` tag.
+- Added placeholder `NPC_Box_01` and `NPC_Box_02` near the player spawn. Each has a humanoid-sized cube shape, a `BoxCollider`, `NpcConversation` with empty `lineKeys`, `NpcLookAt`, and an empty `Animator` with no controller assigned.
+
+
+---
+
+### 2025-02-14 — NPC Dialogue Presentation Updates
+
+- Kept the cursor locked and hidden throughout `NpcInteractionText` talk sequences.
+- Added per-NPC `dialogueColor` and optional `dialogueFont` fields to `NpcConversation`.
+- Updated `NpcDialogueManager.ShowDialogue` to apply each conversation's color and font before typing begins.
+- Updated `NpcConversation.Play()` to pass its presentation settings to the dialogue manager.
+- Preserved the existing two-parameter `ShowDialogue` overload for compatibility with other callers.
+
+
+---
+
+### 2025-02-14 — Lock Player Control During NPC Dialogue
+
+- Updated `NpcInteractionText` to disable the `FirstPersonController` component when a talk sequence starts, preventing movement and camera look input during dialogue.
+- Re-enabled the player controller when the dialogue and camera reset complete.
+- Added a public `playerController` reference with an automatic same-object fallback for `FirstPersonController`.

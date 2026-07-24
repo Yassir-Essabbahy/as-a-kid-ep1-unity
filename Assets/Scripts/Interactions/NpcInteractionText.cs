@@ -10,15 +10,25 @@ public class NpcInteractionText : MonoBehaviour
     public float InteractionDistance = 5f;
     private bool CanInteract = true;
 
+    [Header("Player Control")]
+    public FirstPersonController playerController;
     [Header("Cameras")]
-    public CinemachineVirtualCamera PlayerVcam;
-    public CinemachineVirtualCamera TalkZoomVcam;
+    public CinemachineCamera PlayerVcam;
+    public CinemachineCamera TalkZoomVcam;
+
+
+
+    void Awake()
+    {
+        if (playerController == null)
+        {
+            playerController = GetComponent<FirstPersonController>();
+        }
+    }
 
     void Update()
     {
-        if (!CanInteract) return;
-
-        Ray ray = new Ray(transform.position, transform.forward);
+        if (!CanInteract) return;        Ray ray = new Ray(transform.position, transform.forward);
         if (Physics.Raycast(ray, out RaycastHit hit, InteractionDistance))
         {
             if (hit.collider.CompareTag("InteractNPC"))
@@ -47,6 +57,7 @@ public class NpcInteractionText : MonoBehaviour
     IEnumerator TalkSequence(NpcConversation conv, NpcLookAt look)
     {
         CanInteract = false;
+        if (playerController != null) playerController.enabled = false;
         InteractText.text = "";
 
         if (look != null) look.IKActive = true;
@@ -55,8 +66,8 @@ public class NpcInteractionText : MonoBehaviour
         TalkZoomVcam.Priority = 10;
 
         yield return new WaitForSeconds(1f);
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
 
         yield return StartCoroutine(conv.Play());
 
@@ -65,6 +76,7 @@ public class NpcInteractionText : MonoBehaviour
         if (look != null) look.IKActive = false;
         Cursor.lockState = CursorLockMode.Locked;
 
+        if (playerController != null) playerController.enabled = true;
         CanInteract = true;
     }
 }
