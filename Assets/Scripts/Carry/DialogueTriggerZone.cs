@@ -3,7 +3,10 @@ using UnityEngine;
 public class DialogueTriggerZone : MonoBehaviour
 {
     [Header("Dialogue Source")]
-    public NpcConversation conversation; // the bear's NpcConversation, or any NPC's
+    public NpcConversation conversation;
+
+    [Header("Safety Check")]
+    public CarryableItem requiredCarriedItem; // e.g. the teddy bear's CarryableItem
 
     [Header("Trigger Settings")]
     public string playerTag = "Player";
@@ -16,6 +19,9 @@ public class DialogueTriggerZone : MonoBehaviour
         if (triggerOnce && hasTriggered) return;
         if (!other.CompareTag(playerTag)) return;
         if (conversation == null) return;
+
+        // Safety: only fire if the required item is currently being carried
+        if (requiredCarriedItem != null && !requiredCarriedItem.IsBeingCarried) return;
 
         hasTriggered = true;
         StartCoroutine(conversation.Play());

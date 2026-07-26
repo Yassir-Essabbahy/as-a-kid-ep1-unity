@@ -5829,12 +5829,12 @@ BoxCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.20000005, y: 0.1992189, z: 0.20000625}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 0.38001937, y: 0.08183094, z: 0.7720343}
+  m_Center: {x: -0, y: 0.011882516, z: 0.037580084}
 --- !u!33 &981896452
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -10435,6 +10435,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DialogueTriggerZone
   conversation: {fileID: 1535838319}
+  requiredCarriedItem: {fileID: 981896448}
   playerTag: Player
   triggerOnce: 1
 --- !u!1001 &1830090016
