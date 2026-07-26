@@ -24,7 +24,7 @@ MonoBehaviour:
   m_MinSize: {x: 300, y: 112}
   m_MaxSize: {x: 24288, y: 16192}
   vertical: 0
-  controlID: 669
+  controlID: 7254
   draggingID: 0
 --- !u!114 &2
 MonoBehaviour:
@@ -153,7 +153,7 @@ MonoBehaviour:
   m_MinSize: {x: 200, y: 112}
   m_MaxSize: {x: 16192, y: 16192}
   vertical: 1
-  controlID: 670
+  controlID: 7255
   draggingID: 0
 --- !u!114 &4
 MonoBehaviour:
@@ -179,7 +179,7 @@ MonoBehaviour:
   m_MinSize: {x: 200, y: 56}
   m_MaxSize: {x: 16192, y: 8096}
   vertical: 0
-  controlID: 671
+  controlID: 7348
   draggingID: 0
 --- !u!114 &5
 MonoBehaviour:
@@ -733,9 +733,9 @@ MonoBehaviour:
   m_AudioPlay: 0
   m_DebugDrawModesUseInteractiveLightBakingData: 0
   m_Position:
-    m_Target: {x: -25.380255, y: -1.2344282, z: 19.603395}
+    m_Target: {x: -40.545467, y: 0.40509015, z: 36.91538}
     speed: 2
-    m_Value: {x: -25.380255, y: -1.2344282, z: 19.603395}
+    m_Value: {x: -40.545467, y: 0.40509015, z: 36.91538}
   m_RenderMode: 0
   m_CameraMode:
     drawMode: 0
@@ -782,9 +782,9 @@ MonoBehaviour:
     m_gridOpacity: 0.5
     m_NearestPlaneToHandleMode: 0
   m_Rotation:
-    m_Target: {x: -0.10024787, y: -0.27159694, z: 0.0284604, w: -0.9567678}
+    m_Target: {x: 0.057844684, y: -0.027265368, z: 0.0015747284, w: 0.99797153}
     speed: 2
-    m_Value: {x: -0.1002036, y: -0.27302784, z: 0.028610324, w: -0.95634544}
+    m_Value: {x: -0.057844684, y: 0.027265368, z: -0.0015747283, w: -0.9979715}
   m_Size:
     m_Target: 12.669952
     speed: 2
@@ -1149,14 +1149,16 @@ MonoBehaviour:
     m_DynamicPanelBehavior: 0
   m_SceneHierarchy:
     m_TreeViewState:
-      scrollPos: {x: 0, y: 0}
+      scrollPos: {x: 0, y: 184}
       m_SelectedIDs:
-      - m_Data: 51646
+      - m_Data: -30874
       m_LastClickedID:
-        m_Data: 51646
+        m_Data: -30874
       m_ExpandedIDs:
       - m_Data: -1686
       - m_Data: -1362
+      - m_Data: 51308
+      - m_Data: 51646
       - m_Data: 52084
       m_RenameOverlay:
         m_UserAcceptedRename: 0
@@ -1262,7 +1264,7 @@ MonoBehaviour:
     m_SkipHidden: 0
     m_SearchArea: 1
     m_Folders:
-    - Assets/Scripts/Carry
+    - Assets/Resources/Localization
     m_Globs: []
     m_ProductIds: 
     m_AnyWithAssetOrigin: 0
@@ -1272,22 +1274,22 @@ MonoBehaviour:
   m_ViewMode: 1
   m_StartGridSize: 64
   m_LastFolders:
-  - Assets/Scripts/Carry
+  - Assets/Resources/Localization
   m_LastFoldersGridSize: -1
   m_LastProjectPath: C:\Users\moroc\Documents\Unity\as-a-kid-ep1-unity
   m_LockTracker:
     m_IsLocked: 0
   m_LastLocalAssetsSearchArea: 1
   m_FolderTreeState:
-    scrollPos: {x: 0, y: 120}
+    scrollPos: {x: 0, y: 60}
     m_SelectedIDs:
-    - m_Data: 53648
+    - m_Data: 62042
     m_LastClickedID:
-      m_Data: 53648
+      m_Data: 62042
     m_ExpandedIDs:
     - m_Data: 0
     - m_Data: 53278
-    - m_Data: 53530
+    - m_Data: 53526
     - m_Data: 1000000000
     - m_Data: 2147483647
     m_RenameOverlay:
@@ -1354,9 +1356,9 @@ MonoBehaviour:
       m_ResourceFile: 
   m_ListAreaState:
     m_SelectedInstanceIDs:
-    - m_Data: 51646
+    - m_Data: -30874
     m_LastClickedEntityId:
-      m_Data: 51646
+      m_Data: -30874
     m_HadKeyboardFocusLastEvent: 0
     m_ExpandedInstanceIDs:
     - m_Data: 118872
@@ -1478,7 +1480,7 @@ MonoBehaviour:
   m_LockTracker:
     m_IsLocked: 0
   m_LastSelectedObjectID:
-    m_Data: 51646
+    m_Data: -30874
 --- !u!114 &14
 MonoBehaviour:
   m_ObjectHideFlags: 52

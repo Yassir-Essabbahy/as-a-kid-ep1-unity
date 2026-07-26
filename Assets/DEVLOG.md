@@ -157,3 +157,22 @@ All cameras are Cinemachine VCams managed by `ClassroomGazeScene.cs`.
 - Created `CarryPoint` under `FirstPersonController/Joint/PlayerCamera` at local position `(0.3, -0.2, 0.5)` for held-item positioning.
 - Prepared the scene for the carry-after-dialogue teddy bear configuration.
 - No teddy bear object was found in `TestScene.unity`, so `Rigidbody`, collider, `CarryableItem`, and `NpcConversation` carry settings could not be assigned. Expected object path: `/TeddyBear` (or another clearly named teddy bear GameObject) once it is added to the scene.
+
+
+---
+
+### 2025-02-15 — Teddy Bear Static Carry Fix
+
+- Rewrote `CarryableItem.cs` to hard-lock position and rotation to the carry point every `LateUpdate`, removing the previous physics/lerp-based follow behavior.
+- Fixed a rotation snapping/tumbling bug on pickup caused by interpolating from the object's original scene rotation toward the target instead of snapping instantly.
+- `StartCarrying` now snaps the object to the carry point immediately with no smoothing.
+
+
+---
+
+### 2025-02-15 — Teddy Bear Dialogue Trigger
+
+- Added `CarriedItemSpeaker.cs`: lets a carried item trigger its own `NpcConversation` while being held, either via key press (default `F`) or via a world trigger zone.
+- Added `DialogueTriggerZone.cs`: a standalone trigger volume that fires an assigned `NpcConversation.Play()` when the player enters it, with an optional trigger-once flag.
+- Set up a second, independent `NpcConversation` component on a child object (`BearMetroLine`) separate from the teddy bear's original greet dialogue, so the metro trigger zone plays distinct lines from `dialogue.csv` instead of replaying the initial greet dialogue.
+- Confirmed both conversations resolve their lines through `LocalizationManager.Instance.Get(key)`, keeping all teddy bear dialogue CSV-driven rather than hardcoded.
