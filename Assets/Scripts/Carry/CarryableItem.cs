@@ -3,14 +3,16 @@ using UnityEngine;
 public class CarryableItem : MonoBehaviour
 {
     [Header("Carry Settings")]
-    public Transform carryPoint;      // assign player's hold point (e.g. under camera)
+    public Transform carryPoint;
     public Vector3 localOffset = new Vector3(0.3f, -0.2f, 0.5f);
     public Vector3 localRotationEuler = Vector3.zero;
-    public float followSpeed = 12f;
 
     private bool isBeingCarried = false;
     private Rigidbody rb;
     private Collider col;
+
+    // Stores the object's own rotation offset relative to its "neutral" orientation
+    private Quaternion baseRotationFix;
 
     void Awake()
     {
@@ -27,11 +29,16 @@ public class CarryableItem : MonoBehaviour
         {
             rb.isKinematic = true;
             rb.useGravity = false;
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
         }
         if (col != null)
         {
-            col.enabled = false; // stop it blocking raycasts / colliding with player
+            col.enabled = false;
         }
+
+        // Snap immediately, no lerp, no physics
+        SnapToCarryPosition();
     }
 
     public void StopCarrying()
@@ -49,15 +56,21 @@ public class CarryableItem : MonoBehaviour
         }
     }
 
+    void SnapToCarryPosition()
+    {
+        if (carryPoint == null) return;
+
+        transform.position = carryPoint.TransformPoint(localOffset);
+        transform.rotation = carryPoint.rotation * Quaternion.Euler(localRotationEuler);
+    }
+
     void LateUpdate()
     {
         if (!isBeingCarried || carryPoint == null) return;
 
-        Vector3 targetPos = carryPoint.TransformPoint(localOffset);
-        Quaternion targetRot = carryPoint.rotation * Quaternion.Euler(localRotationEuler);
-
-        transform.position = Vector3.Lerp(transform.position, targetPos, Time.deltaTime * followSpeed);
-        transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, Time.deltaTime * followSpeed);
+        // Hard-locked, static relative to camera — no smoothing, no drift
+        transform.position = carryPoint.TransformPoint(localOffset);
+        transform.rotation = carryPoint.rotation * Quaternion.Euler(localRotationEuler);
     }
 
     public bool IsBeingCarried => isBeingCarried;
