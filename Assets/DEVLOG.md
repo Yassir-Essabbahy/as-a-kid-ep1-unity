@@ -176,3 +176,23 @@ All cameras are Cinemachine VCams managed by `ClassroomGazeScene.cs`.
 - Added `DialogueTriggerZone.cs`: a standalone trigger volume that fires an assigned `NpcConversation.Play()` when the player enters it, with an optional trigger-once flag.
 - Set up a second, independent `NpcConversation` component on a child object (`BearMetroLine`) separate from the teddy bear's original greet dialogue, so the metro trigger zone plays distinct lines from `dialogue.csv` instead of replaying the initial greet dialogue.
 - Confirmed both conversations resolve their lines through `LocalizationManager.Instance.Get(key)`, keeping all teddy bear dialogue CSV-driven rather than hardcoded.
+
+
+---
+
+### 2025-02-16 — Trigger Safety: Require Carried Item
+
+- Added a `requiredCarriedItem` field to `DialogueTriggerZone.cs`, referencing a `CarryableItem`.
+- The trigger now only fires its conversation if the required item's `IsBeingCarried` is true at the moment the player enters the zone, preventing metro/story beats from firing if the teddy bear was left behind.
+- Field is optional — leaving it empty preserves old behavior for trigger zones that don't need the check.
+
+
+---
+
+### 2025-02-16 — Teddy Bear Find-Item Quest
+
+- Added an `OnConversationFinished` event to `NpcConversation.cs`, invoked at the end of `Play()`. No existing dialogue calls are affected; the event is opt-in and only used where explicitly subscribed.
+- Added `TeddyFindQuest.cs`: listens for a designated "ask" `NpcConversation` to finish, then sets `questActive = true`. Exposes `CompleteQuest()`, which plays a "found it" `NpcConversation` and sets `questCompleted = true`.
+- Added `FindableItem.cs`: placed on the item the player must locate. While `questGiver.questActive` is true, pressing `E` within `interactDistance` collects the item, disables it, and calls `CompleteQuest()`.
+- Removed the earlier `TeddyQuestManager.cs` singleton approach in favor of `TeddyFindQuest`, which hooks into the existing dialogue flow instead of introducing a parallel one.
+- Wired the same `NpcConversation` component used by the existing dialogue trigger as `TeddyFindQuest.askConversation`, so quest state updates automatically when that specific conversation finishes.
