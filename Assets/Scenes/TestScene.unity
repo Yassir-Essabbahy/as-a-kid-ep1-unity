@@ -519,6 +519,58 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4572832078516975529, guid: eae8b18d6f43ba540a10017e11402ff2, type: 3}
   m_PrefabInstance: {fileID: 62202934}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &79772531
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 79772532}
+  - component: {fileID: 79772533}
+  m_Layer: 3
+  m_Name: BearMetroAsk
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &79772532
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 79772531}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 981896453}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &79772533
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 79772531}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e123aab5e14237a4a9110536520e12a5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NpcConversation
+  lineKeys:
+  - teddy_metro_03
+  - teddy_metro_04
+  needsChoiceAtEnd: 0
+  dialogueColor: {r: 0.7735849, g: 0, b: 0, a: 1}
+  dialogueFont: {fileID: 0}
+  becomesCarryableAfterDialogue: 0
+  playerCarryPoint: {fileID: 0}
 --- !u!1 &86626413
 GameObject:
   m_ObjectHideFlags: 0
@@ -2570,6 +2622,152 @@ MonoBehaviour:
       BarrelClipping: 0.25
       Anamorphism: 0
   BlendHint: 0
+--- !u!1 &410821862
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 410821867}
+  - component: {fileID: 410821866}
+  - component: {fileID: 410821865}
+  - component: {fileID: 410821864}
+  - component: {fileID: 410821863}
+  - component: {fileID: 410821868}
+  m_Layer: 3
+  m_Name: TeddyFindQuest_ToyHunt
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &410821863
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 410821862}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 24af6957dafbf1b40aad8f901fba974f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TeddyFindQuest
+  askConversation: {fileID: 79772533}
+  foundConversation: {fileID: 2050286484}
+  questActive: 0
+  questCompleted: 0
+--- !u!65 &410821864
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 410821862}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!23 &410821865
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 410821862}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &410821866
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 410821862}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!4 &410821867
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 410821862}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -40.95776, y: 1.97, z: 36.13539}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &410821868
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 410821862}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c91b94f0099f594b9f852929501afb6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueTriggerZone
+  conversation: {fileID: 79772533}
+  requiredCarriedItem: {fileID: 981896448}
+  playerTag: Player
+  triggerOnce: 1
 --- !u!1001 &412642506
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4404,12 +4602,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e123aab5e14237a4a9110536520e12a5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NpcConversation
-  becomesCarryableAfterDialogue: 0
-  playerCarryPoint: {fileID: 0}
   lineKeys: []
   needsChoiceAtEnd: 0
   dialogueColor: {r: 1, g: 1, b: 1, a: 1}
   dialogueFont: {fileID: 0}
+  becomesCarryableAfterDialogue: 0
+  playerCarryPoint: {fileID: 0}
 --- !u!114 &685072659
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4901,14 +5099,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e123aab5e14237a4a9110536520e12a5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NpcConversation
-  becomesCarryableAfterDialogue: 0
-  playerCarryPoint: {fileID: 0}
   lineKeys:
   - Hi
   - How Are You
   needsChoiceAtEnd: 0
   dialogueColor: {r: 1, g: 0, b: 0, a: 1}
   dialogueFont: {fileID: 0}
+  becomesCarryableAfterDialogue: 0
+  playerCarryPoint: {fileID: 0}
 --- !u!114 &891320019
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5757,14 +5955,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e123aab5e14237a4a9110536520e12a5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NpcConversation
-  becomesCarryableAfterDialogue: 1
-  playerCarryPoint: {fileID: 1098999142}
   lineKeys:
   - teddy_greet_01
   - teddy_greet_02
   needsChoiceAtEnd: 0
   dialogueColor: {r: 1, g: 0, b: 0, a: 1}
   dialogueFont: {fileID: 0}
+  becomesCarryableAfterDialogue: 1
+  playerCarryPoint: {fileID: 1098999142}
 --- !u!23 &981896450
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -5857,6 +6055,8 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1535838318}
+  - {fileID: 79772532}
+  - {fileID: 2050286485}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: -90, y: 180, z: 0}
 --- !u!114 &981896454
@@ -5871,6 +6071,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d0ea34aa3241db54c864e3de8628db7a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CarriedItemSpeaker
+  conversation: {fileID: 0}
+  triggerByKeyPress: 0
+  talkKey: 102
+  triggerByZone: 0
+  playerTag: Player
 --- !u!1 &1041854833
 GameObject:
   m_ObjectHideFlags: 0
@@ -7287,6 +7492,133 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1990939958}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1308516430
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1308516435}
+  - component: {fileID: 1308516434}
+  - component: {fileID: 1308516433}
+  - component: {fileID: 1308516432}
+  - component: {fileID: 1308516431}
+  m_Layer: 3
+  m_Name: ElementToFind
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1308516431
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1308516430}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2e0f33d3e11a945478337a9567aaf7b9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FindableItem
+  questGiver: {fileID: 410821863}
+  interactDistance: 5
+--- !u!65 &1308516432
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1308516430}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!23 &1308516433
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1308516430}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &1308516434
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1308516430}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!4 &1308516435
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1308516430}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -40.17336, y: 2.02119, z: 50.22587}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1316730939
 PrefabInstance:
@@ -8880,14 +9212,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e123aab5e14237a4a9110536520e12a5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NpcConversation
-  becomesCarryableAfterDialogue: 0
-  playerCarryPoint: {fileID: 0}
   lineKeys:
   - teddy_metro_01
   - teddy_metro_02
   needsChoiceAtEnd: 0
   dialogueColor: {r: 0.7735849, g: 0, b: 0, a: 1}
   dialogueFont: {fileID: 0}
+  becomesCarryableAfterDialogue: 0
+  playerCarryPoint: {fileID: 0}
 --- !u!1001 &1539773381
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -12233,6 +12565,58 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: 100
   m_TargetDisplay: 0
+--- !u!1 &2050286483
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2050286485}
+  - component: {fileID: 2050286484}
+  m_Layer: 3
+  m_Name: BearMetroFound
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &2050286484
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2050286483}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e123aab5e14237a4a9110536520e12a5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NpcConversation
+  lineKeys:
+  - teddy_metro_05
+  - teddy_metro_06
+  needsChoiceAtEnd: 0
+  dialogueColor: {r: 0.7735849, g: 0, b: 0, a: 1}
+  dialogueFont: {fileID: 0}
+  becomesCarryableAfterDialogue: 0
+  playerCarryPoint: {fileID: 0}
+--- !u!4 &2050286485
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2050286483}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 981896453}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2098706177
 GameObject:
   m_ObjectHideFlags: 0
@@ -16949,3 +17333,5 @@ SceneRoots:
   - {fileID: 332641618}
   - {fileID: 981896453}
   - {fileID: 1819719024}
+  - {fileID: 410821867}
+  - {fileID: 1308516435}

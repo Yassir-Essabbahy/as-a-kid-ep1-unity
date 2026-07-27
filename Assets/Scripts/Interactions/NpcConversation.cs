@@ -1,18 +1,22 @@
+using System;
 using System.Collections;
-using TMPro;
 using UnityEngine;
 
 public class NpcConversation : MonoBehaviour
 {
-
-    [Header("Carry After Dialogue")]
-public bool becomesCarryableAfterDialogue = false;
-public Transform playerCarryPoint; // assign the player's hold point here
-
     public string[] lineKeys;
     public bool needsChoiceAtEnd;
+
+    [Header("Presentation")]
     public Color dialogueColor = Color.white;
-    public TMP_FontAsset dialogueFont;
+    public TMPro.TMP_FontAsset dialogueFont;
+
+    [Header("Carry After Dialogue")]
+    public bool becomesCarryableAfterDialogue = false;
+    public Transform playerCarryPoint;
+
+    // NEW — optional, only used where you actually need it
+    public event Action OnConversationFinished;
 
     public IEnumerator Play()
     {
@@ -22,19 +26,17 @@ public Transform playerCarryPoint; // assign the player's hold point here
             resolvedLines[i] = LocalizationManager.Instance.Get(lineKeys[i]);
         }
 
-        yield return StartCoroutine(NpcDialogueManager.Instance.ShowDialogue(
-            resolvedLines,
-            needsChoiceAtEnd,
-            dialogueColor,
-            dialogueFont));
-            if (becomesCarryableAfterDialogue)
-{
-    CarryableItem carryable = GetComponent<CarryableItem>();
-    if (carryable != null && playerCarryPoint != null)
-    {
-        carryable.StartCarrying(playerCarryPoint);
+        yield return StartCoroutine(NpcDialogueManager.Instance.ShowDialogue(resolvedLines, needsChoiceAtEnd, dialogueColor, dialogueFont));
+
+        if (becomesCarryableAfterDialogue)
+        {
+            CarryableItem carryable = GetComponent<CarryableItem>();
+            if (carryable != null && playerCarryPoint != null)
+            {
+                carryable.StartCarrying(playerCarryPoint);
+            }
+        }
+
+        OnConversationFinished?.Invoke();
     }
-}
-    }
-    
 }
