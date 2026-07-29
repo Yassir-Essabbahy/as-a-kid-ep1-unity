@@ -347,7 +347,7 @@ MonoBehaviour:
     m_Value: 1
   FogColor:
     m_OverrideState: 1
-    m_Value: {r: 0.5, g: 0.46656644, b: 0.1957547, a: 0}
+    m_Value: {r: 0.13207549, g: 0.13207549, b: 0.13207549, a: 0}
   FogDensity:
     m_OverrideState: 1
     m_Value: 0.004
