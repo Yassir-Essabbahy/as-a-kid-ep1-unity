@@ -30,6 +30,7 @@ public class NpcDialogueManager : MonoBehaviour
         }
 
         talkPanel.SetActive(true);
+        choicePack.SetActive(false);
 
         foreach (string line in lines)
         {
@@ -42,7 +43,10 @@ public class NpcDialogueManager : MonoBehaviour
             yield return StartCoroutine(HandleChoices());
         }
 
+        choicePack.SetActive(false);
         talkPanel.SetActive(false);
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 
     public IEnumerator ShowDialogue(string[] lines, bool hasChoice)
@@ -81,6 +85,9 @@ public class NpcDialogueManager : MonoBehaviour
 
     IEnumerator HandleChoices()
     {
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+
         choicePack.SetActive(true);
         choiceMade = false;
 
