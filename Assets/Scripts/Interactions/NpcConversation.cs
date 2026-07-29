@@ -11,6 +11,11 @@ public class NpcConversation : MonoBehaviour
     public Color dialogueColor = Color.white;
     public TMPro.TMP_FontAsset dialogueFont;
 
+    [Header("Sound")]
+    public AudioSource dialogueAudioSource;
+    public AudioClip typingSound;
+    public AudioClip finishSound;
+
     [Header("Carry After Dialogue")]
     public bool becomesCarryableAfterDialogue = false;
     public Transform playerCarryPoint;
@@ -26,7 +31,9 @@ public class NpcConversation : MonoBehaviour
             resolvedLines[i] = LocalizationManager.Instance.Get(lineKeys[i]);
         }
 
-        yield return StartCoroutine(NpcDialogueManager.Instance.ShowDialogue(resolvedLines, needsChoiceAtEnd, dialogueColor, dialogueFont));
+        yield return StartCoroutine(NpcDialogueManager.Instance.ShowDialogue(
+            resolvedLines, needsChoiceAtEnd, dialogueColor, dialogueFont,
+            dialogueAudioSource, typingSound));
 
         if (becomesCarryableAfterDialogue)
         {
@@ -36,6 +43,9 @@ public class NpcConversation : MonoBehaviour
                 carryable.StartCarrying(playerCarryPoint);
             }
         }
+
+        if (dialogueAudioSource != null && finishSound != null)
+            dialogueAudioSource.PlayOneShot(finishSound);
 
         OnConversationFinished?.Invoke();
     }

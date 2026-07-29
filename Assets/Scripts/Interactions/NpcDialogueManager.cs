@@ -20,7 +20,8 @@ public class NpcDialogueManager : MonoBehaviour
         choicePack.SetActive(false);
     }
 
-    public IEnumerator ShowDialogue(string[] lines, bool hasChoice, Color dialogueColor, TMP_FontAsset dialogueFont)
+    public IEnumerator ShowDialogue(string[] lines, bool hasChoice, Color dialogueColor, TMP_FontAsset dialogueFont,
+        AudioSource audioSource = null, AudioClip typingSound = null)
     {
         dialogueText.color = dialogueColor;
         if (dialogueFont != null)
@@ -32,7 +33,7 @@ public class NpcDialogueManager : MonoBehaviour
 
         foreach (string line in lines)
         {
-            yield return StartCoroutine(TypeLine(line));
+            yield return StartCoroutine(TypeLine(line, audioSource, typingSound));
             yield return WaitForInput();
         }
 
@@ -49,16 +50,30 @@ public class NpcDialogueManager : MonoBehaviour
         return ShowDialogue(lines, hasChoice, Color.white, null);
     }
 
-    IEnumerator TypeLine(string line)
+    IEnumerator TypeLine(string line, AudioSource audioSource = null, AudioClip typingSound = null)
+{
+    dialogueText.text = "";
+
+    bool playingTypeSound = audioSource != null && typingSound != null;
+    if (playingTypeSound)
     {
-        dialogueText.text = "";
-        foreach (char c in line)
-        {
-            dialogueText.text += c;
-            yield return new WaitForSeconds(0.04f);
-        }
+        audioSource.clip = typingSound;
+        audioSource.loop = true;
+        audioSource.Play();
     }
 
+    foreach (char c in line)
+    {
+        dialogueText.text += c;
+        yield return new WaitForSeconds(0.04f);
+    }
+
+    if (playingTypeSound)
+    {
+        audioSource.Stop();
+        audioSource.loop = false;
+    }
+}
     IEnumerator WaitForInput()
     {
         while (!Input.GetMouseButtonDown(0)) yield return null;
