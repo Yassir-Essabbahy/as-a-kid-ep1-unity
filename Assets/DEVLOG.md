@@ -196,3 +196,31 @@ All cameras are Cinemachine VCams managed by `ClassroomGazeScene.cs`.
 - Added `FindableItem.cs`: placed on the item the player must locate. While `questGiver.questActive` is true, pressing `E` within `interactDistance` collects the item, disables it, and calls `CompleteQuest()`.
 - Removed the earlier `TeddyQuestManager.cs` singleton approach in favor of `TeddyFindQuest`, which hooks into the existing dialogue flow instead of introducing a parallel one.
 - Wired the same `NpcConversation` component used by the existing dialogue trigger as `TeddyFindQuest.askConversation`, so quest state updates automatically when that specific conversation finishes.
+
+
+
+---
+
+### 2026-07-29 — Beggar NPC Interaction (Reel Feature)
+
+- Created `BeggarInteraction.cs`: a proximity-trigger sequence for a floor-bound "beggar" NPC — optional pre-dialogue sound (cough/mumble), then a camera look-at beat, then `NpcConversation.Play()`.
+- Initial version used a dedicated `CutsceneCamera` + `CinemachineBrain` + `PlayerVcam`/`BeggarVcam` priority swap, mirroring the `ClassroomGazeScene` cinematic pattern. Discontinued after causing a camera-teleport bug: `CinemachineBrain` was fighting the FirstPersonController asset's own per-frame camera writes (head bob/zoom), desyncing Cinemachine's internal blend position from the camera's actual transform.
+- Replaced with a simpler rotation-only approach: `BeggarInteraction` disables the FPS controller and manually lerps `PlayerCamera`'s rotation toward a `lookTarget` transform (placed at the beggar's face height), re-aiming every frame during the lerp-in for exact tracking, then snaps once on arrival.
+- On sequence end, lerps the camera back out to its pre-trigger rotation (captured at the start of the beat) before re-enabling the FPS controller, avoiding a snap when control resumes.
+- Known caveat: if the FPS controller tracks its own internal pitch/yaw state separately from `transform.rotation`, a subtle snap could still occur one frame after control resumes; not yet confirmed whether this happens with the current asset.
+
+---
+
+### 2026-07-29 — Dialogue Typing Sound
+
+- Added `dialogueAudioSource`, `typingSound`, and `finishSound` fields to `NpcConversation.cs`, passed through to `NpcDialogueManager.ShowDialogue()` via two new optional parameters (existing callers unaffected).
+- Updated `NpcDialogueManager.TypeLine()` to loop `typingSound` on `audioSource` for the duration of each line's type-out, then explicitly `Stop()` it the instant the line finishes — replacing an earlier per-character `PlayOneShot` approach that could leave sound ringing past the last character.
+- `finishSound` plays once via `PlayOneShot` after `ShowDialogue()` fully returns (i.e. after any end-of-conversation choice), independent of the typing loop's `Stop()`/`loop` state.
+
+---
+
+### 2026-07-29 — Beggar Yes/No Choice (Pending Bezi Setup)
+
+- Prompted Bezi to add `YesButton`/`NoButton` under the existing `choicePack` container, styled to match `talkPanel`, wired to `NpcDialogueManager.MakeChoice(0)` and `MakeChoice(1)` respectively.
+- `needsChoiceAtEnd` to be set `true` on the beggar's `NpcConversation` so `HandleChoices()` runs after its lines finish.
+- Not yet implemented: nothing currently reads `lastChoiceIndex` after `HandleChoices()` completes, so the Yes/No choice is captured but does not yet branch dialogue or gameplay outcome.
