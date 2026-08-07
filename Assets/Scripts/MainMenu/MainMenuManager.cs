@@ -16,6 +16,9 @@ public class MainMenuManager : MonoBehaviour
     [SerializeField] private GameObject Options_GO;
     [SerializeField] private GameObject Credits_GO;
 
+
+
+    #region MainMenuButtons
     public void EpisodesButton()
     {
         if (CanInteract == false) return;
@@ -34,4 +37,118 @@ public class MainMenuManager : MonoBehaviour
         CanInteract = true;
     }
 
+
+        public void OptionsButton()
+    {
+        if (CanInteract == false) return;
+        StartCoroutine(OptionsButton_CO());
+    }
+
+    private IEnumerator OptionsButton_CO()
+    {
+        
+        CanInteract = false;
+        Options_Anim.SetInteger("C", 1);
+        yield return new WaitForSeconds(0.4f);
+        Options_GO.SetActive(true);
+        mainMenu_GO.SetActive(false);
+        yield return new WaitForSeconds(0.4f);
+        CanInteract = true;
+    }
+
+        public void CreditsButton()
+    {
+        if (CanInteract == false) return;
+        StartCoroutine(CreditsButton_CO());
+    }
+
+    private IEnumerator CreditsButton_CO()
+    {
+        
+        CanInteract = false;
+        Credits_Anim.SetInteger("C", 1);
+        yield return new WaitForSeconds(0.4f);
+        Credits_GO.SetActive(true);
+        mainMenu_GO.SetActive(false);
+        yield return new WaitForSeconds(0.4f);
+        CanInteract = true;
+    }
+
+    public void ExitGame()
+    {
+        Application.Quit();
+    }
+    #endregion
+
+
+
+    #region EpisodesMenu
+
+    public void BackButton_Episodes()
+    {
+        if (CanInteract == false) return;
+        StartCoroutine(BackButton_Episodes_CO());
+    }
+
+    private IEnumerator BackButton_Episodes_CO()
+    {
+        
+        CanInteract = false;
+        Episodes_Anim.SetInteger("C", 1);
+        yield return new WaitForSeconds(0.4f);
+        mainMenu_GO.SetActive(true);
+        Episodes_GO.SetActive(false);
+        yield return new WaitForSeconds(0.4f);
+        CanInteract = true;
+    }
+
+    #endregion
+
+
+
+    #region OptionsMenu
+
+    public void BackButton_Options()
+    {
+        if (CanInteract == false) return;
+        StartCoroutine(BackButton_Options_CO());
+    }
+
+    private IEnumerator BackButton_Options_CO()
+    {
+        
+        CanInteract = false;
+        Options_Anim.SetInteger("C", 1);
+        yield return new WaitForSeconds(0.4f);
+        mainMenu_GO.SetActive(true);
+        Options_GO.SetActive(false);
+        yield return new WaitForSeconds(0.4f);
+        CanInteract = true;
+    }
+
+    #endregion
+
+
+
+    #region CreditsMenu
+
+    public void BackButton_Credits()
+    {
+        if (CanInteract == false) return;
+        StartCoroutine(BackButton_Credits_CO());
+    }
+
+    private IEnumerator BackButton_Credits_CO()
+    {
+        
+        CanInteract = false;
+        Credits_Anim.SetInteger("C", 1);
+        yield return new WaitForSeconds(0.4f);
+        mainMenu_GO.SetActive(true);
+        Credits_GO.SetActive(false);
+        yield return new WaitForSeconds(0.4f);
+        CanInteract = true;
+    }
+
+    #endregion
 }
