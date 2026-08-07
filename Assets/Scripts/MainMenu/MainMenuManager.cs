@@ -16,6 +16,12 @@ public class MainMenuManager : MonoBehaviour
     [SerializeField] private GameObject Options_GO;
     [SerializeField] private GameObject Credits_GO;
 
+    [SerializeField] private GameObject Vcam_01;
+    [SerializeField] private GameObject Vcam_02;
+    [SerializeField] private GameObject Vcam_03;
+    [SerializeField] private GameObject Vcam_04;
+
+
 
 
     #region MainMenuButtons
@@ -27,6 +33,8 @@ public class MainMenuManager : MonoBehaviour
 
     private IEnumerator EpisodesButton_CO()
     {
+        Vcam_01.SetActive(false);
+        Vcam_02.SetActive(true);
         
         CanInteract = false;
         Episodes_Anim.SetInteger("C", 1);
@@ -46,7 +54,8 @@ public class MainMenuManager : MonoBehaviour
 
     private IEnumerator OptionsButton_CO()
     {
-        
+        Vcam_01.SetActive(false);
+        Vcam_03.SetActive(true);
         CanInteract = false;
         Options_Anim.SetInteger("C", 1);
         yield return new WaitForSeconds(0.4f);
@@ -64,7 +73,8 @@ public class MainMenuManager : MonoBehaviour
 
     private IEnumerator CreditsButton_CO()
     {
-        
+        Vcam_01.SetActive(false);
+        Vcam_04.SetActive(true);
         CanInteract = false;
         Credits_Anim.SetInteger("C", 1);
         yield return new WaitForSeconds(0.4f);
@@ -92,7 +102,8 @@ public class MainMenuManager : MonoBehaviour
 
     private IEnumerator BackButton_Episodes_CO()
     {
-        
+        Vcam_02.SetActive(false);
+        Vcam_01.SetActive(true);
         CanInteract = false;
         Episodes_Anim.SetInteger("C", 1);
         yield return new WaitForSeconds(0.4f);
@@ -116,7 +127,8 @@ public class MainMenuManager : MonoBehaviour
 
     private IEnumerator BackButton_Options_CO()
     {
-        
+        Vcam_03.SetActive(false);
+        Vcam_01.SetActive(true);
         CanInteract = false;
         Options_Anim.SetInteger("C", 1);
         yield return new WaitForSeconds(0.4f);
@@ -140,7 +152,8 @@ public class MainMenuManager : MonoBehaviour
 
     private IEnumerator BackButton_Credits_CO()
     {
-        
+        Vcam_04.SetActive(false);
+        Vcam_01.SetActive(true);
         CanInteract = false;
         Credits_Anim.SetInteger("C", 1);
         yield return new WaitForSeconds(0.4f);
