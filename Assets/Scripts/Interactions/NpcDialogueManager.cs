@@ -21,7 +21,7 @@ public class NpcDialogueManager : MonoBehaviour
     }
 
     public IEnumerator ShowDialogue(string[] lines, bool hasChoice, Color dialogueColor, TMP_FontAsset dialogueFont,
-        AudioSource audioSource = null, AudioClip typingSound = null)
+        AudioSource voiceSource = null, AudioClip[] voiceClips = null)
     {
         dialogueText.color = dialogueColor;
         if (dialogueFont != null)
@@ -32,10 +32,12 @@ public class NpcDialogueManager : MonoBehaviour
         talkPanel.SetActive(true);
         choicePack.SetActive(false);
 
-        foreach (string line in lines)
+        for (int i = 0; i < lines.Length; i++)
         {
-            yield return StartCoroutine(TypeLine(line, audioSource, typingSound));
-            yield return WaitForInput();
+            AudioClip clip = (voiceClips != null && i < voiceClips.Length) ? voiceClips[i] : null;
+
+            yield return StartCoroutine(TypeLine(lines[i], voiceSource, clip));
+            yield return WaitForInput(voiceSource);
         }
 
         if (hasChoice)
@@ -51,36 +53,48 @@ public class NpcDialogueManager : MonoBehaviour
 
     public IEnumerator ShowDialogue(string[] lines, bool hasChoice)
     {
-        return ShowDialogue(lines, hasChoice, Color.white, null);
+        yield return StartCoroutine(ShowDialogue(lines, hasChoice, Color.white, null, null, null));
     }
 
-    IEnumerator TypeLine(string line, AudioSource audioSource = null, AudioClip typingSound = null)
-{
-    dialogueText.text = "";
-
-    bool playingTypeSound = audioSource != null && typingSound != null;
-    if (playingTypeSound)
+    IEnumerator TypeLine(string line, AudioSource voiceSource, AudioClip clip)
     {
-        audioSource.clip = typingSound;
-        audioSource.loop = true;
-        audioSource.Play();
+        dialogueText.text = "";
+
+        if (voiceSource != null && clip != null)
+        {
+            voiceSource.Stop();
+            voiceSource.clip = clip;
+            voiceSource.Play();
+        }
+
+        foreach (char c in line)
+        {
+            dialogueText.text += c;
+            yield return new WaitForSeconds(0.04f);
+        }
     }
 
-    foreach (char c in line)
+    // Waits for BOTH the player click AND the voice clip to finish before advancing
+    IEnumerator WaitForInput(AudioSource voiceSource)
     {
-        dialogueText.text += c;
-        yield return new WaitForSeconds(0.04f);
-    }
+        bool clicked = false;
 
-    if (playingTypeSound)
-    {
-        audioSource.Stop();
-        audioSource.loop = false;
-    }
-}
-    IEnumerator WaitForInput()
-    {
-        while (!Input.GetMouseButtonDown(0)) yield return null;
+        while (true)
+        {
+            if (Input.GetMouseButtonDown(0))
+            {
+                clicked = true;
+            }
+
+            bool voiceFinished = voiceSource == null || !voiceSource.isPlaying;
+
+            if (clicked && voiceFinished)
+            {
+                break;
+            }
+
+            yield return null;
+        }
     }
 
     IEnumerator HandleChoices()

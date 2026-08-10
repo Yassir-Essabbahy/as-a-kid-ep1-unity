@@ -7,6 +7,9 @@ public class BeggarInteraction : MonoBehaviour
     public string playerTag = "Player";
     public bool triggerOnce = true;
 
+    [Header("Required Item")]
+    public CarryableItem requiredCarriedItem; // must be carried for the beggar to talk
+
     [Header("Audio")]
     public AudioSource audioSource;
     public AudioClip preSound;
@@ -31,6 +34,9 @@ public class BeggarInteraction : MonoBehaviour
         if (!other.CompareTag(playerTag)) return;
         if (conversation == null) return;
 
+        // Gate: only proceed if the required item (teddy bear) is currently being carried
+        if (requiredCarriedItem != null && !requiredCarriedItem.IsBeingCarried) return;
+
         hasTriggered = true;
         StartCoroutine(RunSequence());
     }
@@ -46,8 +52,6 @@ public class BeggarInteraction : MonoBehaviour
 
         Quaternion startRot = playerCamera.rotation;
 
-        // Lerp in, re-aiming at the target every frame so it's exact
-        // even if the target or camera moved slightly during the blend
         float t = 0f;
         while (t < lookInDuration)
         {
