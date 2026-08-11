@@ -1,7 +1,6 @@
 using UnityEngine;
 using TMPro;
 using System.Collections;
-using Unity.Cinemachine;
 
 public class NpcInteractionText : MonoBehaviour
 {
@@ -10,37 +9,40 @@ public class NpcInteractionText : MonoBehaviour
     public float InteractionDistance = 5f;
     private bool CanInteract = true;
 
+    [Header("Camera")]
+    public Transform playerCamera;
+
+    [Header("Look At")]
+    public float lookInDuration = 0.6f;
+    public float lookOutDuration = 0.4f;
+
     [Header("Player Control")]
-    public FirstPersonController playerController;
-    [Header("Cameras")]
-    public CinemachineCamera PlayerVcam;
-    public CinemachineCamera TalkZoomVcam;
-
-
-
-    void Awake()
-    {
-        if (playerController == null)
-        {
-            playerController = GetComponent<FirstPersonController>();
-        }
-    }
+    public MonoBehaviour playerController;
 
     void Update()
     {
-        if (!CanInteract) return;        Ray ray = new Ray(transform.position, transform.forward);
+        if (!CanInteract) return;
+
+        Ray ray = new Ray(transform.position, transform.forward);
+
         if (Physics.Raycast(ray, out RaycastHit hit, InteractionDistance))
         {
             if (hit.collider.CompareTag("InteractNPC"))
             {
                 InteractText.text = "Press 'E' To Talk";
+
                 if (Input.GetKeyDown(KeyCode.E))
                 {
-                    NpcConversation npcConv = hit.collider.GetComponent<NpcConversation>();
-                    NpcLookAt npcLook = hit.collider.GetComponent<NpcLookAt>();
+                    NpcConversation npcConv =
+                        hit.collider.GetComponent<NpcConversation>();
+
+                    NpcLookAt npcLook =
+                        hit.collider.GetComponent<NpcLookAt>();
 
                     if (npcConv != null)
+                    {
                         StartCoroutine(TalkSequence(npcConv, npcLook));
+                    }
                 }
             }
             else
@@ -57,26 +59,95 @@ public class NpcInteractionText : MonoBehaviour
     IEnumerator TalkSequence(NpcConversation conv, NpcLookAt look)
     {
         CanInteract = false;
-        if (playerController != null) playerController.enabled = false;
         InteractText.text = "";
 
-        if (look != null) look.IKActive = true;
+        // Disable player movement/look
+        if (playerController != null)
+            playerController.enabled = false;
 
-        PlayerVcam.Priority = 0;
-        TalkZoomVcam.Priority = 10;
+        if (look != null)
+            look.IKActive = true;
 
-        yield return new WaitForSeconds(1f);
+        // Save the camera's original rotation
+        Quaternion startRot = playerCamera.rotation;
+
+        // NPC position
+        Transform npc = conv.transform;
+
+        // Calculate rotation toward NPC
+        Quaternion targetRot = Quaternion.LookRotation(
+            npc.position - playerCamera.position
+        );
+
+        // Unlock cursor right as the camera starts switching to the NPC
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+
+        // Smoothly look at NPC
+        float t = 0f;
+
+        while (t < lookInDuration)
+        {
+            t += Time.deltaTime;
+
+            float s = Mathf.SmoothStep(
+                0f,
+                1f,
+                t / lookInDuration
+            );
+
+            playerCamera.rotation = Quaternion.Slerp(
+                startRot,
+                targetRot,
+                s
+            );
+
+            yield return null;
+        }
+
+        playerCamera.rotation = targetRot;
+
+        // Play dialogue
+        yield return StartCoroutine(conv.Play());
+
+        // Look back to original direction
+        Quaternion lookOutStart = playerCamera.rotation;
+
+        float t2 = 0f;
+
+        while (t2 < lookOutDuration)
+        {
+            t2 += Time.deltaTime;
+
+            float s = Mathf.SmoothStep(
+                0f,
+                1f,
+                t2 / lookOutDuration
+            );
+
+            playerCamera.rotation = Quaternion.Slerp(
+                lookOutStart,
+                startRot,
+                s
+            );
+
+            yield return null;
+        }
+
+        playerCamera.rotation = startRot;
+
+        // Disable NPC look-at
+        if (look != null)
+            look.IKActive = false;
+
+        // Lock cursor again
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
-        yield return StartCoroutine(conv.Play());
+        // Enable player control
+        if (playerController != null)
+            playerController.enabled = true;
 
-        PlayerVcam.Priority = 10;
-        TalkZoomVcam.Priority = 0;
-        if (look != null) look.IKActive = false;
-        Cursor.lockState = CursorLockMode.Locked;
-
-        if (playerController != null) playerController.enabled = true;
         CanInteract = true;
     }
 }

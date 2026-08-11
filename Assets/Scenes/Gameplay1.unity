@@ -7318,9 +7318,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::NpcInteractionText
   InteractText: {fileID: 350214160}
   InteractionDistance: 5
-  playerController: {fileID: 0}
-  PlayerVcam: {fileID: 390315860}
-  TalkZoomVcam: {fileID: 517100826}
+  playerCamera: {fileID: 1676752290}
+  lookInDuration: 0.6
+  lookOutDuration: 0.4
+  playerController: {fileID: 892892644}
 --- !u!1 &902619065
 GameObject:
   m_ObjectHideFlags: 0
