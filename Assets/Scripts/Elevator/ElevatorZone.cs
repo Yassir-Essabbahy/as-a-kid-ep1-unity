@@ -3,6 +3,11 @@ using UnityEngine;
 public class ElevatorZone : MonoBehaviour
 {
     public string playerTag = "Player";
+    [Tooltip("Optional explicit reference. If empty, the zone finds the scene elevator once.")]
+    public ElevatorButton elevator;
+
+    // Kept serialized so existing scene data is not lost; the zone no longer
+    // controls the Animator or audio directly.
     public Animator doorAnimator;
     public string openTrigger = "Open";
     public AudioSource audioSource;
@@ -17,8 +22,11 @@ public class ElevatorZone : MonoBehaviour
 
         hasOpened = true;
 
-        if (doorAnimator != null) doorAnimator.SetTrigger(openTrigger);
-        if (audioSource != null && doorOpenSound != null) audioSource.PlayOneShot(doorOpenSound);
+        if (elevator == null)
+            elevator = FindAnyObjectByType<ElevatorButton>();
+
+        if (elevator != null)
+            elevator.RequestDoorOpenFromZone();
     }
 
     void OnTriggerExit(Collider other)

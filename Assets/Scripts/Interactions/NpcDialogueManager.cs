@@ -11,18 +11,49 @@ public class NpcDialogueManager : MonoBehaviour
     public GameObject choicePack;
     public TextMeshProUGUI dialogueText;
 
+    [Header("Typing")]
+    [Min(0f)]
+    public float charactersPerSecond = 25f;
+
     [Header("Choice")]
     public int lastChoiceIndex;
 
-    private bool choiceMade = false;
+    private bool choiceMade;
+    private bool dialogueRunning;
 
-    void Awake()
+    public bool IsDialogueRunning => dialogueRunning;
+
+
+    // ============================================================
+    // UNITY
+    // ============================================================
+
+    private void Awake()
     {
+        if (Instance != null && Instance != this)
+        {
+            Debug.LogWarning(
+                $"Duplicate NpcDialogueManager found on {gameObject.name}. " +
+                "Destroying duplicate."
+            );
+
+            Destroy(gameObject);
+            return;
+        }
+
         Instance = this;
 
-        talkPanel.SetActive(false);
-        choicePack.SetActive(false);
+        if (talkPanel != null)
+            talkPanel.SetActive(false);
+
+        if (choicePack != null)
+            choicePack.SetActive(false);
     }
+
+
+    // ============================================================
+    // MAIN DIALOGUE
+    // ============================================================
 
     public IEnumerator ShowDialogue(
         string[] lines,
@@ -32,42 +63,97 @@ public class NpcDialogueManager : MonoBehaviour
         AudioSource voiceSource = null,
         AudioClip[] voiceClips = null)
     {
+        if (dialogueRunning)
+        {
+            Debug.LogWarning(
+                "NpcDialogueManager: A dialogue is already running."
+            );
+
+            yield break;
+        }
+
+        dialogueRunning = true;
+
+        // --------------------------------------------------------
+        // SAFETY
+        // --------------------------------------------------------
+
+        if (lines == null || lines.Length == 0)
+        {
+            Debug.LogWarning(
+                "NpcDialogueManager: Dialogue contains no lines."
+            );
+
+            dialogueRunning = false;
+            yield break;
+        }
+
+        if (dialogueText == null)
+        {
+            Debug.LogError(
+                "NpcDialogueManager: Dialogue Text is not assigned."
+            );
+
+            dialogueRunning = false;
+            yield break;
+        }
+
+        // --------------------------------------------------------
+        // UI SETUP
+        // --------------------------------------------------------
+
         dialogueText.color = dialogueColor;
 
         if (dialogueFont != null)
-        {
             dialogueText.font = dialogueFont;
-        }
 
-        // Hide cursor during dialogue
+        if (talkPanel != null)
+            talkPanel.SetActive(true);
+
+        if (choicePack != null)
+            choicePack.SetActive(false);
+
+        choiceMade = false;
+
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
-        talkPanel.SetActive(true);
-        choicePack.SetActive(false);
+
+        // --------------------------------------------------------
+        // PLAY EACH LINE
+        // --------------------------------------------------------
 
         for (int i = 0; i < lines.Length; i++)
         {
-            AudioClip clip =
-                (voiceClips != null && i < voiceClips.Length)
-                ? voiceClips[i]
-                : null;
+            AudioClip clip = null;
 
-            // Type text + play voice
-            yield return StartCoroutine(
-                TypeLine(lines[i], voiceSource, clip)
-            );
+            if (voiceClips != null &&
+                i < voiceClips.Length)
+            {
+                clip = voiceClips[i];
+            }
 
-            // Wait until voice finishes AND player clicks
             yield return StartCoroutine(
-                WaitForInput(voiceSource)
+                PlayLine(
+                    lines[i],
+                    voiceSource,
+                    clip
+                )
             );
         }
 
-        // Stop voice just in case
+
+        // --------------------------------------------------------
+        // STOP VOICE
+        // --------------------------------------------------------
+
         StopVoice(voiceSource);
 
-        // Handle choice
+
+        // --------------------------------------------------------
+        // CHOICE
+        // --------------------------------------------------------
+
         if (hasChoice)
         {
             yield return StartCoroutine(
@@ -75,13 +161,29 @@ public class NpcDialogueManager : MonoBehaviour
             );
         }
 
-        choicePack.SetActive(false);
-        talkPanel.SetActive(false);
 
-        // Keep cursor hidden
+        // --------------------------------------------------------
+        // CLOSE
+        // --------------------------------------------------------
+
+        if (choicePack != null)
+            choicePack.SetActive(false);
+
+        if (talkPanel != null)
+            talkPanel.SetActive(false);
+
+        dialogueText.text = "";
+
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+
+        dialogueRunning = false;
     }
+
+
+    // ============================================================
+    // BACKWARD COMPATIBILITY
+    // ============================================================
 
     public IEnumerator ShowDialogue(
         string[] lines,
@@ -99,46 +201,138 @@ public class NpcDialogueManager : MonoBehaviour
         );
     }
 
-    IEnumerator TypeLine(
+
+    // ============================================================
+    // PLAY ONE LINE
+    // ============================================================
+
+    private IEnumerator PlayLine(
         string line,
         AudioSource voiceSource,
         AudioClip clip)
     {
-        dialogueText.text = "";
+        if (string.IsNullOrEmpty(line))
+            line = "";
 
-        // Stop previous voice
+
+        // --------------------------------------------------------
+        // STOP PREVIOUS AUDIO
+        // --------------------------------------------------------
+
         StopVoice(voiceSource);
 
-        // Start voice
-        if (voiceSource != null && clip != null)
+
+        // --------------------------------------------------------
+        // PLAY VOICE
+        // --------------------------------------------------------
+
+        bool voicePlaying = false;
+
+        if (voiceSource != null &&
+            clip != null)
         {
             voiceSource.clip = clip;
+
+            // Make sure volume isn't accidentally zero.
+            if (voiceSource.volume <= 0f)
+                voiceSource.volume = 1f;
+
             voiceSource.Play();
+
+            // Unity updates isPlaying after Play().
+            yield return null;
+
+            voicePlaying = voiceSource.isPlaying;
+
+            if (!voicePlaying)
+            {
+                Debug.LogWarning(
+                    $"NpcDialogueManager: AudioSource failed to play " +
+                    $"clip '{clip.name}'. Dialogue will continue normally."
+                );
+            }
         }
 
-        // Type text
+
+        // --------------------------------------------------------
+        // TYPE TEXT
+        // --------------------------------------------------------
+
+        yield return StartCoroutine(
+            TypeText(line)
+        );
+
+
+        // --------------------------------------------------------
+        // WAIT
+        // --------------------------------------------------------
+
+        yield return StartCoroutine(
+            WaitForAdvance(
+                voiceSource,
+                voicePlaying
+            )
+        );
+
+
+        // --------------------------------------------------------
+        // CLEANUP
+        // --------------------------------------------------------
+
+        StopVoice(voiceSource);
+    }
+
+
+    // ============================================================
+    // TYPE TEXT
+    // ============================================================
+
+    private IEnumerator TypeText(string line)
+    {
+        dialogueText.text = "";
+
+        if (charactersPerSecond <= 0f)
+        {
+            dialogueText.text = line;
+            yield break;
+        }
+
+        float delay = 1f / charactersPerSecond;
+
         foreach (char c in line)
         {
             dialogueText.text += c;
 
-            yield return new WaitForSeconds(0.04f);
+            yield return new WaitForSeconds(delay);
         }
     }
 
-    IEnumerator WaitForInput(AudioSource voiceSource)
+
+    // ============================================================
+    // WAIT FOR NEXT LINE
+    // ============================================================
+
+    private IEnumerator WaitForAdvance(
+        AudioSource voiceSource,
+        bool voiceWasPlaying)
     {
+        bool voiceFinished =
+            !voiceWasPlaying ||
+            voiceSource == null;
+
         while (true)
         {
-            // Check whether voice has finished
-            bool voiceFinished =
-                voiceSource == null ||
-                !voiceSource.isPlaying;
+            // If voice was playing, wait until it finishes.
+            if (voiceWasPlaying &&
+                voiceSource != null &&
+                !voiceSource.isPlaying)
+            {
+                voiceFinished = true;
+            }
 
-            // Only accept a click once the voice has finished.
-            // This prevents an early click (made while the voice
-            // is still playing) from being "banked" and instantly
-            // advancing the dialogue the moment the voice ends.
-            if (voiceFinished && Input.GetMouseButtonDown(0))
+            // Advance with left mouse click, Space, or E once voice has finished (or if text only).
+            if ((Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.E)) &&
+                voiceFinished)
             {
                 yield break;
             }
@@ -147,22 +341,22 @@ public class NpcDialogueManager : MonoBehaviour
         }
     }
 
-    void StopVoice(AudioSource voiceSource)
-    {
-        if (voiceSource != null && voiceSource.isPlaying)
-        {
-            voiceSource.Stop();
-        }
-    }
 
-    IEnumerator HandleChoices()
+    // ============================================================
+    // CHOICES
+    // ============================================================
+
+    private IEnumerator HandleChoices()
     {
-        // Keep cursor hidden
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        if (choicePack == null)
+            yield break;
+
+        choiceMade = false;
 
         choicePack.SetActive(true);
-        choiceMade = false;
+
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
 
         while (!choiceMade)
         {
@@ -172,6 +366,7 @@ public class NpcDialogueManager : MonoBehaviour
         choicePack.SetActive(false);
     }
 
+
     public void MakeChoice()
     {
         choiceMade = true;
@@ -179,9 +374,30 @@ public class NpcDialogueManager : MonoBehaviour
         Debug.Log("Choice Selected!");
     }
 
+
     public void MakeChoice(int index)
     {
         lastChoiceIndex = index;
         choiceMade = true;
+
+        Debug.Log(
+            $"Choice Selected: {index}"
+        );
+    }
+
+
+    // ============================================================
+    // AUDIO
+    // ============================================================
+
+    private void StopVoice(AudioSource voiceSource)
+    {
+        if (voiceSource == null)
+            return;
+
+        if (voiceSource.isPlaying)
+            voiceSource.Stop();
+
+        voiceSource.clip = null;
     }
 }

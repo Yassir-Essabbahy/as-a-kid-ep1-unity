@@ -7,33 +7,81 @@ public class FloorManager : MonoBehaviour
     [System.Serializable]
     public class Floor
     {
-        public GameObject floorRoot; // parent object holding this floor's NPC, item, lighting, props
+        [Tooltip("Only the environment for this floor.")]
+        public GameObject floorRoot;
     }
 
+    [Header("Floors")]
     public Floor[] floors;
+
+    [Header("Current Floor")]
     public int currentFloorIndex = 0;
 
-    void Awake()
+
+    private void Awake()
     {
         Instance = this;
     }
 
-    void Start()
+
+    private void Start()
     {
         ActivateFloor(currentFloorIndex);
     }
 
+
     public void ActivateFloor(int index)
     {
+        if (floors == null || floors.Length == 0)
+        {
+            Debug.LogWarning(
+                "FloorManager: No floors assigned."
+            );
+
+            return;
+        }
+
+
+        if (index < 0 || index >= floors.Length)
+        {
+            Debug.LogWarning(
+                "FloorManager: Invalid floor index " + index
+            );
+
+            return;
+        }
+
+
         for (int i = 0; i < floors.Length; i++)
         {
-            floors[i].floorRoot.SetActive(i == index);
+            if (floors[i] == null ||
+                floors[i].floorRoot == null)
+            {
+                continue;
+            }
+
+            floors[i].floorRoot.SetActive(
+                i == index
+            );
         }
+
+
         currentFloorIndex = index;
     }
 
+
     public bool HasNextFloor()
     {
-        return currentFloorIndex + 1 < floors.Length;
+        return floors != null &&
+               currentFloorIndex + 1 < floors.Length;
+    }
+
+
+    public int GetNextFloorIndex()
+    {
+        if (!HasNextFloor())
+            return currentFloorIndex;
+
+        return currentFloorIndex + 1;
     }
 }

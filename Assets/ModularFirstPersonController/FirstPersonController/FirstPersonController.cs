@@ -1,4 +1,4 @@
-﻿// CHANGE LOG
+// CHANGE LOG
 // 
 // CHANGES || version VERSION
 //
@@ -142,6 +142,28 @@ public class FirstPersonController : MonoBehaviour
         playerCanMove = !locked;
         cameraCanMove = !locked;
     }
+
+    /// <summary>
+    /// Snaps the body and camera together, while synchronizing the controller's
+    /// internal yaw/pitch values. Use after teleports/cutscenes.
+    /// </summary>
+    public void SnapViewRotation(Quaternion worldBodyRotation)
+    {
+        float bodyYaw = worldBodyRotation.eulerAngles.y;
+        transform.rotation = Quaternion.Euler(0f, bodyYaw, 0f);
+        yaw = transform.localEulerAngles.y;
+
+        if (playerCamera == null)
+            return;
+
+        float cameraPitch = playerCamera.transform.localEulerAngles.x;
+        if (cameraPitch > 180f)
+            cameraPitch -= 360f;
+
+        pitch = Mathf.Clamp(cameraPitch, -maxLookAngle, maxLookAngle);
+        playerCamera.transform.localRotation = Quaternion.Euler(pitch, 0f, 0f);
+    }
+
 
     private void Awake()
     {

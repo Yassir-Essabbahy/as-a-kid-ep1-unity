@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public class DialogueTriggerZone : MonoBehaviour
@@ -14,16 +15,30 @@ public class DialogueTriggerZone : MonoBehaviour
 
     private bool hasTriggered = false;
 
-    void OnTriggerEnter(Collider other)
+    private void OnTriggerEnter(Collider other)
     {
-        if (triggerOnce && hasTriggered) return;
-        if (!other.CompareTag(playerTag)) return;
-        if (conversation == null) return;
+        if (!other.CompareTag(playerTag))
+            return;
 
-        // Safety: only fire if the required item is currently being carried
-        if (requiredCarriedItem != null && !requiredCarriedItem.IsBeingCarried) return;
+        StartCoroutine(TriggerIfReady());
+    }
+
+    /// <summary>
+    /// Allows a scripted sequence to fire this exact trigger without moving
+    /// the player through its collider.
+    /// </summary>
+    public IEnumerator TriggerIfReady()
+    {
+        if (triggerOnce && hasTriggered)
+            yield break;
+
+        if (conversation == null)
+            yield break;
+
+        if (requiredCarriedItem != null && !requiredCarriedItem.IsBeingCarried)
+            yield break;
 
         hasTriggered = true;
-        StartCoroutine(conversation.Play());
+        yield return StartCoroutine(conversation.Play());
     }
 }
