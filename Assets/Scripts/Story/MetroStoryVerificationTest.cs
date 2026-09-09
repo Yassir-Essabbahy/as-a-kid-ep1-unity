@@ -86,9 +86,9 @@ public static class MetroStoryVerificationTest
         });
 
         // 3 Metro NPCs check
-        var bully = GameObject.Find("Floor1/StoryNPCs/NPC_Bully");
-        var shop = GameObject.Find("Floor1/StoryNPCs/NPC_ShopOwner");
-        var neighbor = GameObject.Find("Floor1/StoryNPCs/NPC_Neighbor");
+        var bully = GameObject.Find("StoryNPCs/NPC_Bully") ?? GameObject.Find("Floor1/StoryNPCs/NPC_Bully");
+        var shop = GameObject.Find("StoryNPCs/NPC_ShopOwner") ?? GameObject.Find("Floor1/StoryNPCs/NPC_ShopOwner");
+        var neighbor = GameObject.Find("StoryNPCs/NPC_Neighbor") ?? GameObject.Find("Floor1/StoryNPCs/NPC_Neighbor");
         bool npcsOk = bully != null && shop != null && neighbor != null &&
                       bully.CompareTag("InteractNPC") && shop.CompareTag("InteractNPC") && neighbor.CompareTag("InteractNPC");
         results.Add(new TestResult {
@@ -98,8 +98,8 @@ public static class MetroStoryVerificationTest
         });
 
         // PlatformEndTrigger check
-        var f1 = GameObject.Find("Floor1");
-        var platformTrigger = f1 != null ? f1.transform.Find("PlatformEndTrigger")?.gameObject : null;
+        var ctrl = GameObject.FindAnyObjectByType<MetroStorySequenceController>();
+        var platformTrigger = ctrl != null ? ctrl.platformEndTrigger : null;
         var ptCol = platformTrigger != null ? platformTrigger.GetComponent<BoxCollider>() : null;
         var ptScript = platformTrigger != null ? platformTrigger.GetComponent<PlatformEndTrigger>() : null;
         bool triggerOk = platformTrigger != null && ptCol != null && ptCol.isTrigger && ptScript != null;
@@ -110,7 +110,7 @@ public static class MetroStoryVerificationTest
         });
 
         // Door check
-        var door = f1 != null ? f1.transform.Find("Door_Behind")?.gameObject : null;
+        var door = GameObject.Find("Door_Behind") ?? (f1 != null ? f1.transform.Find("Door_Behind")?.gameObject : null);
         var doorCol = door != null ? door.GetComponent<BoxCollider>() : null;
         var doorAudio = door != null ? door.GetComponent<AudioSource>() : null;
         var doorInteract = door != null ? door.GetComponent<DoorInteractable>() : null;
@@ -122,7 +122,7 @@ public static class MetroStoryVerificationTest
         });
 
         // BehindDoorRoom check
-        var room = f1 != null ? f1.transform.Find("BehindDoorRoom")?.gameObject : null;
+        var room = GameObject.Find("BehindDoorRoom") ?? (f1 != null ? f1.transform.Find("BehindDoorRoom")?.gameObject : null);
         var teacher = room != null ? room.transform.Find("Teacher")?.gameObject : null;
         var mother = room != null ? room.transform.Find("Mother")?.gameObject : null;
         var father = room != null ? room.transform.Find("Father")?.gameObject : null;
