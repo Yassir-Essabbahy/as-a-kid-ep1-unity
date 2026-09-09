@@ -113,7 +113,17 @@ public class BeggarInteraction : MonoBehaviour
             _rigidbody.angularVelocity = Vector3.zero;
         }
 
-        Vector3 targetLookPos = lookTarget != null ? lookTarget.position : (transform.position + Vector3.up * 1.3f);
+        Vector3 targetLookPos = lookTarget != null ? lookTarget.position : (transform.position + Vector3.up * 0.9f);
+        if (lookTarget == null)
+        {
+            var col = GetComponent<Collider>();
+            if (col != null) targetLookPos = col.bounds.center;
+        }
+
+        // Keep cursor locked throughout dialogue
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+
         bool useCinemachine = (cinemachineBrain != null && playerVcam != null && talkZoomVcam != null && playerCamera != null);
 
         if (useCinemachine)
@@ -125,12 +135,12 @@ public class BeggarInteraction : MonoBehaviour
             playerVcam.Lens.FieldOfView = currentFov;
             playerVcam.Priority.Value = 20;
 
-            Vector3 toTarget = targetLookPos - playerCamera.position;
-            float stepDistance = Mathf.Clamp(toTarget.magnitude * 0.15f, 0.2f, 0.45f);
-            Vector3 zoomPos = playerCamera.position + toTarget.normalized * stepDistance;
-            Quaternion zoomRot = Quaternion.LookRotation(targetLookPos - zoomPos);
+            Vector3 camPos = playerCamera.position;
+            Vector3 lookDir = targetLookPos - camPos;
+            if (lookDir.sqrMagnitude < 0.001f) lookDir = playerCamera.forward;
+            Quaternion zoomRot = Quaternion.LookRotation(lookDir);
 
-            talkZoomVcam.transform.SetPositionAndRotation(zoomPos, zoomRot);
+            talkZoomVcam.transform.SetPositionAndRotation(camPos, zoomRot);
             talkZoomVcam.Lens.FieldOfView = dialogueZoomFOV;
             talkZoomVcam.Priority.Value = 10;
 
@@ -142,27 +152,24 @@ public class BeggarInteraction : MonoBehaviour
 
             talkZoomVcam.Priority.Value = 30;
 
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
-
             yield return new WaitForSeconds(lookInDuration);
         }
         else if (playerCamera != null)
         {
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
-
             Quaternion startRot = playerCamera.rotation;
             float t = 0f;
             while (t < lookInDuration)
             {
                 t += Time.deltaTime;
                 float s = Mathf.SmoothStep(0f, 1f, t / lookInDuration);
-                Quaternion currentTarget = Quaternion.LookRotation(targetLookPos - playerCamera.position);
+                Vector3 lookDir = targetLookPos - playerCamera.position;
+                Quaternion currentTarget = lookDir.sqrMagnitude > 0.001f ? Quaternion.LookRotation(lookDir) : playerCamera.rotation;
                 playerCamera.rotation = Quaternion.Slerp(startRot, currentTarget, s);
                 yield return null;
             }
-            playerCamera.rotation = Quaternion.LookRotation(targetLookPos - playerCamera.position);
+            Vector3 finalLook = targetLookPos - playerCamera.position;
+            if (finalLook.sqrMagnitude > 0.001f)
+                playerCamera.rotation = Quaternion.LookRotation(finalLook);
         }
 
         yield return new WaitForSeconds(delayBeforeDialogue);

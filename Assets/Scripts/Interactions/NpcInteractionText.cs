@@ -93,7 +93,7 @@ public class NpcInteractionText : MonoBehaviour
 
                     if (npcConv != null)
                     {
-                        StartCoroutine(TalkSequence(npcConv, npcLook));
+                        StartCoroutine(TalkSequence(npcConv, npcLook, hit.collider, hit.point));
                     }
                 }
             }
@@ -108,7 +108,69 @@ public class NpcInteractionText : MonoBehaviour
         }
     }
 
-    IEnumerator TalkSequence(NpcConversation conv, NpcLookAt look)
+    private Vector3 GetTargetLookPosition(NpcConversation conv, Collider hitCol, Vector3 hitPoint)
+    {
+        Transform npc = conv.transform;
+
+        // 1. Check for dedicated look target children (e.g. BeggarHead, LookTarget, Head)
+        Transform lookTarget = npc.Find("LookTarget") ?? npc.Find("lookTarget") ?? 
+                               npc.Find("BeggarHead") ?? npc.Find("Head") ?? npc.Find("head");
+        if (lookTarget != null)
+            return lookTarget.position;
+
+        // 2. Check for humanoid animator head bone
+        var anim = npc.GetComponentInChildren<Animator>();
+        if (anim != null && anim.isHuman)
+        {
+            var headBone = anim.GetBoneTransform(HumanBodyBones.Head);
+            if (headBone != null)
+                return headBone.position;
+        }
+
+        // 3. If there is an animator with named head/face bones in generic rig
+        if (anim != null)
+        {
+            var transforms = npc.GetComponentsInChildren<Transform>();
+            foreach (var t in transforms)
+            {
+                string lower = t.name.ToLower();
+                if (lower.Contains("head") || lower.Contains("face"))
+                    return t.position;
+            }
+
+            var r = npc.GetComponentInChildren<Renderer>();
+            if (r != null)
+            {
+                Bounds b = r.bounds;
+                return new Vector3(b.center.x, b.min.y + b.size.y * 0.85f, b.center.z);
+            }
+        }
+
+        // 4. For props, items, dolls, or objects (NO Animator, like Teddy Bear):
+        // Prefer the exact visual MeshRenderer bounds center
+        var rend = hitCol != null ? hitCol.GetComponent<Renderer>() : null;
+        if (rend == null) rend = npc.GetComponentInChildren<Renderer>();
+        if (rend != null)
+        {
+            return rend.bounds.center;
+        }
+
+        // 5. Use raycast hit point if available
+        if (hitPoint != Vector3.zero)
+            return hitPoint;
+
+        // 6. Fallback to collider bounds
+        Collider col = hitCol != null ? hitCol : npc.GetComponent<Collider>();
+        if (col == null) col = npc.GetComponentInChildren<Collider>();
+        if (col != null)
+        {
+            return col.bounds.center;
+        }
+
+        return npc.position;
+    }
+
+    IEnumerator TalkSequence(NpcConversation conv, NpcLookAt look, Collider hitCollider = null, Vector3 hitPoint = default)
     {
         CanInteract = false;
         InteractText.text = "";
@@ -134,25 +196,12 @@ public class NpcInteractionText : MonoBehaviour
         if (look != null)
             look.IKActive = true;
 
-        // 2. Find target look position (head/eye level of the NPC)
-        Transform npc = conv.transform;
-        Vector3 targetLookPos = npc.position + aimOffset;
+        // 2. Find accurate target look position (face height or object center)
+        Vector3 targetLookPos = GetTargetLookPosition(conv, hitCollider, hitPoint);
 
-        // Try to find a dedicated head/look transform if present
-        Transform head = npc.Find("Head") ?? npc.Find("head") ?? npc.Find("BeggarHead") ?? npc.Find("LookTarget");
-        if (head != null)
-        {
-            targetLookPos = head.position;
-        }
-        else
-        {
-            var anim = npc.GetComponentInChildren<Animator>();
-            if (anim != null && anim.isHuman)
-            {
-                var headBone = anim.GetBoneTransform(HumanBodyBones.Head);
-                if (headBone != null) targetLookPos = headBone.position;
-            }
-        }
+        // Keep cursor locked and invisible throughout dialogue
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
 
         // 3. Setup Cinemachine Virtual Cameras if available
         bool useCinemachine = (cinemachineBrain != null && playerVcam != null && talkZoomVcam != null && playerCamera != null);
@@ -167,13 +216,15 @@ public class NpcInteractionText : MonoBehaviour
             playerVcam.Lens.FieldOfView = currentFov;
             playerVcam.Priority.Value = 20;
 
-            // Position TalkZoomVcam: subtle forward dolly and aim at NPC face
-            Vector3 toNpc = targetLookPos - playerCamera.position;
-            float stepDistance = Mathf.Clamp(toNpc.magnitude * 0.15f, 0.2f, 0.45f);
-            Vector3 zoomPos = playerCamera.position + toNpc.normalized * stepDistance;
-            Quaternion zoomRot = Quaternion.LookRotation(targetLookPos - zoomPos);
+            // Position TalkZoomVcam at player's eye level (optical zoom, no positional displacement)
+            Vector3 camPos = playerCamera.position;
+            Vector3 lookDirection = targetLookPos - camPos;
+            if (lookDirection.sqrMagnitude < 0.001f)
+                lookDirection = playerCamera.forward;
 
-            talkZoomVcam.transform.SetPositionAndRotation(zoomPos, zoomRot);
+            Quaternion zoomRot = Quaternion.LookRotation(lookDirection);
+
+            talkZoomVcam.transform.SetPositionAndRotation(camPos, zoomRot);
             talkZoomVcam.Lens.FieldOfView = dialogueZoomFOV;
             talkZoomVcam.Priority.Value = 10;
 
@@ -187,20 +238,14 @@ public class NpcInteractionText : MonoBehaviour
             // Trigger blend to talk zoom camera
             talkZoomVcam.Priority.Value = 30;
 
-            // Unlock cursor for dialogue interactions
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
-
             yield return new WaitForSeconds(blendInDuration);
         }
         else if (playerCamera != null)
         {
             // Fallback smooth rotation if Cinemachine is not wired
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
-
             Quaternion startRot = playerCamera.rotation;
-            Quaternion targetRot = Quaternion.LookRotation(targetLookPos - playerCamera.position);
+            Vector3 lookDirection = targetLookPos - playerCamera.position;
+            Quaternion targetRot = lookDirection.sqrMagnitude > 0.001f ? Quaternion.LookRotation(lookDirection) : playerCamera.rotation;
             float t = 0f;
             while (t < blendInDuration)
             {
@@ -249,7 +294,7 @@ public class NpcInteractionText : MonoBehaviour
         if (look != null)
             look.IKActive = false;
 
-        // 7. Re-lock cursor
+        // 7. Ensure cursor stays locked
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 

@@ -194,6 +194,7 @@ public class FirstPersonController : MonoBehaviour
         if(lockCursor)
         {
             Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
         }
 
         if(crosshair)
