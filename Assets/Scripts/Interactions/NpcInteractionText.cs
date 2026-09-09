@@ -79,6 +79,17 @@ public class NpcInteractionText : MonoBehaviour
 
         if (Physics.Raycast(ray, out RaycastHit hit, InteractionDistance))
         {
+            var placeholder = hit.collider.GetComponent<InteractivePlaceholderItem>() ?? hit.collider.GetComponentInParent<InteractivePlaceholderItem>();
+            if (placeholder != null && (!placeholder.oneTimeOnly || !placeholder.hasBeenInteracted))
+            {
+                InteractText.text = placeholder.promptText;
+                if (Input.GetKeyDown(KeyCode.E))
+                {
+                    placeholder.TriggerInteraction();
+                }
+                return;
+            }
+
             if (hit.collider.CompareTag("InteractNPC"))
             {
                 InteractText.text = "Press 'E' To Talk";

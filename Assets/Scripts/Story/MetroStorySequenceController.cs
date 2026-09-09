@@ -78,16 +78,21 @@ public class MetroStorySequenceController : MonoBehaviour
 
     public enum StoryPhase
     {
-        MetroExploration,     // 0: Player exploring, talking to 3 NPCs
-        TruthOrDareChoice,    // 1: Teddy prompts Truth or Dare
-        TruthResolution,      // 2: Teddy reveals fear
-        DareObjective,        // 3: Physical walk to platform end
-        TeddyTurn,            // 4: Teddy says "Wake up" -> door sound starts
-        DoorWaiting,          // 5: Waiting for player to inspect/open door
-        BehindDoorCinematic,  // 6: Cinematic with Teacher, Mother, Father
-        ChildEpisode,         // 7: Child seizure / severe episode & panic
-        FinalTeddyMoment,     // 8: Cut back to calm teddy in metro
-        EndOfPrototype        // 9: Fade to black, End UI, Restart
+        Floor1_Exploration,     // 0: Floor 1 - talk to NPCs (Neighbor, Shop Owner), search for Transit Pass
+        Floor1_ElevatorReady,   // 1: Floor 1 - Elevator unlocked, objective points up stairs
+        Elevator_Travel,        // 2: Inside elevator - doors close, travelling
+        Elevator_TrainFalseStop,// 3: False stop - doors open onto void track, train speeds past
+        Floor3_Arrival,         // 4: Arrived at Floor 3 - doors open, explore Floor 3
+        Floor3_NpcEncounter,    // 5: Floor 3 - Meet Bully and inspect Floor 3 clues
+        Floor3_TruthOrDare,     // 6: Truth or Dare choice on Floor 3
+        Floor3_TruthResolution, // 7: Truth branch dialogue
+        Floor3_DareObjective,   // 8: Dare branch - walk to end of Floor 3 platform
+        TeddyTurn,              // 9: Teddy says "Wake up" -> door knocking starts
+        DoorWaiting,            // 10: Player walks to Door on Floor 3
+        BehindDoorCinematic,    // 11: Teacher, Mother, Father cinematic
+        ChildEpisode,           // 12: Child seizure / panic episode
+        FinalTeddyMoment,       // 13: Final calm teddy view on Floor 3
+        EndOfPrototype          // 14: Fade to black, End UI, Restart
     }
 
     [Header("Teddy Identity (Single Source of Truth)")]
@@ -96,7 +101,18 @@ public class MetroStorySequenceController : MonoBehaviour
     public static string TeddyName => Instance != null ? Instance.teddyName : "Mistfox";
 
     [Header("Current Phase")]
-    public StoryPhase currentPhase = StoryPhase.MetroExploration;
+    public StoryPhase currentPhase = StoryPhase.Floor1_Exploration;
+
+    [Header("Floor 1 Exploration Tasks")]
+    public bool transitPassCollected = false;
+    public bool vendingMachineInspected = false;
+    public bool intercomInspected = false;
+    public bool IsElevatorUnlocked => transitPassCollected || (neighborSpoken && shopOwnerSpoken);
+
+    [Header("Floor 3 Exploration Tasks")]
+    public bool departureBoardInspected = false;
+    public bool teddyLostPieceCollected = false;
+    public GameObject floor3BullyObject;
 
     [Header("NPC References")]
     public NpcConversation neighborConversation;
@@ -108,6 +124,7 @@ public class MetroStorySequenceController : MonoBehaviour
     public bool shopOwnerSpoken = false;
     public bool bullySpoken = false;
 
+    public bool AllFloor1NpcsSpoken => neighborSpoken && shopOwnerSpoken;
     public bool AllNpcsSpoken => neighborSpoken && shopOwnerSpoken && bullySpoken;
 
     [Header("Teddy References")]
@@ -171,6 +188,12 @@ public class MetroStorySequenceController : MonoBehaviour
             restartButton.onClick.RemoveListener(RestartSequence);
             restartButton.onClick.AddListener(RestartSequence);
         }
+
+        if (objectiveText != null)
+        {
+            objectiveText.gameObject.SetActive(true);
+            objectiveText.text = "Explore the platform. Speak with the people waiting.";
+        }
     }
 
     private void Update()
@@ -208,6 +231,17 @@ public class MetroStorySequenceController : MonoBehaviour
             if (teddyCarryable == null)
                 teddyCarryable = teddyBearObject.GetComponent<CarryableItem>();
         }
+
+        var elevBtn = FindAnyObjectByType<ElevatorButton>();
+        if (elevBtn != null)
+        {
+            elevBtn.OnElevatorRideStarted -= OnElevatorStarted;
+            elevBtn.OnElevatorRideStarted += OnElevatorStarted;
+            elevBtn.OnFalseStopTriggered -= OnElevatorFalseStop;
+            elevBtn.OnFalseStopTriggered += OnElevatorFalseStop;
+            elevBtn.OnArrivalOnNewFloor -= () => OnFloorArrived(1);
+            elevBtn.OnArrivalOnNewFloor += () => OnFloorArrived(1);
+        }
     }
 
     private void HookConversations()
@@ -240,9 +274,69 @@ public class MetroStorySequenceController : MonoBehaviour
                 break;
         }
 
-        if (AllNpcsSpoken && currentPhase == StoryPhase.MetroExploration)
+        if (npcIndex == 0 || npcIndex == 1)
         {
-            Debug.Log("[MetroStory] All 3 NPCs have been spoken to! Teddy Truth or Dare is now primed.");
+            CheckFloor1Progress();
+        }
+        else if (npcIndex == 2)
+        {
+            CheckFloor3Progress();
+        }
+    }
+
+    public void OnPlaceholderInteracted(InteractivePlaceholderItem item)
+    {
+        if (item == null) return;
+        switch (item.itemType)
+        {
+            case InteractivePlaceholderItem.PlaceholderType.Floor1_TransitCard:
+                transitPassCollected = true;
+                Debug.Log("[MetroStory] Transit Keycard collected!");
+                CheckFloor1Progress();
+                break;
+            case InteractivePlaceholderItem.PlaceholderType.Floor1_VendingMachine:
+                vendingMachineInspected = true;
+                Debug.Log("[MetroStory] Vending machine inspected.");
+                CheckFloor1Progress();
+                break;
+            case InteractivePlaceholderItem.PlaceholderType.Floor1_Intercom:
+                intercomInspected = true;
+                Debug.Log("[MetroStory] Intercom inspected.");
+                CheckFloor1Progress();
+                break;
+            case InteractivePlaceholderItem.PlaceholderType.Floor3_DepartureBoard:
+                departureBoardInspected = true;
+                Debug.Log("[MetroStory] Departure board inspected.");
+                CheckFloor3Progress();
+                break;
+            case InteractivePlaceholderItem.PlaceholderType.Floor3_LostTeddyPiece:
+                teddyLostPieceCollected = true;
+                Debug.Log("[MetroStory] Lost teddy ribbon collected.");
+                CheckFloor3Progress();
+                break;
+        }
+    }
+
+    public void CheckFloor1Progress()
+    {
+        if (currentPhase == StoryPhase.Floor1_Exploration && IsElevatorUnlocked)
+        {
+            currentPhase = StoryPhase.Floor1_ElevatorReady;
+            Debug.Log("[MetroStory] Floor 1 requirements met. Elevator is unlocked!");
+            if (objectiveText != null)
+            {
+                objectiveText.gameObject.SetActive(true);
+                objectiveText.text = "Walk up the stairs and take the elevator to the upper platform.";
+            }
+        }
+    }
+
+    public void CheckFloor3Progress()
+    {
+        if (bullySpoken && (currentPhase == StoryPhase.Floor3_Arrival || currentPhase == StoryPhase.Floor3_NpcEncounter))
+        {
+            currentPhase = StoryPhase.Floor3_TruthOrDare;
+            Debug.Log("[MetroStory] Bully spoken on Floor 3. Truth or Dare is primed!");
             if (objectiveText != null)
             {
                 objectiveText.gameObject.SetActive(true);
@@ -251,17 +345,81 @@ public class MetroStorySequenceController : MonoBehaviour
         }
     }
 
+    public void OnElevatorStarted()
+    {
+        currentPhase = StoryPhase.Elevator_Travel;
+        if (objectiveText != null)
+        {
+            objectiveText.gameObject.SetActive(true);
+            objectiveText.text = "...";
+        }
+        Debug.Log("[MetroStory] Elevator travel started.");
+    }
+
+    public void OnElevatorFalseStop()
+    {
+        currentPhase = StoryPhase.Elevator_TrainFalseStop;
+        Debug.Log("[MetroStory] Elevator false stop triggered on void track.");
+    }
+
+    public void OnFloorArrived(int floorIndex)
+    {
+        currentPhase = StoryPhase.Floor3_Arrival;
+        ActivateFloor3StoryElements();
+        if (objectiveText != null)
+        {
+            objectiveText.gameObject.SetActive(true);
+            objectiveText.text = "Explore Floor 3. Find out what this place is.";
+        }
+        Debug.Log($"[MetroStory] Arrived on Floor 3 (Index {floorIndex}).");
+    }
+
+    public void ActivateFloor3StoryElements()
+    {
+        if (floor3BullyObject != null)
+            floor3BullyObject.SetActive(true);
+
+        if (doorObject != null)
+            doorObject.SetActive(true);
+
+        var f3 = GameObject.Find("Floor3");
+        if (f3 != null)
+        {
+            var doorInF3 = f3.transform.Find("Door_Behind");
+            if (doorInF3 != null) doorInF3.gameObject.SetActive(true);
+        }
+    }
+
     public bool TryHandleTeddyInteraction()
     {
         if (sequenceBusy) return true;
 
-        if (currentPhase == StoryPhase.MetroExploration)
+        if (currentPhase == StoryPhase.Floor1_Exploration || currentPhase == StoryPhase.Floor1_ElevatorReady)
         {
-            if (!AllNpcsSpoken)
+            if (!IsElevatorUnlocked)
             {
                 StartCoroutine(PlaySimpleTeddyLines(new string[] {
                     "Teddy: This place feels strange.",
-                    "Teddy: Did you see those people waiting? Go see what they want."
+                    "Teddy: Search the platform and see what those people waiting want."
+                }));
+                return true;
+            }
+            else
+            {
+                StartCoroutine(PlaySimpleTeddyLines(new string[] {
+                    "Teddy: Look! The elevator stairs are open.",
+                    "Teddy: Let's go up before another train comes."
+                }));
+                return true;
+            }
+        }
+        else if (currentPhase == StoryPhase.Floor3_Arrival || currentPhase == StoryPhase.Floor3_NpcEncounter || currentPhase == StoryPhase.Floor3_TruthOrDare)
+        {
+            if (!bullySpoken)
+            {
+                StartCoroutine(PlaySimpleTeddyLines(new string[] {
+                    "Teddy: Someone is standing down this platform...",
+                    "Teddy: Go see who it is."
                 }));
                 return true;
             }
@@ -304,7 +462,7 @@ public class MetroStorySequenceController : MonoBehaviour
     public IEnumerator TruthOrDareSequence()
     {
         sequenceBusy = true;
-        currentPhase = StoryPhase.TruthOrDareChoice;
+        currentPhase = StoryPhase.Floor3_TruthOrDare;
 
         if (objectiveText != null) objectiveText.gameObject.SetActive(false);
         if (fpsController != null) fpsController.SetControlLocked(true);
@@ -341,7 +499,7 @@ public class MetroStorySequenceController : MonoBehaviour
 
     private IEnumerator TruthBranchRoutine()
     {
-        currentPhase = StoryPhase.TruthResolution;
+        currentPhase = StoryPhase.Floor3_TruthResolution;
 
         string[] truthLines = new string[] {
             GetLoc("truth_01"),
@@ -364,7 +522,7 @@ public class MetroStorySequenceController : MonoBehaviour
 
     private IEnumerator DareBranchRoutine()
     {
-        currentPhase = StoryPhase.DareObjective;
+        currentPhase = StoryPhase.Floor3_DareObjective;
 
         string[] dareLines = new string[] {
             GetLoc("dare_01"),
@@ -393,7 +551,7 @@ public class MetroStorySequenceController : MonoBehaviour
 
     public void OnPlatformEndReached()
     {
-        if (currentPhase != StoryPhase.DareObjective || dareObjectiveCompleted) return;
+        if (currentPhase != StoryPhase.Floor3_DareObjective || dareObjectiveCompleted) return;
         dareObjectiveCompleted = true;
 
         if (platformEndTrigger != null)

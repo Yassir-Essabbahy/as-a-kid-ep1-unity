@@ -55,6 +55,10 @@ public class ElevatorButton : MonoBehaviour
     [Header("Player")]
     public Transform playerTransform;
 
+    public event System.Action OnElevatorRideStarted;
+    public event System.Action OnFalseStopTriggered;
+    public event System.Action OnArrivalOnNewFloor;
+
     private bool isRunning;
 
     public bool CanAcceptDoorZoneRequest => !isRunning;
@@ -73,7 +77,23 @@ public class ElevatorButton : MonoBehaviour
         float dist = Vector3.Distance(transform.position, playerTransform.position);
         if (dist <= interactDistance && Input.GetKeyDown(interactKey))
         {
-            if (currentFloorQuest != null && !currentFloorQuest.questCompleted) return;
+            bool storyUnlocked = MetroStorySequenceController.Instance != null && MetroStorySequenceController.Instance.IsElevatorUnlocked;
+            bool questCompleted = currentFloorQuest == null || currentFloorQuest.questCompleted;
+
+            if (!storyUnlocked && !questCompleted)
+            {
+                if (NpcDialogueManager.Instance != null && !NpcDialogueManager.Instance.IsDialogueRunning)
+                {
+                    StartCoroutine(NpcDialogueManager.Instance.ShowDialogue(
+                        new string[] { "Child: The elevator power is off. I need to find the station transit keycard." },
+                        false,
+                        Color.white,
+                        null
+                    ));
+                }
+                return;
+            }
+
             if (FloorManager.Instance == null || !FloorManager.Instance.HasNextFloor()) return;
 
             StartCoroutine(RunElevator());
@@ -83,6 +103,9 @@ public class ElevatorButton : MonoBehaviour
     IEnumerator RunElevator()
     {
         isRunning = true;
+        OnElevatorRideStarted?.Invoke();
+        if (MetroStorySequenceController.Instance != null)
+            MetroStorySequenceController.Instance.OnElevatorStarted();
 
         // 1. Close doors, travel
         SetDoors(false);
@@ -95,6 +118,10 @@ public class ElevatorButton : MonoBehaviour
         ResetShakeTarget();
 
         // 2. Open onto the void track (false stop)
+        OnFalseStopTriggered?.Invoke();
+        if (MetroStorySequenceController.Instance != null)
+            MetroStorySequenceController.Instance.OnElevatorFalseStop();
+
         if (voidTrackScene != null) voidTrackScene.SetActive(true);
         SetDoors(true);
         yield return new WaitForSeconds(doorOpenTime);
@@ -127,6 +154,18 @@ public class ElevatorButton : MonoBehaviour
         {
             yield return StartCoroutine(teddyReactionConversation.Play());
         }
+        else
+        {
+            string[] trainReaction = new string[] {
+                MetroStorySequenceController.GetLoc("elevator_train_reaction_01"),
+                MetroStorySequenceController.GetLoc("elevator_train_reaction_02")
+            };
+            var dm = NpcDialogueManager.Instance;
+            if (dm != null && Application.isPlaying)
+            {
+                yield return StartCoroutine(dm.ShowDialogue(trainReaction, false, Color.white, null));
+            }
+        }
 
         // 5. Real arrival travel + floor swap
         shake = StartCoroutine(Shake(elevatorTravelTime));
@@ -139,6 +178,10 @@ public class ElevatorButton : MonoBehaviour
 
         SetDoors(true);
         yield return new WaitForSeconds(doorOpenTime);
+
+        OnArrivalOnNewFloor?.Invoke();
+        if (MetroStorySequenceController.Instance != null)
+            MetroStorySequenceController.Instance.OnFloorArrived(nextFloor);
 
         isRunning = false;
     }
