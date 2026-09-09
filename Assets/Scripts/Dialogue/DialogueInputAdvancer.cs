@@ -30,7 +30,11 @@ public class DialogueInputAdvancer : MonoBehaviour
     {
         if (IsLocked) return;
 
-        if (Input.GetKeyDown(advanceKey) && DialogueManager.Instance != null && DialogueManager.Instance.IsPlaying)
+        bool advancePressed = Input.GetKeyDown(advanceKey) ||
+                              Input.GetMouseButtonDown(0) ||
+                              (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began);
+
+        if (advancePressed && DialogueManager.Instance != null && DialogueManager.Instance.IsPlaying)
         {
             DialogueManager.Instance.Advance();
         }

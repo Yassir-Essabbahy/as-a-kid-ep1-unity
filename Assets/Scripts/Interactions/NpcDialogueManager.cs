@@ -1,6 +1,7 @@
 using System.Collections;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class NpcDialogueManager : MonoBehaviour
 {
@@ -11,6 +12,16 @@ public class NpcDialogueManager : MonoBehaviour
     public GameObject choicePack;
     public TextMeshProUGUI dialogueText;
 
+    [Header("Cinematic Letterbox Bands")]
+    public RectTransform topBand;
+    public RectTransform bottomBand;
+    public float topBandHeight = 140f;
+    public float bottomBandHeight = 220f;
+    public float slideDuration = 0.45f;
+
+    [Header("Buttons")]
+    public Button continueButton;
+
     [Header("Typing")]
     [Min(0f)]
     public float charactersPerSecond = 25f;
@@ -20,6 +31,11 @@ public class NpcDialogueManager : MonoBehaviour
 
     private bool choiceMade;
     private bool dialogueRunning;
+    private Coroutine slideCoroutine;
+
+    private bool continueClicked;
+    private bool skipTypingRequested;
+    private bool isTyping;
 
     public bool IsDialogueRunning => dialogueRunning;
 
@@ -43,11 +59,114 @@ public class NpcDialogueManager : MonoBehaviour
 
         Instance = this;
 
+        EnsureBandsBound();
+        ResetBandsOffscreen();
+
+        if (continueButton != null)
+        {
+            continueButton.onClick.RemoveListener(OnContinueClicked);
+            continueButton.onClick.AddListener(OnContinueClicked);
+        }
+
         if (talkPanel != null)
             talkPanel.SetActive(false);
 
         if (choicePack != null)
             choicePack.SetActive(false);
+    }
+
+    public void OnContinueClicked()
+    {
+        if (isTyping)
+        {
+            skipTypingRequested = true;
+            return;
+        }
+
+        continueClicked = true;
+    }
+
+    public void EnsureBandsBound()
+    {
+        if (talkPanel == null) return;
+
+        if (topBand == null)
+        {
+            var t = talkPanel.transform.Find("TopBand");
+            if (t != null) topBand = t.GetComponent<RectTransform>();
+        }
+        if (bottomBand == null)
+        {
+            var b = talkPanel.transform.Find("BottomBand");
+            if (b != null) bottomBand = b.GetComponent<RectTransform>();
+        }
+        if (continueButton == null && bottomBand != null)
+        {
+            var btn = bottomBand.transform.Find("ContinueButton");
+            if (btn != null)
+            {
+                continueButton = btn.GetComponent<Button>();
+                if (continueButton != null)
+                {
+                    continueButton.onClick.RemoveListener(OnContinueClicked);
+                    continueButton.onClick.AddListener(OnContinueClicked);
+                }
+            }
+        }
+    }
+
+    public void ResetBandsOffscreen()
+    {
+        EnsureBandsBound();
+
+        if (topBand != null)
+        {
+            topBand.sizeDelta = new Vector2(topBand.sizeDelta.x, topBandHeight);
+            topBand.anchoredPosition = new Vector2(0f, topBandHeight);
+        }
+        if (bottomBand != null)
+        {
+            bottomBand.sizeDelta = new Vector2(bottomBand.sizeDelta.x, bottomBandHeight);
+            bottomBand.anchoredPosition = new Vector2(0f, -bottomBandHeight);
+        }
+    }
+
+    public IEnumerator SlideBandsRoutine(bool slideIn)
+    {
+        EnsureBandsBound();
+
+        if (topBand == null || bottomBand == null)
+        {
+            if (!slideIn && talkPanel != null) talkPanel.SetActive(false);
+            yield break;
+        }
+
+        float elapsed = 0f;
+        Vector2 topStart = topBand.anchoredPosition;
+        Vector2 topEnd = slideIn ? new Vector2(0f, 0f) : new Vector2(0f, topBandHeight);
+
+        Vector2 bottomStart = bottomBand.anchoredPosition;
+        Vector2 bottomEnd = slideIn ? new Vector2(0f, 0f) : new Vector2(0f, -bottomBandHeight);
+
+        while (elapsed < slideDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float t = Mathf.Clamp01(elapsed / slideDuration);
+            float smoothT = Mathf.SmoothStep(0f, 1f, t);
+
+            topBand.anchoredPosition = Vector2.Lerp(topStart, topEnd, smoothT);
+            bottomBand.anchoredPosition = Vector2.Lerp(bottomStart, bottomEnd, smoothT);
+            yield return null;
+        }
+
+        topBand.anchoredPosition = topEnd;
+        bottomBand.anchoredPosition = bottomEnd;
+
+        if (!slideIn)
+        {
+            if (talkPanel != null) talkPanel.SetActive(false);
+        }
+        slideCoroutine = null;
     }
 
 
@@ -107,16 +226,26 @@ public class NpcDialogueManager : MonoBehaviour
         if (dialogueFont != null)
             dialogueText.font = dialogueFont;
 
+        EnsureBandsBound();
+        ResetBandsOffscreen();
+
         if (talkPanel != null)
             talkPanel.SetActive(true);
 
         if (choicePack != null)
             choicePack.SetActive(false);
 
+        if (continueButton != null)
+            continueButton.gameObject.SetActive(true);
+
         choiceMade = false;
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+
+        // Slide the bands in: top slides down, bottom slides up
+        if (slideCoroutine != null) StopCoroutine(slideCoroutine);
+        slideCoroutine = StartCoroutine(SlideBandsRoutine(slideIn: true));
 
 
         // --------------------------------------------------------
@@ -166,13 +295,20 @@ public class NpcDialogueManager : MonoBehaviour
         // CLOSE
         // --------------------------------------------------------
 
+        if (continueButton != null)
+            continueButton.gameObject.SetActive(false);
+
         if (choicePack != null)
             choicePack.SetActive(false);
 
+        dialogueText.text = "";
+
+        // Slide the bands out: top slides up, bottom slides down
+        if (slideCoroutine != null) StopCoroutine(slideCoroutine);
+        yield return StartCoroutine(SlideBandsRoutine(slideIn: false));
+
         if (talkPanel != null)
             talkPanel.SetActive(false);
-
-        dialogueText.text = "";
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
@@ -289,22 +425,39 @@ public class NpcDialogueManager : MonoBehaviour
 
     private IEnumerator TypeText(string line)
     {
+        isTyping = true;
+        skipTypingRequested = false;
         dialogueText.text = "";
 
         if (charactersPerSecond <= 0f)
         {
             dialogueText.text = line;
+            isTyping = false;
             yield break;
         }
 
         float delay = 1f / charactersPerSecond;
 
-        foreach (char c in line)
+        for (int i = 0; i < line.Length; i++)
         {
-            dialogueText.text += c;
+            // Allow skipping typewriter text on continue button, Space, E, Left Click, or Touch tap
+            if (skipTypingRequested ||
+                Input.GetMouseButtonDown(0) || 
+                Input.GetKeyDown(KeyCode.Space) || 
+                Input.GetKeyDown(KeyCode.E) ||
+                (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began))
+            {
+                dialogueText.text = line;
+                skipTypingRequested = false;
+                isTyping = false;
+                yield break;
+            }
 
+            dialogueText.text += line[i];
             yield return new WaitForSeconds(delay);
         }
+
+        isTyping = false;
     }
 
 
@@ -316,6 +469,10 @@ public class NpcDialogueManager : MonoBehaviour
         AudioSource voiceSource,
         bool voiceWasPlaying)
     {
+        continueClicked = false;
+        if (continueButton != null)
+            continueButton.gameObject.SetActive(true);
+
         bool voiceFinished =
             !voiceWasPlaying ||
             voiceSource == null;
@@ -330,10 +487,16 @@ public class NpcDialogueManager : MonoBehaviour
                 voiceFinished = true;
             }
 
-            // Advance with left mouse click, Space, or E once voice has finished (or if text only).
-            if ((Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.E)) &&
-                voiceFinished)
+            bool advanceInput = continueClicked ||
+                                Input.GetMouseButtonDown(0) || 
+                                Input.GetKeyDown(KeyCode.Space) || 
+                                Input.GetKeyDown(KeyCode.E) ||
+                                (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began);
+
+            // Advance with continue button, left mouse click, Space, E, or Touch once voice has finished
+            if (advanceInput && voiceFinished)
             {
+                continueClicked = false;
                 yield break;
             }
 
@@ -353,10 +516,15 @@ public class NpcDialogueManager : MonoBehaviour
 
         choiceMade = false;
 
+        // Hide continue button during choices
+        if (continueButton != null)
+            continueButton.gameObject.SetActive(false);
+
         choicePack.SetActive(true);
 
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        // Unlock mouse cursor so the player can click choice buttons
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
 
         while (!choiceMade)
         {
@@ -364,6 +532,9 @@ public class NpcDialogueManager : MonoBehaviour
         }
 
         choicePack.SetActive(false);
+
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 
 
