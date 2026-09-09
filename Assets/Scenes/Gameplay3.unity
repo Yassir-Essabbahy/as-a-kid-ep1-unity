@@ -18056,7 +18056,7 @@ MonoBehaviour:
   playerCamera: {fileID: 1676752293}
   fov: 60
   invertCamera: 0
-  cameraCanMove: 0
+  cameraCanMove: 1
   mouseSensitivity: 2
   maxLookAngle: 50
   lockCursor: 1
@@ -18068,7 +18068,7 @@ MonoBehaviour:
   zoomKey: 324
   zoomFOV: 30
   zoomStepTime: 5
-  playerCanMove: 0
+  playerCanMove: 1
   walkSpeed: 3
   maxVelocityChange: 10
   enableSprint: 1
@@ -19931,8 +19931,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 981896447}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.7071068, y: -0.000000061817246, z: -0.000000061817246, w: -0.7071068}
-  m_LocalPosition: {x: -41.1, y: 2.57, z: 61}
+  m_LocalRotation: {x: -0, y: 0.7071068, z: 0.7071068, w: 0}
+  m_LocalPosition: {x: -39.9, y: 1.4699998, z: 14.32}
   m_LocalScale: {x: 5, y: 5, z: 5}
   m_ConstrainProportionsScale: 0
   m_Children:

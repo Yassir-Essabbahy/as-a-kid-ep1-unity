@@ -94,6 +94,20 @@ public class ElevatorButton : MonoBehaviour
                 return;
             }
 
+            if (MetroStorySequenceController.Instance != null && !MetroStorySequenceController.Instance.IsTeddyCarried)
+            {
+                if (NpcDialogueManager.Instance != null && !NpcDialogueManager.Instance.IsDialogueRunning)
+                {
+                    StartCoroutine(NpcDialogueManager.Instance.ShowDialogue(
+                        new string[] { "Child: I can't leave without my teddy bear. He's somewhere on the platform." },
+                        false,
+                        Color.white,
+                        null
+                    ));
+                }
+                return;
+            }
+
             if (FloorManager.Instance == null || !FloorManager.Instance.HasNextFloor()) return;
 
             StartCoroutine(RunElevator());

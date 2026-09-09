@@ -99,6 +99,15 @@ public static class MetroStoryVerificationTest
             if (ctrl.platformEndTrigger != null) ctrl.platformEndTrigger.SetActive(false);
             if (ctrl.doorTrigger != null) ctrl.doorTrigger.enabled = false;
             if (ctrl.endPrototypePanel != null) ctrl.endPrototypePanel.SetActive(false);
+
+            if (ctrl.teddyCarryable != null && ctrl.teddyCarryable.IsBeingCarried)
+            {
+                ctrl.teddyCarryable.StopCarrying();
+                if (ctrl.teddyBearObject != null)
+                {
+                    ctrl.teddyBearObject.transform.position = new Vector3(-39.9f, 1.47f, 14.32f);
+                }
+            }
         }
 
         return results;

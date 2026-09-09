@@ -92,12 +92,32 @@ public class NpcInteractionText : MonoBehaviour
 
             if (hit.collider.CompareTag("InteractNPC"))
             {
-                InteractText.text = "Press 'E' To Talk";
+                bool isTeddy = hit.collider.gameObject.name.Contains("Teddy") || (MetroStorySequenceController.Instance != null && hit.collider.gameObject == MetroStorySequenceController.Instance.teddyBearObject);
+                var carryable = isTeddy ? hit.collider.GetComponent<CarryableItem>() : null;
+                bool isCarried = carryable != null && carryable.IsBeingCarried;
+
+                if (isTeddy && !isCarried)
+                {
+                    InteractText.text = "Press 'E' to Take Teddy";
+                }
+                else
+                {
+                    InteractText.text = "Press 'E' To Talk";
+                }
 
                 if (Input.GetKeyDown(KeyCode.E))
                 {
-                    if (hit.collider.gameObject.name.Contains("Teddy") || (MetroStorySequenceController.Instance != null && hit.collider.gameObject == MetroStorySequenceController.Instance.teddyBearObject))
+                    if (isTeddy)
                     {
+                        if (carryable != null && !carryable.IsBeingCarried)
+                        {
+                            var cp = GameObject.Find("CarryPoint")?.transform;
+                            if (cp != null)
+                            {
+                                carryable.StartCarrying(cp);
+                            }
+                        }
+
                         if (MetroStorySequenceController.Instance != null && MetroStorySequenceController.Instance.TryHandleTeddyInteraction())
                         {
                             return;

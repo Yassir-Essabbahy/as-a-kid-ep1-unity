@@ -173,7 +173,6 @@ public class MetroStorySequenceController : MonoBehaviour
     {
         ResolveReferences();
         HookConversations();
-        EnsureTeddyCarried();
 
         if (platformEndTrigger != null)
             platformEndTrigger.SetActive(false);
@@ -193,7 +192,7 @@ public class MetroStorySequenceController : MonoBehaviour
         if (objectiveText != null)
         {
             objectiveText.gameObject.SetActive(true);
-            objectiveText.text = "Explore the platform. Speak with the people waiting.";
+            objectiveText.text = "Explore the platform. Find your teddy bear and speak with the people waiting.";
         }
     }
 
@@ -342,13 +341,33 @@ public class MetroStorySequenceController : MonoBehaviour
         if (bullySpoken)
         {
             currentPhase = StoryPhase.Floor3_TruthOrDare;
-            Debug.Log("[MetroStory] Bully spoken on Floor 3. Truth or Dare is primed!");
-            if (objectiveText != null)
-            {
-                objectiveText.gameObject.SetActive(true);
-                objectiveText.text = "Press 'F' to talk to your Teddy Bear...";
-            }
+            Debug.Log("[MetroStory] Bully spoken on Floor 3. Waiting 2 seconds then auto-firing Teddy dialogue...");
+            StartCoroutine(AutoTriggerTeddyRoutine());
         }
+    }
+
+    private bool isAutoTriggeringTeddy = false;
+
+    private IEnumerator AutoTriggerTeddyRoutine()
+    {
+        isAutoTriggeringTeddy = true;
+        if (objectiveText != null)
+        {
+            objectiveText.gameObject.SetActive(true);
+            objectiveText.text = "...";
+        }
+
+        if (Application.isPlaying)
+        {
+            yield return new WaitForSeconds(2.0f);
+        }
+        else
+        {
+            yield return null;
+        }
+
+        isAutoTriggeringTeddy = false;
+        yield return StartCoroutine(TruthOrDareSequence());
     }
 
     public void OnElevatorStarted()
@@ -372,7 +391,6 @@ public class MetroStorySequenceController : MonoBehaviour
     {
         currentPhase = StoryPhase.Floor3_Arrival;
         ActivateFloor3StoryElements();
-        EnsureTeddyCarried();
         if (objectiveText != null)
         {
             objectiveText.gameObject.SetActive(true);
@@ -394,6 +412,17 @@ public class MetroStorySequenceController : MonoBehaviour
         {
             var doorInF3 = f3.transform.Find("Door_Behind");
             if (doorInF3 != null) doorInF3.gameObject.SetActive(true);
+        }
+    }
+
+    public bool IsTeddyCarried
+    {
+        get
+        {
+            if (teddyCarryable != null) return teddyCarryable.IsBeingCarried;
+            var tb = GameObject.Find("Teddy_Bear_Box");
+            var c = tb != null ? tb.GetComponent<CarryableItem>() : null;
+            return c != null && c.IsBeingCarried;
         }
     }
 
@@ -448,7 +477,7 @@ public class MetroStorySequenceController : MonoBehaviour
             sequenceBusy = false;
         }
 
-        if (sequenceBusy)
+        if (sequenceBusy || isAutoTriggeringTeddy)
         {
             Debug.Log("[MetroStory] Sequence currently busy, ignoring Teddy interaction.");
             return true;
@@ -525,6 +554,8 @@ public class MetroStorySequenceController : MonoBehaviour
     {
         sequenceBusy = true;
         currentPhase = StoryPhase.Floor3_TruthOrDare;
+
+        EnsureTeddyCarried();
 
         if (objectiveText != null) objectiveText.gameObject.SetActive(false);
         if (fpsController != null) fpsController.SetControlLocked(true);
