@@ -141,6 +141,12 @@ public class FirstPersonController : MonoBehaviour
     {
         playerCanMove = !locked;
         cameraCanMove = !locked;
+
+        if (locked && rb != null)
+        {
+            Vector3 v = rb.linearVelocity;
+            rb.linearVelocity = new Vector3(0f, v.y, 0f);
+        }
     }
 
     /// <summary>
@@ -469,6 +475,19 @@ public class FirstPersonController : MonoBehaviour
                 velocityChange.y = 0;
 
                 rb.AddForce(velocityChange, ForceMode.VelocityChange);
+            }
+        }
+        else
+        {
+            isWalking = false;
+            isSprinting = false;
+
+            if (rb != null)
+            {
+                Vector3 v = rb.linearVelocity;
+                v.x = Mathf.MoveTowards(v.x, 0f, maxVelocityChange * 2f * Time.fixedDeltaTime);
+                v.z = Mathf.MoveTowards(v.z, 0f, maxVelocityChange * 2f * Time.fixedDeltaTime);
+                rb.linearVelocity = v;
             }
         }
 
