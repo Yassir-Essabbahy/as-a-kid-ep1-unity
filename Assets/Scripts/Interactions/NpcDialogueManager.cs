@@ -5,7 +5,23 @@ using UnityEngine.UI;
 
 public class NpcDialogueManager : MonoBehaviour
 {
-    public static NpcDialogueManager Instance;
+    private static NpcDialogueManager _instance;
+    public static NpcDialogueManager Instance
+    {
+        get
+        {
+            if (_instance == null)
+            {
+                _instance = FindAnyObjectByType<NpcDialogueManager>();
+                if (_instance != null)
+                {
+                    _instance.EnsureBandsBound();
+                }
+            }
+            return _instance;
+        }
+        set => _instance = value;
+    }
 
     [Header("UI")]
     public GameObject talkPanel;

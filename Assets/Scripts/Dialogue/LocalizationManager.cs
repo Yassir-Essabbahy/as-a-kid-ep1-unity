@@ -4,7 +4,33 @@ using UnityEngine;
 
 public class LocalizationManager : MonoBehaviour
 {
-    public static LocalizationManager Instance { get; private set; }
+    private static LocalizationManager _instance;
+    public static LocalizationManager Instance
+    {
+        get
+        {
+            if (_instance == null)
+            {
+                _instance = FindAnyObjectByType<LocalizationManager>();
+                if (_instance == null)
+                {
+                    var go = new GameObject("LocalizationManager_Auto");
+                    _instance = go.AddComponent<LocalizationManager>();
+                }
+            }
+
+            if (_instance != null)
+            {
+                if (string.IsNullOrEmpty(_instance.currentLanguage))
+                    _instance.currentLanguage = string.IsNullOrEmpty(_instance.defaultLanguage) ? "en" : _instance.defaultLanguage;
+                if (_instance.table == null || _instance.table.Count == 0)
+                    _instance.Load();
+            }
+
+            return _instance;
+        }
+        private set => _instance = value;
+    }
 
     [Tooltip("File name inside Resources/Localization, without extension")]
     [SerializeField] private string csvFileName = "dialogue";
@@ -78,13 +104,19 @@ public class LocalizationManager : MonoBehaviour
     {
         if (string.IsNullOrEmpty(key)) return "";
 
+        if (string.IsNullOrEmpty(currentLanguage))
+            currentLanguage = string.IsNullOrEmpty(defaultLanguage) ? "en" : defaultLanguage;
+
+        if (table == null || table.Count == 0)
+            Load();
+
         if (!table.TryGetValue(key, out var langMap))
         {
             Debug.LogWarning($"[Localization] Missing key: '{key}'");
             return $"[{key}]";
         }
 
-        if (langMap.TryGetValue(currentLanguage, out var text))
+        if (langMap != null && langMap.TryGetValue(currentLanguage, out var text))
             return text;
 
         Debug.LogWarning($"[Localization] Key '{key}' missing language '{currentLanguage}'");

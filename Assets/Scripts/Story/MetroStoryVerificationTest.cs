@@ -49,6 +49,20 @@ public static class MetroStoryVerificationTest
         // 10. Final Teddy & End Screen Verification
         TestFinalTeddyAndEndScreen(results);
 
+        // Reset state back to clean exploration state
+        var ctrl = GameObject.FindAnyObjectByType<MetroStorySequenceController>();
+        if (ctrl != null)
+        {
+            ctrl.currentPhase = MetroStorySequenceController.StoryPhase.MetroExploration;
+            ctrl.neighborSpoken = false;
+            ctrl.shopOwnerSpoken = false;
+            ctrl.bullySpoken = false;
+            ctrl.dareObjectiveCompleted = false;
+            if (ctrl.platformEndTrigger != null) ctrl.platformEndTrigger.SetActive(false);
+            if (ctrl.doorTrigger != null) ctrl.doorTrigger.enabled = false;
+            if (ctrl.endPrototypePanel != null) ctrl.endPrototypePanel.SetActive(false);
+        }
+
         return results;
     }
 
@@ -110,6 +124,7 @@ public static class MetroStoryVerificationTest
         });
 
         // Door check
+        var f1 = GameObject.Find("Floor1");
         var door = GameObject.Find("Door_Behind") ?? (f1 != null ? f1.transform.Find("Door_Behind")?.gameObject : null);
         var doorCol = door != null ? door.GetComponent<BoxCollider>() : null;
         var doorAudio = door != null ? door.GetComponent<AudioSource>() : null;

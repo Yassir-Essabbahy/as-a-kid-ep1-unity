@@ -8,7 +8,73 @@ using UnityEngine.UI;
 
 public class MetroStorySequenceController : MonoBehaviour
 {
-    public static MetroStorySequenceController Instance { get; private set; }
+    private static MetroStorySequenceController _instance;
+    public static MetroStorySequenceController Instance
+    {
+        get
+        {
+            if (_instance == null)
+                _instance = FindAnyObjectByType<MetroStorySequenceController>();
+            return _instance;
+        }
+        private set => _instance = value;
+    }
+
+    public static string GetLoc(string key)
+    {
+        string text = key;
+        try
+        {
+            if (LocalizationManager.Instance != null)
+                text = LocalizationManager.Instance.Get(key);
+            else
+            {
+                var loc = FindAnyObjectByType<LocalizationManager>();
+                if (loc != null)
+                    text = loc.Get(key);
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning($"[MetroStory] GetLoc error for '{key}': {e.Message}");
+        }
+
+        if (!string.IsNullOrEmpty(text) && text.Contains("{TEDDY_NAME}"))
+        {
+            text = text.Replace("{TEDDY_NAME}", TeddyName);
+        }
+
+        return text;
+    }
+
+    private IEnumerator SafeShowDialogue(string[] lines, bool hasChoice = false, Color? dialogueColor = null, TMP_FontAsset dialogueFont = null)
+    {
+        var diag = NpcDialogueManager.Instance;
+        if (diag == null)
+            diag = FindAnyObjectByType<NpcDialogueManager>();
+
+        if (diag != null && Application.isPlaying)
+        {
+            yield return StartCoroutine(diag.ShowDialogue(
+                lines,
+                hasChoice: hasChoice,
+                dialogueColor: dialogueColor ?? Color.white,
+                dialogueFont: dialogueFont
+            ));
+        }
+        else
+        {
+            if (diag != null && !Application.isPlaying)
+            {
+                Debug.Log($"[MetroStory EditMode] Simulating dialogue ({lines.Length} lines)");
+            }
+            else
+            {
+                Debug.LogWarning("[MetroStory] NpcDialogueManager not available. Skipping dialogue wait.");
+            }
+            yield return null;
+        }
+    }
 
     public enum StoryPhase
     {
@@ -214,7 +280,7 @@ public class MetroStorySequenceController : MonoBehaviour
         sequenceBusy = true;
         if (fpsController != null) fpsController.SetControlLocked(true);
 
-        yield return StartCoroutine(NpcDialogueManager.Instance.ShowDialogue(
+        yield return StartCoroutine(SafeShowDialogue(
             rawLines,
             hasChoice: false,
             dialogueColor: Color.white,
@@ -244,20 +310,23 @@ public class MetroStorySequenceController : MonoBehaviour
         if (fpsController != null) fpsController.SetControlLocked(true);
 
         string[] introLines = new string[] {
-            LocalizationManager.Instance.Get("teddy_met_people_01"),
-            LocalizationManager.Instance.Get("teddy_met_people_02")
+            GetLoc("teddy_met_people_01"),
+            GetLoc("teddy_met_people_02")
         };
 
-        NpcDialogueManager.Instance.SetChoiceLabels("TRUTH", "DARE");
+        if (NpcDialogueManager.Instance != null)
+        {
+            NpcDialogueManager.Instance.SetChoiceLabels("TRUTH", "DARE");
+        }
 
-        yield return StartCoroutine(NpcDialogueManager.Instance.ShowDialogue(
+        yield return StartCoroutine(SafeShowDialogue(
             introLines,
             hasChoice: true,
             dialogueColor: Color.white,
             dialogueFont: null
         ));
 
-        int choice = NpcDialogueManager.Instance.lastChoiceIndex;
+        int choice = NpcDialogueManager.Instance != null ? NpcDialogueManager.Instance.lastChoiceIndex : 0;
         Debug.Log($"[MetroStory] Player chose Truth or Dare: {choice} (0=Truth, 1=Dare)");
 
         if (choice == 0)
@@ -275,13 +344,13 @@ public class MetroStorySequenceController : MonoBehaviour
         currentPhase = StoryPhase.TruthResolution;
 
         string[] truthLines = new string[] {
-            LocalizationManager.Instance.Get("truth_01"),
-            LocalizationManager.Instance.Get("truth_02"),
-            LocalizationManager.Instance.Get("truth_03"),
-            LocalizationManager.Instance.Get("truth_04")
+            GetLoc("truth_01"),
+            GetLoc("truth_02"),
+            GetLoc("truth_03"),
+            GetLoc("truth_04")
         };
 
-        yield return StartCoroutine(NpcDialogueManager.Instance.ShowDialogue(
+        yield return StartCoroutine(SafeShowDialogue(
             truthLines,
             hasChoice: false,
             dialogueColor: Color.white,
@@ -298,11 +367,11 @@ public class MetroStorySequenceController : MonoBehaviour
         currentPhase = StoryPhase.DareObjective;
 
         string[] dareLines = new string[] {
-            LocalizationManager.Instance.Get("dare_01"),
-            LocalizationManager.Instance.Get("dare_02")
+            GetLoc("dare_01"),
+            GetLoc("dare_02")
         };
 
-        yield return StartCoroutine(NpcDialogueManager.Instance.ShowDialogue(
+        yield return StartCoroutine(SafeShowDialogue(
             dareLines,
             hasChoice: false,
             dialogueColor: Color.white,
@@ -342,10 +411,10 @@ public class MetroStorySequenceController : MonoBehaviour
         if (fpsController != null) fpsController.SetControlLocked(true);
 
         string[] lines = new string[] {
-            LocalizationManager.Instance.Get("dare_complete_01")
+            GetLoc("dare_complete_01")
         };
 
-        yield return StartCoroutine(NpcDialogueManager.Instance.ShowDialogue(
+        yield return StartCoroutine(SafeShowDialogue(
             lines,
             hasChoice: false,
             dialogueColor: Color.white,
@@ -364,15 +433,15 @@ public class MetroStorySequenceController : MonoBehaviour
         if (fpsController != null) fpsController.SetControlLocked(true);
 
         string[] turnLines = new string[] {
-            LocalizationManager.Instance.Get("turn_01"),
-            LocalizationManager.Instance.Get("turn_02"),
-            LocalizationManager.Instance.Get("turn_03"),
-            LocalizationManager.Instance.Get("turn_04"),
-            LocalizationManager.Instance.Get("turn_05"),
-            LocalizationManager.Instance.Get("turn_06")
+            GetLoc("turn_01"),
+            GetLoc("turn_02"),
+            GetLoc("turn_03"),
+            GetLoc("turn_04"),
+            GetLoc("turn_05"),
+            GetLoc("turn_06")
         };
 
-        yield return StartCoroutine(NpcDialogueManager.Instance.ShowDialogue(
+        yield return StartCoroutine(SafeShowDialogue(
             turnLines,
             hasChoice: false,
             dialogueColor: Color.white,
@@ -431,20 +500,20 @@ public class MetroStorySequenceController : MonoBehaviour
         }
 
         string[] cinematicLines = new string[] {
-            LocalizationManager.Instance.Get("cinematic_01"),
-            LocalizationManager.Instance.Get("cinematic_02"),
-            LocalizationManager.Instance.Get("cinematic_03"),
-            LocalizationManager.Instance.Get("cinematic_04"),
-            LocalizationManager.Instance.Get("cinematic_05"),
-            LocalizationManager.Instance.Get("cinematic_06"),
-            LocalizationManager.Instance.Get("cinematic_07"),
-            LocalizationManager.Instance.Get("cinematic_08"),
-            LocalizationManager.Instance.Get("cinematic_09"),
-            LocalizationManager.Instance.Get("scream_01"),
-            LocalizationManager.Instance.Get("scream_02")
+            GetLoc("cinematic_01"),
+            GetLoc("cinematic_02"),
+            GetLoc("cinematic_03"),
+            GetLoc("cinematic_04"),
+            GetLoc("cinematic_05"),
+            GetLoc("cinematic_06"),
+            GetLoc("cinematic_07"),
+            GetLoc("cinematic_08"),
+            GetLoc("cinematic_09"),
+            GetLoc("scream_01"),
+            GetLoc("scream_02")
         };
 
-        yield return StartCoroutine(NpcDialogueManager.Instance.ShowDialogue(
+        yield return StartCoroutine(SafeShowDialogue(
             cinematicLines,
             hasChoice: false,
             dialogueColor: new Color(1f, 0.85f, 0.85f),
@@ -462,13 +531,13 @@ public class MetroStorySequenceController : MonoBehaviour
         Coroutine shakeRoutine = StartCoroutine(CameraShakeRoutine(shakeTarget, 5.0f, 0.35f));
 
         string[] episodeLines = new string[] {
-            LocalizationManager.Instance.Get("episode_01"),
-            LocalizationManager.Instance.Get("episode_02"),
-            LocalizationManager.Instance.Get("episode_03"),
-            LocalizationManager.Instance.Get("episode_04")
+            GetLoc("episode_01"),
+            GetLoc("episode_02"),
+            GetLoc("episode_03"),
+            GetLoc("episode_04")
         };
 
-        yield return StartCoroutine(NpcDialogueManager.Instance.ShowDialogue(
+        yield return StartCoroutine(SafeShowDialogue(
             episodeLines,
             hasChoice: false,
             dialogueColor: new Color(1f, 0.4f, 0.4f),
@@ -524,11 +593,11 @@ public class MetroStorySequenceController : MonoBehaviour
         yield return new WaitForSeconds(0.6f);
 
         string[] finalLines = new string[] {
-            LocalizationManager.Instance.Get("final_teddy_01"),
-            LocalizationManager.Instance.Get("final_teddy_02")
+            GetLoc("final_teddy_01"),
+            GetLoc("final_teddy_02")
         };
 
-        yield return StartCoroutine(NpcDialogueManager.Instance.ShowDialogue(
+        yield return StartCoroutine(SafeShowDialogue(
             finalLines,
             hasChoice: false,
             dialogueColor: new Color(0.9f, 0.95f, 1f),
