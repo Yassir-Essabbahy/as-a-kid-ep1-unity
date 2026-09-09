@@ -8225,18 +8225,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MetroStorySequenceController
   teddyName: Mistfox
-  currentPhase: 4
+  currentPhase: 0
   neighborConversation: {fileID: 1089494598}
   shopOwnerConversation: {fileID: 1202416760}
   bullyConversation: {fileID: 558135367}
-  neighborSpoken: 1
-  shopOwnerSpoken: 1
-  bullySpoken: 1
+  neighborSpoken: 0
+  shopOwnerSpoken: 0
+  bullySpoken: 0
   teddyBearObject: {fileID: 981896447}
   teddyConversation: {fileID: 981896449}
   teddyCarryable: {fileID: 981896448}
   platformEndTrigger: {fileID: 1425081818}
-  dareObjectiveCompleted: 1
+  dareObjectiveCompleted: 0
   doorObject: {fileID: 951833015}
   doorAudioSource: {fileID: 951833018}
   doorTrigger: {fileID: 951833017}
@@ -18909,7 +18909,7 @@ BoxCollider:
   m_LayerOverridePriority: 0
   m_IsTrigger: 1
   m_ProvidesContacts: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 3
   m_Size: {x: 3, y: 3, z: 3}
   m_Center: {x: 0, y: 1.3, z: -1}
