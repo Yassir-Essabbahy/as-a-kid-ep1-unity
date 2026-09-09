@@ -262,9 +262,19 @@ public class NpcDialogueManager : MonoBehaviour
                 clip = voiceClips[i];
             }
 
+            string processedLine = lines[i];
+            if (!string.IsNullOrEmpty(processedLine))
+            {
+                string tName = MetroStorySequenceController.TeddyName;
+                if (!string.IsNullOrEmpty(tName))
+                {
+                    processedLine = processedLine.Replace("{TEDDY_NAME}", tName).Replace("[TEDDY NAME]", tName);
+                }
+            }
+
             yield return StartCoroutine(
                 PlayLine(
-                    lines[i],
+                    processedLine,
                     voiceSource,
                     clip
                 )
@@ -509,6 +519,16 @@ public class NpcDialogueManager : MonoBehaviour
     // CHOICES
     // ============================================================
 
+    public void SetChoiceLabels(string optionA, string optionB)
+    {
+        if (choicePack == null) return;
+        var yesLabel = choicePack.transform.Find("YesButton/Label")?.GetComponent<TextMeshProUGUI>();
+        if (yesLabel != null) yesLabel.text = optionA;
+
+        var noLabel = choicePack.transform.Find("NoButton/Label")?.GetComponent<TextMeshProUGUI>();
+        if (noLabel != null) noLabel.text = optionB;
+    }
+
     private IEnumerator HandleChoices()
     {
         if (choicePack == null)
@@ -520,6 +540,20 @@ public class NpcDialogueManager : MonoBehaviour
         if (continueButton != null)
             continueButton.gameObject.SetActive(false);
 
+        // Ensure button click listeners are bound to respective indices
+        var yesBtn = choicePack.transform.Find("YesButton")?.GetComponent<Button>();
+        var noBtn = choicePack.transform.Find("NoButton")?.GetComponent<Button>();
+        if (yesBtn != null)
+        {
+            yesBtn.onClick.RemoveAllListeners();
+            yesBtn.onClick.AddListener(() => MakeChoice(0));
+        }
+        if (noBtn != null)
+        {
+            noBtn.onClick.RemoveAllListeners();
+            noBtn.onClick.AddListener(() => MakeChoice(1));
+        }
+
         choicePack.SetActive(true);
 
         // Unlock mouse cursor so the player can click choice buttons
@@ -528,6 +562,11 @@ public class NpcDialogueManager : MonoBehaviour
 
         while (!choiceMade)
         {
+            if (Input.GetKeyDown(KeyCode.Alpha1) || Input.GetKeyDown(KeyCode.Keypad1))
+                MakeChoice(0);
+            else if (Input.GetKeyDown(KeyCode.Alpha2) || Input.GetKeyDown(KeyCode.Keypad2))
+                MakeChoice(1);
+
             yield return null;
         }
 

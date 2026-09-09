@@ -1,0 +1,607 @@
+using System;
+using System.Collections;
+using TMPro;
+using Unity.Cinemachine;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+
+public class MetroStorySequenceController : MonoBehaviour
+{
+    public static MetroStorySequenceController Instance { get; private set; }
+
+    public enum StoryPhase
+    {
+        MetroExploration,     // 0: Player exploring, talking to 3 NPCs
+        TruthOrDareChoice,    // 1: Teddy prompts Truth or Dare
+        TruthResolution,      // 2: Teddy reveals fear
+        DareObjective,        // 3: Physical walk to platform end
+        TeddyTurn,            // 4: Teddy says "Wake up" -> door sound starts
+        DoorWaiting,          // 5: Waiting for player to inspect/open door
+        BehindDoorCinematic,  // 6: Cinematic with Teacher, Mother, Father
+        ChildEpisode,         // 7: Child seizure / severe episode & panic
+        FinalTeddyMoment,     // 8: Cut back to calm teddy in metro
+        EndOfPrototype        // 9: Fade to black, End UI, Restart
+    }
+
+    [Header("Teddy Identity (Single Source of Truth)")]
+    [Tooltip("The single variable storing the teddy bear's name.")]
+    public string teddyName = "Mistfox";
+    public static string TeddyName => Instance != null ? Instance.teddyName : "Mistfox";
+
+    [Header("Current Phase")]
+    public StoryPhase currentPhase = StoryPhase.MetroExploration;
+
+    [Header("NPC References")]
+    public NpcConversation neighborConversation;
+    public NpcConversation shopOwnerConversation;
+    public NpcConversation bullyConversation;
+
+    [Header("NPC Spoken Status")]
+    public bool neighborSpoken = false;
+    public bool shopOwnerSpoken = false;
+    public bool bullySpoken = false;
+
+    public bool AllNpcsSpoken => neighborSpoken && shopOwnerSpoken && bullySpoken;
+
+    [Header("Teddy References")]
+    public GameObject teddyBearObject;
+    public NpcConversation teddyConversation;
+    public CarryableItem teddyCarryable;
+
+    [Header("Dare Objective")]
+    public GameObject platformEndTrigger;
+    public bool dareObjectiveCompleted = false;
+
+    [Header("Door & Cinematic")]
+    public GameObject doorObject;
+    public AudioSource doorAudioSource;
+    public BoxCollider doorTrigger;
+    public CinemachineCamera behindDoorVcam;
+    public CinemachineCamera finalTeddyVcam;
+    public Transform teacherTransform;
+    public Transform motherTransform;
+    public Transform fatherTransform;
+
+    [Header("Player References")]
+    public FirstPersonController fpsController;
+    public Transform playerCamera;
+    public CinemachineBrain cinemachineBrain;
+
+    [Header("UI References")]
+    public GameObject endPrototypePanel;
+    public Button restartButton;
+    public ScreenFader screenFader;
+    public TextMeshProUGUI objectiveText;
+
+    private bool sequenceBusy = false;
+
+    private void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+    }
+
+    private void Start()
+    {
+        ResolveReferences();
+        HookConversations();
+
+        if (platformEndTrigger != null)
+            platformEndTrigger.SetActive(false);
+
+        if (doorTrigger != null)
+            doorTrigger.enabled = false;
+
+        if (endPrototypePanel != null)
+            endPrototypePanel.SetActive(false);
+
+        if (restartButton != null)
+        {
+            restartButton.onClick.RemoveListener(RestartSequence);
+            restartButton.onClick.AddListener(RestartSequence);
+        }
+    }
+
+    private void Update()
+    {
+        if (currentPhase == StoryPhase.EndOfPrototype)
+        {
+            if (Input.GetKeyDown(KeyCode.R))
+            {
+                RestartSequence();
+            }
+        }
+    }
+
+    public void ResolveReferences()
+    {
+        if (fpsController == null)
+            fpsController = FindAnyObjectByType<FirstPersonController>();
+
+        if (fpsController != null && playerCamera == null && fpsController.playerCamera != null)
+            playerCamera = fpsController.playerCamera.transform;
+
+        if (cinemachineBrain == null && playerCamera != null)
+            cinemachineBrain = playerCamera.GetComponent<CinemachineBrain>();
+
+        if (screenFader == null)
+            screenFader = FindAnyObjectByType<ScreenFader>();
+
+        if (teddyBearObject == null)
+            teddyBearObject = GameObject.Find("Teddy_Bear_Box");
+
+        if (teddyBearObject != null)
+        {
+            if (teddyConversation == null)
+                teddyConversation = teddyBearObject.GetComponent<NpcConversation>();
+            if (teddyCarryable == null)
+                teddyCarryable = teddyBearObject.GetComponent<CarryableItem>();
+        }
+    }
+
+    private void HookConversations()
+    {
+        if (neighborConversation != null)
+            neighborConversation.OnConversationFinished += () => OnNpcSpoken(0);
+
+        if (shopOwnerConversation != null)
+            shopOwnerConversation.OnConversationFinished += () => OnNpcSpoken(1);
+
+        if (bullyConversation != null)
+            bullyConversation.OnConversationFinished += () => OnNpcSpoken(2);
+    }
+
+    public void OnNpcSpoken(int npcIndex)
+    {
+        switch (npcIndex)
+        {
+            case 0:
+                neighborSpoken = true;
+                Debug.Log("[MetroStory] Neighbor conversation finished.");
+                break;
+            case 1:
+                shopOwnerSpoken = true;
+                Debug.Log("[MetroStory] Shop Owner conversation finished.");
+                break;
+            case 2:
+                bullySpoken = true;
+                Debug.Log("[MetroStory] Bully conversation finished.");
+                break;
+        }
+
+        if (AllNpcsSpoken && currentPhase == StoryPhase.MetroExploration)
+        {
+            Debug.Log("[MetroStory] All 3 NPCs have been spoken to! Teddy Truth or Dare is now primed.");
+            if (objectiveText != null)
+            {
+                objectiveText.gameObject.SetActive(true);
+                objectiveText.text = "Talk to your Teddy Bear...";
+            }
+        }
+    }
+
+    public bool TryHandleTeddyInteraction()
+    {
+        if (sequenceBusy) return true;
+
+        if (currentPhase == StoryPhase.MetroExploration)
+        {
+            if (!AllNpcsSpoken)
+            {
+                StartCoroutine(PlaySimpleTeddyLines(new string[] {
+                    "Teddy: This place feels strange.",
+                    "Teddy: Did you see those people waiting? Go see what they want."
+                }));
+                return true;
+            }
+            else
+            {
+                StartCoroutine(TruthOrDareSequence());
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private IEnumerator PlaySimpleTeddyLines(string[] rawLines)
+    {
+        sequenceBusy = true;
+        if (fpsController != null) fpsController.SetControlLocked(true);
+
+        yield return StartCoroutine(NpcDialogueManager.Instance.ShowDialogue(
+            rawLines,
+            hasChoice: false,
+            dialogueColor: Color.white,
+            dialogueFont: null
+        ));
+
+        // If teddy is not carried yet, pick it up into hands
+        if (teddyCarryable != null && !teddyCarryable.IsBeingCarried && fpsController != null)
+        {
+            var cp = fpsController.GetComponentInChildren<Camera>()?.transform.Find("CarryPoint") ?? fpsController.transform.Find("CarryPoint");
+            if (cp != null)
+            {
+                teddyCarryable.StartCarrying(cp);
+            }
+        }
+
+        if (fpsController != null) fpsController.SetControlLocked(false);
+        sequenceBusy = false;
+    }
+
+    public IEnumerator TruthOrDareSequence()
+    {
+        sequenceBusy = true;
+        currentPhase = StoryPhase.TruthOrDareChoice;
+
+        if (objectiveText != null) objectiveText.gameObject.SetActive(false);
+        if (fpsController != null) fpsController.SetControlLocked(true);
+
+        string[] introLines = new string[] {
+            LocalizationManager.Instance.Get("teddy_met_people_01"),
+            LocalizationManager.Instance.Get("teddy_met_people_02")
+        };
+
+        NpcDialogueManager.Instance.SetChoiceLabels("TRUTH", "DARE");
+
+        yield return StartCoroutine(NpcDialogueManager.Instance.ShowDialogue(
+            introLines,
+            hasChoice: true,
+            dialogueColor: Color.white,
+            dialogueFont: null
+        ));
+
+        int choice = NpcDialogueManager.Instance.lastChoiceIndex;
+        Debug.Log($"[MetroStory] Player chose Truth or Dare: {choice} (0=Truth, 1=Dare)");
+
+        if (choice == 0)
+        {
+            yield return StartCoroutine(TruthBranchRoutine());
+        }
+        else
+        {
+            yield return StartCoroutine(DareBranchRoutine());
+        }
+    }
+
+    private IEnumerator TruthBranchRoutine()
+    {
+        currentPhase = StoryPhase.TruthResolution;
+
+        string[] truthLines = new string[] {
+            LocalizationManager.Instance.Get("truth_01"),
+            LocalizationManager.Instance.Get("truth_02"),
+            LocalizationManager.Instance.Get("truth_03"),
+            LocalizationManager.Instance.Get("truth_04")
+        };
+
+        yield return StartCoroutine(NpcDialogueManager.Instance.ShowDialogue(
+            truthLines,
+            hasChoice: false,
+            dialogueColor: Color.white,
+            dialogueFont: null
+        ));
+
+        yield return new WaitForSeconds(0.8f);
+
+        yield return StartCoroutine(TeddyTurnRoutine());
+    }
+
+    private IEnumerator DareBranchRoutine()
+    {
+        currentPhase = StoryPhase.DareObjective;
+
+        string[] dareLines = new string[] {
+            LocalizationManager.Instance.Get("dare_01"),
+            LocalizationManager.Instance.Get("dare_02")
+        };
+
+        yield return StartCoroutine(NpcDialogueManager.Instance.ShowDialogue(
+            dareLines,
+            hasChoice: false,
+            dialogueColor: Color.white,
+            dialogueFont: null
+        ));
+
+        if (platformEndTrigger != null)
+            platformEndTrigger.SetActive(true);
+
+        if (objectiveText != null)
+        {
+            objectiveText.gameObject.SetActive(true);
+            objectiveText.text = "Dare: Walk to the end of the platform.";
+        }
+
+        if (fpsController != null) fpsController.SetControlLocked(false);
+        sequenceBusy = false;
+    }
+
+    public void OnPlatformEndReached()
+    {
+        if (currentPhase != StoryPhase.DareObjective || dareObjectiveCompleted) return;
+        dareObjectiveCompleted = true;
+
+        if (platformEndTrigger != null)
+            platformEndTrigger.SetActive(false);
+
+        if (objectiveText != null)
+            objectiveText.gameObject.SetActive(false);
+
+        StartCoroutine(CompleteDareRoutine());
+    }
+
+    private IEnumerator CompleteDareRoutine()
+    {
+        sequenceBusy = true;
+        if (fpsController != null) fpsController.SetControlLocked(true);
+
+        string[] lines = new string[] {
+            LocalizationManager.Instance.Get("dare_complete_01")
+        };
+
+        yield return StartCoroutine(NpcDialogueManager.Instance.ShowDialogue(
+            lines,
+            hasChoice: false,
+            dialogueColor: Color.white,
+            dialogueFont: null
+        ));
+
+        yield return new WaitForSeconds(0.8f);
+
+        yield return StartCoroutine(TeddyTurnRoutine());
+    }
+
+    private IEnumerator TeddyTurnRoutine()
+    {
+        currentPhase = StoryPhase.TeddyTurn;
+        sequenceBusy = true;
+        if (fpsController != null) fpsController.SetControlLocked(true);
+
+        string[] turnLines = new string[] {
+            LocalizationManager.Instance.Get("turn_01"),
+            LocalizationManager.Instance.Get("turn_02"),
+            LocalizationManager.Instance.Get("turn_03"),
+            LocalizationManager.Instance.Get("turn_04"),
+            LocalizationManager.Instance.Get("turn_05"),
+            LocalizationManager.Instance.Get("turn_06")
+        };
+
+        yield return StartCoroutine(NpcDialogueManager.Instance.ShowDialogue(
+            turnLines,
+            hasChoice: false,
+            dialogueColor: Color.white,
+            dialogueFont: null
+        ));
+
+        if (doorAudioSource != null && !doorAudioSource.isPlaying)
+        {
+            doorAudioSource.Play();
+        }
+
+        if (doorTrigger != null)
+            doorTrigger.enabled = true;
+
+        currentPhase = StoryPhase.DoorWaiting;
+
+        if (objectiveText != null)
+        {
+            objectiveText.gameObject.SetActive(true);
+            objectiveText.text = "Investigate the sounds coming from the door...";
+        }
+
+        if (fpsController != null) fpsController.SetControlLocked(false);
+        sequenceBusy = false;
+        Debug.Log("[MetroStory] Teddy's turn finished. Door trigger active!");
+    }
+
+    public void OnDoorInteracted()
+    {
+        if (currentPhase != StoryPhase.DoorWaiting || sequenceBusy) return;
+        StartCoroutine(BehindDoorCinematicRoutine());
+    }
+
+    public IEnumerator BehindDoorCinematicRoutine()
+    {
+        sequenceBusy = true;
+        currentPhase = StoryPhase.BehindDoorCinematic;
+
+        if (doorTrigger != null) doorTrigger.enabled = false;
+        if (objectiveText != null) objectiveText.gameObject.SetActive(false);
+
+        if (fpsController != null)
+        {
+            fpsController.SetControlLocked(true);
+        }
+
+        if (cinemachineBrain != null && behindDoorVcam != null)
+        {
+            behindDoorVcam.Priority.Value = 100;
+            cinemachineBrain.DefaultBlend = new CinemachineBlendDefinition(
+                CinemachineBlendDefinition.Styles.EaseInOut,
+                1.0f
+            );
+            cinemachineBrain.enabled = true;
+            yield return new WaitForSeconds(1.0f);
+        }
+
+        string[] cinematicLines = new string[] {
+            LocalizationManager.Instance.Get("cinematic_01"),
+            LocalizationManager.Instance.Get("cinematic_02"),
+            LocalizationManager.Instance.Get("cinematic_03"),
+            LocalizationManager.Instance.Get("cinematic_04"),
+            LocalizationManager.Instance.Get("cinematic_05"),
+            LocalizationManager.Instance.Get("cinematic_06"),
+            LocalizationManager.Instance.Get("cinematic_07"),
+            LocalizationManager.Instance.Get("cinematic_08"),
+            LocalizationManager.Instance.Get("cinematic_09"),
+            LocalizationManager.Instance.Get("scream_01"),
+            LocalizationManager.Instance.Get("scream_02")
+        };
+
+        yield return StartCoroutine(NpcDialogueManager.Instance.ShowDialogue(
+            cinematicLines,
+            hasChoice: false,
+            dialogueColor: new Color(1f, 0.85f, 0.85f),
+            dialogueFont: null
+        ));
+
+        yield return StartCoroutine(ChildEpisodeRoutine());
+    }
+
+    private IEnumerator ChildEpisodeRoutine()
+    {
+        currentPhase = StoryPhase.ChildEpisode;
+
+        Transform shakeTarget = behindDoorVcam != null ? behindDoorVcam.transform : playerCamera;
+        Coroutine shakeRoutine = StartCoroutine(CameraShakeRoutine(shakeTarget, 5.0f, 0.35f));
+
+        string[] episodeLines = new string[] {
+            LocalizationManager.Instance.Get("episode_01"),
+            LocalizationManager.Instance.Get("episode_02"),
+            LocalizationManager.Instance.Get("episode_03"),
+            LocalizationManager.Instance.Get("episode_04")
+        };
+
+        yield return StartCoroutine(NpcDialogueManager.Instance.ShowDialogue(
+            episodeLines,
+            hasChoice: false,
+            dialogueColor: new Color(1f, 0.4f, 0.4f),
+            dialogueFont: null
+        ));
+
+        if (shakeRoutine != null) StopCoroutine(shakeRoutine);
+
+        yield return StartCoroutine(FinalTeddyMomentRoutine());
+    }
+
+    private IEnumerator CameraShakeRoutine(Transform targetTransform, float duration, float magnitude)
+    {
+        if (targetTransform == null) yield break;
+        Vector3 originalPos = targetTransform.localPosition;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            float x = UnityEngine.Random.Range(-1f, 1f) * magnitude;
+            float y = UnityEngine.Random.Range(-1f, 1f) * magnitude;
+            targetTransform.localPosition = originalPos + new Vector3(x, y, 0f);
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        targetTransform.localPosition = originalPos;
+    }
+
+    private IEnumerator FinalTeddyMomentRoutine()
+    {
+        currentPhase = StoryPhase.FinalTeddyMoment;
+
+        if (behindDoorVcam != null)
+            behindDoorVcam.Priority.Value = 0;
+
+        if (finalTeddyVcam != null)
+        {
+            finalTeddyVcam.Priority.Value = 120;
+        }
+        else
+        {
+            var talkVcam = GameObject.Find("TalkZoomVcam")?.GetComponent<CinemachineCamera>();
+            if (talkVcam != null && teddyBearObject != null)
+            {
+                talkVcam.transform.position = teddyBearObject.transform.position + new Vector3(0, 0.8f, 1.8f);
+                talkVcam.transform.rotation = Quaternion.LookRotation(teddyBearObject.transform.position - talkVcam.transform.position);
+                talkVcam.Priority.Value = 120;
+            }
+        }
+
+        yield return new WaitForSeconds(0.6f);
+
+        string[] finalLines = new string[] {
+            LocalizationManager.Instance.Get("final_teddy_01"),
+            LocalizationManager.Instance.Get("final_teddy_02")
+        };
+
+        yield return StartCoroutine(NpcDialogueManager.Instance.ShowDialogue(
+            finalLines,
+            hasChoice: false,
+            dialogueColor: new Color(0.9f, 0.95f, 1f),
+            dialogueFont: null
+        ));
+
+        if (screenFader != null)
+        {
+            bool fadeDone = false;
+            screenFader.FadeToBlack(2.0f, () => fadeDone = true);
+            while (!fadeDone) yield return null;
+        }
+        else
+        {
+            yield return new WaitForSeconds(1.5f);
+        }
+
+        currentPhase = StoryPhase.EndOfPrototype;
+        if (endPrototypePanel != null)
+        {
+            endPrototypePanel.SetActive(true);
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+
+        Debug.Log("[MetroStory] Sequence complete. END OF PROTOTYPE displayed.");
+    }
+
+    public void RestartSequence()
+    {
+        Debug.Log("[MetroStory] Restarting sequence / reloading scene.");
+        Time.timeScale = 1f;
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    }
+
+    [ContextMenu("Debug: Mark All NPCs Spoken")]
+    public void DebugMarkAllNpcsSpoken()
+    {
+        neighborSpoken = true;
+        shopOwnerSpoken = true;
+        bullySpoken = true;
+        Debug.Log("[MetroStory DEBUG] All NPCs marked spoken.");
+    }
+
+    [ContextMenu("Debug: Trigger Truth Branch")]
+    public void DebugTriggerTruthBranch()
+    {
+        DebugMarkAllNpcsSpoken();
+        StartCoroutine(TruthBranchRoutine());
+    }
+
+    [ContextMenu("Debug: Trigger Dare Branch")]
+    public void DebugTriggerDareBranch()
+    {
+        DebugMarkAllNpcsSpoken();
+        StartCoroutine(DareBranchRoutine());
+    }
+
+    [ContextMenu("Debug: Trigger Behind Door Cinematic")]
+    public void DebugTriggerCinematic()
+    {
+        StartCoroutine(BehindDoorCinematicRoutine());
+    }
+
+    [ContextMenu("Debug: Trigger Episode")]
+    public void DebugTriggerEpisode()
+    {
+        StartCoroutine(ChildEpisodeRoutine());
+    }
+
+    [ContextMenu("Debug: Trigger Final Teddy Moment")]
+    public void DebugTriggerFinalTeddy()
+    {
+        StartCoroutine(FinalTeddyMomentRoutine());
+    }
+}

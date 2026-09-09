@@ -85,6 +85,14 @@ public class NpcInteractionText : MonoBehaviour
 
                 if (Input.GetKeyDown(KeyCode.E))
                 {
+                    if (hit.collider.gameObject.name.Contains("Teddy") || (MetroStorySequenceController.Instance != null && hit.collider.gameObject == MetroStorySequenceController.Instance.teddyBearObject))
+                    {
+                        if (MetroStorySequenceController.Instance != null && MetroStorySequenceController.Instance.TryHandleTeddyInteraction())
+                        {
+                            return;
+                        }
+                    }
+
                     NpcConversation npcConv =
                         hit.collider.GetComponent<NpcConversation>();
 

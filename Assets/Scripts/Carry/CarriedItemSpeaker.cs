@@ -28,6 +28,11 @@ public class CarriedItemSpeaker : MonoBehaviour
 
         if (Input.GetKeyDown(talkKey))
         {
+            if (MetroStorySequenceController.Instance != null && MetroStorySequenceController.Instance.TryHandleTeddyInteraction())
+            {
+                return;
+            }
+
             StartCoroutine(conversation.Play());
         }
     }
