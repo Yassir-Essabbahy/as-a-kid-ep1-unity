@@ -17,14 +17,15 @@ public class CarriedItemSpeaker : MonoBehaviour
 
     void Awake()
     {
-        carryable = GetComponent<CarryableItem>();
+        if (carryable == null)
+            carryable = GetComponent<CarryableItem>();
+        if (conversation == null)
+            conversation = GetComponent<NpcConversation>();
     }
 
     void Update()
     {
         if (!triggerByKeyPress) return;
-        if (!carryable.IsBeingCarried) return;
-        if (conversation == null) return;
 
         if (Input.GetKeyDown(talkKey))
         {
@@ -33,7 +34,15 @@ public class CarriedItemSpeaker : MonoBehaviour
                 return;
             }
 
-            StartCoroutine(conversation.Play());
+            if (carryable != null && !carryable.IsBeingCarried) return;
+
+            if (conversation == null)
+                conversation = GetComponent<NpcConversation>();
+
+            if (conversation != null)
+            {
+                StartCoroutine(conversation.Play());
+            }
         }
     }
 

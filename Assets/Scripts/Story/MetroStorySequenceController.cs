@@ -173,6 +173,7 @@ public class MetroStorySequenceController : MonoBehaviour
     {
         ResolveReferences();
         HookConversations();
+        EnsureTeddyCarried();
 
         if (platformEndTrigger != null)
             platformEndTrigger.SetActive(false);
@@ -198,6 +199,11 @@ public class MetroStorySequenceController : MonoBehaviour
 
     private void Update()
     {
+        if (Input.GetKeyDown(KeyCode.F) || Input.GetKeyDown(KeyCode.T))
+        {
+            TryHandleTeddyInteraction();
+        }
+
         if (currentPhase == StoryPhase.EndOfPrototype)
         {
             if (Input.GetKeyDown(KeyCode.R))
@@ -333,14 +339,14 @@ public class MetroStorySequenceController : MonoBehaviour
 
     public void CheckFloor3Progress()
     {
-        if (bullySpoken && (currentPhase == StoryPhase.Floor3_Arrival || currentPhase == StoryPhase.Floor3_NpcEncounter))
+        if (bullySpoken)
         {
             currentPhase = StoryPhase.Floor3_TruthOrDare;
             Debug.Log("[MetroStory] Bully spoken on Floor 3. Truth or Dare is primed!");
             if (objectiveText != null)
             {
                 objectiveText.gameObject.SetActive(true);
-                objectiveText.text = "Talk to your Teddy Bear...";
+                objectiveText.text = "Press 'F' to talk to your Teddy Bear...";
             }
         }
     }
@@ -366,6 +372,7 @@ public class MetroStorySequenceController : MonoBehaviour
     {
         currentPhase = StoryPhase.Floor3_Arrival;
         ActivateFloor3StoryElements();
+        EnsureTeddyCarried();
         if (objectiveText != null)
         {
             objectiveText.gameObject.SetActive(true);
@@ -390,9 +397,64 @@ public class MetroStorySequenceController : MonoBehaviour
         }
     }
 
+    public void EnsureTeddyCarried()
+    {
+        if (teddyCarryable == null)
+        {
+            if (teddyBearObject != null)
+                teddyCarryable = teddyBearObject.GetComponent<CarryableItem>();
+            else
+            {
+                var tb = GameObject.Find("Teddy_Bear_Box");
+                if (tb != null)
+                {
+                    teddyBearObject = tb;
+                    teddyCarryable = tb.GetComponent<CarryableItem>();
+                }
+            }
+        }
+
+        if (teddyCarryable != null && !teddyCarryable.IsBeingCarried)
+        {
+            Transform cp = null;
+            if (fpsController != null)
+            {
+                cp = fpsController.GetComponentInChildren<Camera>()?.transform.Find("CarryPoint") 
+                     ?? fpsController.transform.Find("CarryPoint");
+            }
+            if (cp == null && playerCamera != null)
+            {
+                cp = playerCamera.Find("CarryPoint");
+            }
+            if (cp == null)
+            {
+                var foundCp = GameObject.Find("CarryPoint");
+                if (foundCp != null) cp = foundCp.transform;
+            }
+
+            if (cp != null)
+            {
+                teddyCarryable.StartCarrying(cp);
+                Debug.Log("[MetroStory] Teddy snapped to player's CarryPoint.");
+            }
+        }
+    }
+
     public bool TryHandleTeddyInteraction()
     {
-        if (sequenceBusy) return true;
+        var dm = NpcDialogueManager.Instance ?? FindAnyObjectByType<NpcDialogueManager>();
+        if (dm != null && !dm.IsDialogueRunning)
+        {
+            sequenceBusy = false;
+        }
+
+        if (sequenceBusy)
+        {
+            Debug.Log("[MetroStory] Sequence currently busy, ignoring Teddy interaction.");
+            return true;
+        }
+
+        EnsureTeddyCarried();
 
         if (currentPhase == StoryPhase.Floor1_Exploration || currentPhase == StoryPhase.Floor1_ElevatorReady)
         {
@@ -413,7 +475,7 @@ public class MetroStorySequenceController : MonoBehaviour
                 return true;
             }
         }
-        else if (currentPhase == StoryPhase.Floor3_Arrival || currentPhase == StoryPhase.Floor3_NpcEncounter || currentPhase == StoryPhase.Floor3_TruthOrDare)
+        else if (currentPhase == StoryPhase.Floor3_Arrival || currentPhase == StoryPhase.Floor3_NpcEncounter || currentPhase == StoryPhase.Floor3_TruthOrDare || bullySpoken)
         {
             if (!bullySpoken)
             {

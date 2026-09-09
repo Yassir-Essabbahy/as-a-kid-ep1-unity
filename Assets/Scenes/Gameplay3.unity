@@ -19931,8 +19931,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 981896447}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: 0.7071068, z: 0.7071068, w: 0}
-  m_LocalPosition: {x: -39.9, y: 1.4699998, z: 14.32}
+  m_LocalRotation: {x: 0.7071068, y: -0.000000061817246, z: -0.000000061817246, w: -0.7071068}
+  m_LocalPosition: {x: -41.1, y: 2.57, z: 61}
   m_LocalScale: {x: 5, y: 5, z: 5}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -19953,7 +19953,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d0ea34aa3241db54c864e3de8628db7a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CarriedItemSpeaker
-  conversation: {fileID: 0}
+  conversation: {fileID: 981896449}
   triggerByKeyPress: 1
   talkKey: 102
   triggerByZone: 0
@@ -44313,7 +44313,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &2116621745
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -44334,7 +44334,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Talk to your Teddy Bear...
+  m_text: Explore the platform. Speak with the people waiting.
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
