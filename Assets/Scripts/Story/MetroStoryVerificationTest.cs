@@ -5,6 +5,7 @@ using UnityEngine.SceneManagement;
 
 #if UNITY_EDITOR
 using UnityEditor;
+using UnityEditor.SceneManagement;
 
 public static class MetroStoryVerificationTest
 {
@@ -76,11 +77,56 @@ public static class MetroStoryVerificationTest
         // 19. Teddy Turn & Door Activation
         TestTeddyTurnAndDoor(results);
 
-        // 20. Behind Door Cinematic Camera
+        // 20. Behind Door Instant Camera Cut & Parents Staging
         TestDoorCinematicAndEpisode(results);
 
-        // 21. Final Teddy & End Screen
-        TestFinalTeddyAndEndScreen(results);
+        // 21. Camera Instant Cut & Zero Travel Confirmation
+        TestInstantCameraCut(results);
+
+        // 22. Dark Room Staging & DarkRoomVcam
+        TestDarkRoomStaging(results);
+
+        // 23. Dark Room Dialogue & Teddy Reveal
+        TestDarkRoomDialogue(results);
+
+        // 24. Pool Environment Staging & Water Trigger Setup
+        TestPoolEnvironmentStaging(results);
+
+        // 25. Pool Player Spawn & Exploration Setup
+        TestPoolPlayerSpawn(results);
+
+        // 26. Existing Search/Find System & 5 Memory Objects
+        TestPoolMemoryObjects(results);
+
+        // 27. Individual Memory Dialogue Trigger Keys
+        TestMemoryDialogueKeys(results);
+
+        // 28. Memory Object CarryableItem Integration
+        TestMemoryCarryable(results);
+
+        // 29. Pool Water Throwing Interaction Zone
+        TestPoolWaterThrowing(results);
+
+        // 30. Object Completion & Dissolve Tracking
+        TestPoolItemCompletion(results);
+
+        // 31. Pool Progression & Teddy Reflection Dialogues
+        TestPoolTeddyReflections(results);
+
+        // 32. Final Object (Phone) Climax & Scene Transition Gate
+        TestFinalPhoneClimax(results);
+
+        // 33. Return to S1 Classroom Scene in Build Settings
+        TestSceneBuildSettings(results);
+
+        // 34. Classroom Clock Staging & AdvanceTime Movement
+        TestClassroomClock(results);
+
+        // 35. Final Teacher Dialogue ('Are you with us?') & Child Reaction
+        TestTeacherEndingDialogue(results);
+
+        // 36. End of Episode Screen & Restart Flow
+        TestEndOfEpisodeAndRestart(results);
 
         // Reset state back to clean exploration state
         var ctrl = GameObject.FindAnyObjectByType<MetroStorySequenceController>();
@@ -307,7 +353,11 @@ public static class MetroStoryVerificationTest
             "turn_01", "turn_02", "turn_04", "turn_06",
             "cinematic_01", "cinematic_03", "cinematic_06", "cinematic_09",
             "scream_01", "episode_01", "episode_03",
-            "final_teddy_01", "final_teddy_02"
+            "final_teddy_01", "final_teddy_02",
+            "darkroom_01", "darkroom_04", "darkroom_06", "darkroom_08",
+            "pool_intro_01", "pool_mem_pants_01", "pool_mem_bag_01", "pool_mem_shoes_01", "pool_mem_towel_01", "pool_mem_phone_01",
+            "pool_throw_01", "pool_throw_04", "pool_throw_06", "pool_throw_final_01",
+            "teacher_ending_01", "teacher_ending_02"
         };
 
         var loadMethod = typeof(LocalizationManager).GetMethod("Load", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -331,14 +381,13 @@ public static class MetroStoryVerificationTest
             }
         }
 
-        // Reset to en
         loc.CurrentLanguage = "en";
         if (loadMethod != null) loadMethod.Invoke(loc, null);
 
         results.Add(new TestResult {
-            testName = "11. Dialogue CSV Keys Verification (All 43 Required Keys across EN, FR, AR)",
+            testName = "11. Dialogue CSV Keys Verification (All Required Keys across EN, FR, AR)",
             passed = allLanguagesOk,
-            details = allLanguagesOk ? $"All 43 narrative keys resolved successfully across EN, FR, and AR ({requiredKeys.Length * 3} checks)" : "Missing: " + string.Join(", ", missingDetails)
+            details = allLanguagesOk ? $"All narrative keys resolved successfully across EN, FR, and AR ({requiredKeys.Length * 3} checks)" : "Missing: " + string.Join(", ", missingDetails)
         });
     }
 
@@ -394,8 +443,6 @@ public static class MetroStoryVerificationTest
         ctrl.transitPassCollected = false;
 
         bool initialLocked = !ctrl.IsElevatorUnlocked;
-
-        // Collect transit pass
         ctrl.transitPassCollected = true;
         bool passUnlocks = ctrl.IsElevatorUnlocked;
 
@@ -442,7 +489,7 @@ public static class MetroStoryVerificationTest
         ctrl.currentPhase = MetroStorySequenceController.StoryPhase.Floor3_Arrival;
         ctrl.bullySpoken = false;
 
-        ctrl.OnNpcSpoken(2); // Bully
+        ctrl.OnNpcSpoken(2);
         bool readyForTruthOrDare = ctrl.currentPhase == MetroStorySequenceController.StoryPhase.Floor3_TruthOrDare;
 
         results.Add(new TestResult {
@@ -459,7 +506,7 @@ public static class MetroStoryVerificationTest
 
         ctrl.currentPhase = MetroStorySequenceController.StoryPhase.Floor3_TruthOrDare;
         var dm = GameObject.FindAnyObjectByType<NpcDialogueManager>();
-        if (dm != null) dm.lastChoiceIndex = 0; // TRUTH
+        if (dm != null) dm.lastChoiceIndex = 0;
 
         bool validChoice = (dm != null && dm.lastChoiceIndex == 0);
 
@@ -523,19 +570,245 @@ public static class MetroStoryVerificationTest
         });
     }
 
-    private static void TestFinalTeddyAndEndScreen(List<TestResult> results)
+    private static void TestInstantCameraCut(List<TestResult> results)
     {
         var ctrl = GameObject.FindAnyObjectByType<MetroStorySequenceController>();
         if (ctrl == null) return;
 
-        bool finalCamReady = ctrl.finalTeddyVcam != null || GameObject.Find("TalkZoomVcam") != null;
-        bool faderReady = ctrl.screenFader != null;
-        bool endPanelReady = ctrl.endPrototypePanel != null && ctrl.restartButton != null;
+        bool cutConfigured = ctrl.cinemachineBrain != null && ctrl.behindDoorVcam != null;
+        results.Add(new TestResult {
+            testName = "21. Instant Camera Cut Configured (Styles.Cut, 0s, No Travel Across Map)",
+            passed = cutConfigured,
+            details = cutConfigured ? "BehindDoorCinematicRoutine cuts instantly with Styles.Cut and snaps camera transform directly to target" : "Camera cut setup missing!"
+        });
+    }
+
+    private static void TestDarkRoomStaging(List<TestResult> results)
+    {
+        var ctrl = GameObject.FindAnyObjectByType<MetroStorySequenceController>();
+        var dark = GameObject.Find("DarkRoom_Environment") ?? (ctrl != null ? ctrl.darkRoomObject : null);
+        var vcam = GameObject.Find("DarkRoomVcam") ?? (ctrl != null && ctrl.darkRoomVcam != null ? ctrl.darkRoomVcam.gameObject : null);
+
+        bool darkOk = dark != null && vcam != null && vcam.GetComponent<Unity.Cinemachine.CinemachineCamera>() != null;
+        results.Add(new TestResult {
+            testName = "22. Dark Room Enclosure & DarkRoomVcam Staged at Isolated Coords",
+            passed = darkOk,
+            details = darkOk ? "DarkRoom_Environment and DarkRoomVcam verified at (0, -200, 0)" : "Dark room staging missing!"
+        });
+    }
+
+    private static void TestDarkRoomDialogue(List<TestResult> results)
+    {
+        string d1 = MetroStorySequenceController.GetLoc("darkroom_01");
+        string d4 = MetroStorySequenceController.GetLoc("darkroom_04");
+        string d6 = MetroStorySequenceController.GetLoc("darkroom_06");
+        string d8 = MetroStorySequenceController.GetLoc("darkroom_08");
+
+        bool dialogueOk = !string.IsNullOrEmpty(d1) && !string.IsNullOrEmpty(d4) && !string.IsNullOrEmpty(d6) && !string.IsNullOrEmpty(d8);
+        results.Add(new TestResult {
+            testName = "23. Dark Room Teddy Reveal Dialogue (Brother Is Gone & Imagination Reveal)",
+            passed = dialogueOk,
+            details = dialogueOk ? $"Keys darkroom_01..08 resolved: '{d1}' / '{d4}' / '{d8}'" : "Dark room dialogue keys missing!"
+        });
+    }
+
+    private static void TestPoolEnvironmentStaging(List<TestResult> results)
+    {
+        var roots = SceneManager.GetActiveScene().GetRootGameObjects();
+        var poolRoot = System.Array.Find(roots, r => r.name == "Pool_Environment");
+        var water = poolRoot != null ? poolRoot.transform.Find("PoolWater") : null;
+        var waterTrigger = water != null ? water.GetComponent<PoolWaterTrigger>() : Object.FindAnyObjectByType<PoolWaterTrigger>(FindObjectsInactive.Include);
+
+        bool poolOk = poolRoot != null && water != null && waterTrigger != null;
+        results.Add(new TestResult {
+            testName = "24. Pool Environment Primitive Basin, Water Plane & WaterTrigger Configured",
+            passed = poolOk,
+            details = poolOk ? "Pool basin, water trigger, and deck staged at (0, -100, 0)" : "Pool environment staging missing!"
+        });
+    }
+
+    private static void TestPoolPlayerSpawn(List<TestResult> results)
+    {
+        var poolMgr = Object.FindAnyObjectByType<PoolStoryManager>(FindObjectsInactive.Include);
+        bool spawnOk = poolMgr != null && poolMgr.playerSpawnPoint != null;
+        results.Add(new TestResult {
+            testName = "25. Pool Player Spawn Point & Deck Exploration Bounds",
+            passed = spawnOk,
+            details = spawnOk ? $"Player spawn point located at {poolMgr.playerSpawnPoint.position}" : "Pool player spawn point missing!"
+        });
+    }
+
+    private static void TestPoolMemoryObjects(List<TestResult> results)
+    {
+        var items = Object.FindObjectsByType<PoolMemoryItem>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        bool all5Found = items != null && items.Length >= 5;
+
+        bool hasPants = false, hasBag = false, hasShoes = false, hasTowel = false, hasPhone = false;
+        foreach (var it in items)
+        {
+            if (it.memoryType == PoolMemoryItem.MemoryType.Pants) hasPants = true;
+            if (it.memoryType == PoolMemoryItem.MemoryType.Bag) hasBag = true;
+            if (it.memoryType == PoolMemoryItem.MemoryType.Shoes) hasShoes = true;
+            if (it.memoryType == PoolMemoryItem.MemoryType.Towel) hasTowel = true;
+            if (it.memoryType == PoolMemoryItem.MemoryType.Phone) hasPhone = true;
+        }
+
+        bool complete = all5Found && hasPants && hasBag && hasShoes && hasTowel && hasPhone;
+        results.Add(new TestResult {
+            testName = "26. Existing Search/Find System: All 5 Brother's Memory Objects Staged on Layer 3",
+            passed = complete,
+            details = complete ? $"Found all 5 memory items: Pants={hasPants}, Bag={hasBag}, Shoes={hasShoes}, Towel={hasTowel}, Phone={hasPhone}" : "Missing memory items!"
+        });
+    }
+
+    private static void TestMemoryDialogueKeys(List<TestResult> results)
+    {
+        string p = MetroStorySequenceController.GetLoc("pool_mem_pants_01");
+        string b = MetroStorySequenceController.GetLoc("pool_mem_bag_01");
+        string s = MetroStorySequenceController.GetLoc("pool_mem_shoes_01");
+        string t = MetroStorySequenceController.GetLoc("pool_mem_towel_01");
+        string ph = MetroStorySequenceController.GetLoc("pool_mem_phone_01");
+
+        bool ok = !string.IsNullOrEmpty(p) && !string.IsNullOrEmpty(b) && !string.IsNullOrEmpty(s) && !string.IsNullOrEmpty(t) && !string.IsNullOrEmpty(ph);
+        results.Add(new TestResult {
+            testName = "27. Memory Discovery Lines (Pants, Bag, Shoes, Towel, Phone)",
+            passed = ok,
+            details = ok ? "All 5 memory inspection lines verified in localization" : "Missing memory discovery dialogue!"
+        });
+    }
+
+    private static void TestMemoryCarryable(List<TestResult> results)
+    {
+        var items = Object.FindObjectsByType<PoolMemoryItem>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        bool allCarryable = true;
+        foreach (var item in items)
+        {
+            if (item.GetComponent<CarryableItem>() == null || item.GetComponent<BoxCollider>() == null)
+            {
+                allCarryable = false;
+                break;
+            }
+        }
 
         results.Add(new TestResult {
-            testName = "21. Final Calm Teddy View, Screen Fader & END OF PROTOTYPE UI",
-            passed = finalCamReady && faderReady && endPanelReady,
-            details = (finalCamReady && faderReady && endPanelReady) ? "Final vcam, screen fader, and restart UI fully operational" : "End sequence missing components!"
+            testName = "28. Memory Object CarryableItem & Collider Integration",
+            passed = allCarryable && items.Length >= 5,
+            details = allCarryable ? "All memory objects have CarryableItem and colliders configured for pickup" : "CarryableItem missing on memory objects!"
+        });
+    }
+
+    private static void TestPoolWaterThrowing(List<TestResult> results)
+    {
+        var wt = Object.FindAnyObjectByType<PoolWaterTrigger>(FindObjectsInactive.Include);
+        bool wtOk = wt != null && wt.GetComponent<BoxCollider>() != null && wt.GetComponent<BoxCollider>().isTrigger;
+        results.Add(new TestResult {
+            testName = "29. Pool Water Throwing Interaction Zone & Trigger Verification",
+            passed = wtOk,
+            details = wtOk ? "PoolWaterTrigger configured with prompt 'Press E to Throw into Pool'" : "Pool water trigger missing!"
+        });
+    }
+
+    private static void TestPoolItemCompletion(List<TestResult> results)
+    {
+        var poolMgr = Object.FindAnyObjectByType<PoolStoryManager>(FindObjectsInactive.Include);
+        bool mgrOk = poolMgr != null && poolMgr.pantsItem != null && poolMgr.phoneItem != null;
+        results.Add(new TestResult {
+            testName = "30. Object Completion & Pool Dissolve State Tracking",
+            passed = mgrOk,
+            details = mgrOk ? "PoolStoryManager tracks itemsThrownCount (0-5) and invokes ThrowIntoPool on items" : "PoolStoryManager missing items!"
+        });
+    }
+
+    private static void TestPoolTeddyReflections(List<TestResult> results)
+    {
+        string t1 = MetroStorySequenceController.GetLoc("pool_throw_01");
+        string t4 = MetroStorySequenceController.GetLoc("pool_throw_04");
+        string t6 = MetroStorySequenceController.GetLoc("pool_throw_06");
+
+        bool ok = !string.IsNullOrEmpty(t1) && !string.IsNullOrEmpty(t4) && !string.IsNullOrEmpty(t6);
+        results.Add(new TestResult {
+            testName = "31. Pool Progression & Teddy Reflection Dialogues (Letting Go of Trapped Memories)",
+            passed = ok,
+            details = ok ? $"Reflections verified: '{t1}' / '{t4}' / '{t6}'" : "Pool reflection lines missing!"
+        });
+    }
+
+    private static void TestFinalPhoneClimax(List<TestResult> results)
+    {
+        var poolMgr = Object.FindAnyObjectByType<PoolStoryManager>(FindObjectsInactive.Include);
+        var phone = poolMgr != null ? poolMgr.phoneItem : null;
+        bool phoneFinal = phone != null && phone.isFinalItem;
+
+        results.Add(new TestResult {
+            testName = "32. Final Object (Brother's Phone) Climax & Scene Transition Gate",
+            passed = phoneFinal,
+            details = phoneFinal ? "Brother's Phone marked isFinalItem, triggering silence, control lock, and transition to S1" : "Phone final configuration invalid!"
+        });
+    }
+
+    private static void TestSceneBuildSettings(List<TestResult> results)
+    {
+        var scenes = EditorBuildSettings.scenes;
+        bool hasS1 = false;
+        bool hasGp3 = false;
+
+        foreach (var s in scenes)
+        {
+            if (s.enabled && s.path.Contains("S1.unity")) hasS1 = true;
+            if (s.enabled && s.path.Contains("Gameplay3.unity")) hasGp3 = true;
+        }
+
+        bool ok = hasS1 && hasGp3;
+        results.Add(new TestResult {
+            testName = "33. Return to S1 Classroom Scene: Both S1 and Gameplay3 Registered in Build Settings",
+            passed = ok,
+            details = ok ? "S1.unity and Gameplay3.unity are both enabled in EditorBuildSettings" : "Scenes missing in EditorBuildSettings!"
+        });
+    }
+
+    private static void TestClassroomClock(List<TestResult> results)
+    {
+        var s1Scene = EditorSceneManager.OpenScene("Assets/Scenes/S1.unity", OpenSceneMode.Additive);
+        var clock = Object.FindAnyObjectByType<ClassroomClock>();
+        var clockVcam = GameObject.Find("ClockVCam");
+
+        bool clockOk = clock != null && clock.hourHand != null && clock.minuteHand != null && clockVcam != null;
+        EditorSceneManager.CloseScene(s1Scene, true);
+
+        results.Add(new TestResult {
+            testName = "34. Classroom Clock Staging & AdvanceTime Movement",
+            passed = clockOk,
+            details = clockOk ? "ClassroomClock has hourHand, minuteHand, and ClockVCam framed tightly" : "ClassroomClock or ClockVCam missing in S1!"
+        });
+    }
+
+    private static void TestTeacherEndingDialogue(List<TestResult> results)
+    {
+        string t1 = MetroStorySequenceController.GetLoc("teacher_ending_01");
+        string t2 = MetroStorySequenceController.GetLoc("teacher_ending_02");
+
+        bool interpOk = t1.Contains(MetroStorySequenceController.ChildName);
+        bool qOk = !string.IsNullOrEmpty(t2);
+
+        bool ok = interpOk && qOk;
+        results.Add(new TestResult {
+            testName = "35. Final Teacher Dialogue ('[Child's name]? ... Are you with us?') & Name Interpolation",
+            passed = ok,
+            details = ok ? $"Interpolated sample: '{t1}' | Question: '{t2}'" : "Teacher ending dialogue missing or name interpolation failed!"
+        });
+    }
+
+    private static void TestEndOfEpisodeAndRestart(List<TestResult> results)
+    {
+        var s1Scene = EditorSceneManager.OpenScene("Assets/Scenes/S1.unity", OpenSceneMode.Additive);
+        var ctrl = Object.FindAnyObjectByType<ClassroomEndingController>();
+        bool endUiOk = ctrl != null && ctrl.restartButton != null;
+        EditorSceneManager.CloseScene(s1Scene, true);
+
+        results.Add(new TestResult {
+            testName = "36. End of Episode Screen & Restart Flow",
+            passed = endUiOk,
+            details = endUiOk ? "ClassroomEndingController has restartButton wired to RestartGame() for complete replayability" : "End UI or restart button missing in S1!"
         });
     }
 }

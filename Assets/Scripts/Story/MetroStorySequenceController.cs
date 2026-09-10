@@ -43,6 +43,10 @@ public class MetroStorySequenceController : MonoBehaviour
         {
             text = text.Replace("{TEDDY_NAME}", TeddyName);
         }
+        if (!string.IsNullOrEmpty(text) && text.Contains("{CHILD_NAME}"))
+        {
+            text = text.Replace("{CHILD_NAME}", ChildName);
+        }
 
         return text;
     }
@@ -92,13 +96,26 @@ public class MetroStorySequenceController : MonoBehaviour
         BehindDoorCinematic,    // 11: Teacher, Mother, Father cinematic
         ChildEpisode,           // 12: Child seizure / panic episode
         FinalTeddyMoment,       // 13: Final calm teddy view on Floor 3
-        EndOfPrototype          // 14: Fade to black, End UI, Restart
+        EndOfPrototype,         // 14: Fade to black, End UI, Restart
+        DarkRoom_Reveal,        // 15: Teddy explains brother is gone and reveals he is imagination
+        Pool_Arrival,           // 16: Arrive at pool environment, exploration begins
+        Pool_SearchingMemories, // 17: Finding and picking up brother's memories
+        Pool_ThrowingMemories,  // 18: Throwing items into the pool water
+        Pool_FinalPhone,        // 19: Finding and throwing brother's phone
+        Classroom_Return,       // 20: Return to S1 classroom scene
+        Classroom_ClockShot,    // 21: Camera focused on clock moving forward
+        Classroom_TeacherEnding,// 22: Teacher asks "Are you with us?"
+        EndOfEpisode            // 23: Fade to black, END OF EPISODE screen, restart
     }
 
     [Header("Teddy Identity (Single Source of Truth)")]
     [Tooltip("The single variable storing the teddy bear's name.")]
     public string teddyName = "Mistfox";
     public static string TeddyName => Instance != null ? Instance.teddyName : "Mistfox";
+
+    [Header("Child Identity")]
+    public string childName = "Yassir";
+    public static string ChildName => Instance != null ? Instance.childName : "Yassir";
 
     [Header("Current Phase")]
     public StoryPhase currentPhase = StoryPhase.Floor1_Exploration;
@@ -145,6 +162,11 @@ public class MetroStorySequenceController : MonoBehaviour
     public Transform teacherTransform;
     public Transform motherTransform;
     public Transform fatherTransform;
+
+    [Header("Dark Room & Pool Staging")]
+    public GameObject darkRoomObject;
+    public CinemachineCamera darkRoomVcam;
+    public PoolStoryManager poolStoryManager;
 
     [Header("Player References")]
     public FirstPersonController fpsController;
@@ -236,6 +258,16 @@ public class MetroStorySequenceController : MonoBehaviour
             if (teddyCarryable == null)
                 teddyCarryable = teddyBearObject.GetComponent<CarryableItem>();
         }
+
+        if (darkRoomObject == null)
+            darkRoomObject = GameObject.Find("DarkRoom_Environment");
+        if (darkRoomVcam == null)
+        {
+            var dv = GameObject.Find("DarkRoomVcam");
+            if (dv != null) darkRoomVcam = dv.GetComponent<CinemachineCamera>();
+        }
+        if (poolStoryManager == null)
+            poolStoryManager = FindAnyObjectByType<PoolStoryManager>();
 
         var elevBtn = FindAnyObjectByType<ElevatorButton>();
         if (elevBtn != null)
@@ -739,15 +771,24 @@ public class MetroStorySequenceController : MonoBehaviour
             fpsController.SetControlLocked(true);
         }
 
-        if (cinemachineBrain != null && behindDoorVcam != null)
+        // Instant camera cut: 0 map travel, 0 duration, immediate cut to cinematic camera position
+        if (behindDoorVcam != null)
         {
-            behindDoorVcam.Priority.Value = 100;
+            behindDoorVcam.Priority.Value = 200;
+            if (playerCamera != null)
+            {
+                playerCamera.position = behindDoorVcam.transform.position;
+                playerCamera.rotation = behindDoorVcam.transform.rotation;
+            }
+        }
+
+        if (cinemachineBrain != null)
+        {
             cinemachineBrain.DefaultBlend = new CinemachineBlendDefinition(
-                CinemachineBlendDefinition.Styles.EaseInOut,
-                1.0f
+                CinemachineBlendDefinition.Styles.Cut,
+                0f
             );
             cinemachineBrain.enabled = true;
-            yield return new WaitForSeconds(1.0f);
         }
 
         string[] cinematicLines = new string[] {
@@ -797,7 +838,94 @@ public class MetroStorySequenceController : MonoBehaviour
 
         if (shakeRoutine != null) StopCoroutine(shakeRoutine);
 
-        yield return StartCoroutine(FinalTeddyMomentRoutine());
+        // After seizure episode, continue directly into the Dark Room Teddy reveal
+        yield return StartCoroutine(DarkRoomRoutine());
+    }
+
+    public IEnumerator DarkRoomRoutine()
+    {
+        currentPhase = StoryPhase.DarkRoom_Reveal;
+        sequenceBusy = true;
+
+        if (fpsController != null) fpsController.SetControlLocked(true);
+
+        if (screenFader != null)
+        {
+            bool fadeOutDone = false;
+            screenFader.FadeToBlack(1.2f, () => fadeOutDone = true);
+            while (!fadeOutDone) yield return null;
+        }
+
+        if (behindDoorVcam != null) behindDoorVcam.Priority.Value = 0;
+        if (darkRoomObject != null) darkRoomObject.SetActive(true);
+
+        if (darkRoomVcam != null)
+        {
+            darkRoomVcam.Priority.Value = 300;
+            if (playerCamera != null)
+            {
+                playerCamera.position = darkRoomVcam.transform.position;
+                playerCamera.rotation = darkRoomVcam.transform.rotation;
+            }
+        }
+
+        if (screenFader != null)
+        {
+            screenFader.FadeFromBlack(1.0f);
+        }
+
+        yield return new WaitForSeconds(1.0f);
+
+        string[] darkRoomLines = new string[] {
+            GetLoc("darkroom_01"),
+            GetLoc("darkroom_02"),
+            GetLoc("darkroom_03"),
+            GetLoc("darkroom_04"),
+            GetLoc("darkroom_05"),
+            GetLoc("darkroom_06"),
+            GetLoc("darkroom_07"),
+            GetLoc("darkroom_08")
+        };
+
+        yield return StartCoroutine(SafeShowDialogue(
+            darkRoomLines,
+            hasChoice: false,
+            dialogueColor: new Color(0.9f, 0.95f, 1f),
+            dialogueFont: null
+        ));
+
+        yield return new WaitForSeconds(1.0f);
+
+        yield return StartCoroutine(TransitionToPoolRoutine());
+    }
+
+    public IEnumerator TransitionToPoolRoutine()
+    {
+        currentPhase = StoryPhase.Pool_Arrival;
+
+        if (screenFader != null)
+        {
+            bool fadeDone = false;
+            screenFader.FadeToBlack(1.5f, () => fadeDone = true);
+            while (!fadeDone) yield return null;
+        }
+
+        if (darkRoomObject != null) darkRoomObject.SetActive(false);
+        if (darkRoomVcam != null) darkRoomVcam.Priority.Value = 0;
+        if (cinemachineBrain != null) cinemachineBrain.enabled = false;
+
+        if (poolStoryManager == null) poolStoryManager = FindAnyObjectByType<PoolStoryManager>();
+        if (poolStoryManager != null)
+        {
+            poolStoryManager.StartPoolSequence();
+        }
+
+        if (screenFader != null)
+        {
+            screenFader.FadeFromBlack(1.0f);
+        }
+
+        sequenceBusy = false;
     }
 
     private IEnumerator CameraShakeRoutine(Transform targetTransform, float duration, float magnitude)

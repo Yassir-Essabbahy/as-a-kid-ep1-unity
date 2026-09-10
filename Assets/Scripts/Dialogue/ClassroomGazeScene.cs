@@ -66,6 +66,12 @@ public class ClassroomGazeScene : MonoBehaviour
 
     private void Start()
     {
+        if (ClassroomEndingController.IsEndingActive)
+        {
+            enabled = false;
+            return;
+        }
+
         playerRig.SetActive(false);
 
         teacherVCam.gameObject.SetActive(true);
