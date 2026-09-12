@@ -14,5 +14,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Gameplay3.unity
     guid: 5989e87aecc20d24ead432e799a59085
+  - enabled: 1
+    path: Assets/Scenes/MoroccanBeach.unity
+    guid: e999dd476c1a7524d955fd1ecd7b65f6
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
