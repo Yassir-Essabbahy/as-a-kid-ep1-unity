@@ -24,6 +24,7 @@ Shader "Custom/OceanSurface_URP"
         {
             Name "ForwardLit"
             Tags { "LightMode" = "UniversalForward" }
+            Cull Off
 
             HLSLPROGRAM
             #pragma vertex vert
