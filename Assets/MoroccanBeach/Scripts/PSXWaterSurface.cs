@@ -32,8 +32,8 @@ namespace MoroccanBeach
 
         private void Update()
         {
-            // 1. Texture UV scrolling for retro wave roll
-            if (mat != null)
+            // 1. Texture UV scrolling for retro wave roll (if material uses standard _MainTex)
+            if (mat != null && mat.HasProperty("_MainTex"))
             {
                 uvOffset += uvScrollSpeed * Time.deltaTime;
                 mat.mainTextureOffset = uvOffset;
