@@ -267,7 +267,7 @@ public class MetroStorySequenceController : MonoBehaviour
             if (dv != null) darkRoomVcam = dv.GetComponent<CinemachineCamera>();
         }
         if (poolStoryManager == null)
-            poolStoryManager = FindAnyObjectByType<PoolStoryManager>();
+            poolStoryManager = FindAnyObjectByType<PoolStoryManager>(FindObjectsInactive.Include);
 
         var elevBtn = FindAnyObjectByType<ElevatorButton>();
         if (elevBtn != null)
@@ -914,7 +914,7 @@ public class MetroStorySequenceController : MonoBehaviour
         if (darkRoomVcam != null) darkRoomVcam.Priority.Value = 0;
         if (cinemachineBrain != null) cinemachineBrain.enabled = false;
 
-        if (poolStoryManager == null) poolStoryManager = FindAnyObjectByType<PoolStoryManager>();
+        if (poolStoryManager == null) poolStoryManager = FindAnyObjectByType<PoolStoryManager>(FindObjectsInactive.Include);
         if (poolStoryManager != null)
         {
             poolStoryManager.StartPoolSequence();
@@ -995,21 +995,20 @@ public class MetroStorySequenceController : MonoBehaviour
         }
 
         currentPhase = StoryPhase.EndOfPrototype;
-        if (endPrototypePanel != null)
-        {
-            endPrototypePanel.SetActive(true);
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
-        }
-
-        Debug.Log("[MetroStory] Sequence complete. END OF PROTOTYPE displayed.");
+        Debug.Log("[MetroStory] Sequence complete. Fading out and transitioning to MoroccanBeach...");
+        ScreenFader.TransitionToScene("MoroccanBeach", 2.0f);
     }
 
     public void RestartSequence()
     {
-        Debug.Log("[MetroStory] Restarting sequence / reloading scene.");
-        Time.timeScale = 1f;
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        Debug.Log("[MetroStory] Transitioning to MoroccanBeach.");
+        ScreenFader.TransitionToScene("MoroccanBeach", 2.0f);
+    }
+
+    [ContextMenu("Debug: Trigger Transition to Moroccan Beach")]
+    public void DebugTriggerBeachTransition()
+    {
+        ScreenFader.TransitionToScene("MoroccanBeach", 2.0f);
     }
 
     [ContextMenu("Debug: Mark All NPCs Spoken")]

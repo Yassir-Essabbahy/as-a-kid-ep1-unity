@@ -234,25 +234,19 @@ public class PoolStoryManager : MonoBehaviour
             // Silence for emotional impact
             yield return new WaitForSeconds(2.5f);
 
-            // Transition to Classroom ending
-            TriggerClassroomTransition();
+            // Transition to MoroccanBeach ending
+            TriggerBeachTransition();
         }
     }
 
     public void TriggerClassroomTransition()
     {
-        Debug.Log("[PoolStoryManager] All 5 memories thrown into pool. Transitioning to Classroom Scene...");
-        if (screenFader != null)
-        {
-            screenFader.FadeToBlack(2.0f, () => {
-                ClassroomEndingController.IsEndingActive = true;
-                SceneManager.LoadScene("S1");
-            });
-        }
-        else
-        {
-            ClassroomEndingController.IsEndingActive = true;
-            SceneManager.LoadScene("S1");
-        }
+        TriggerBeachTransition();
+    }
+
+    public void TriggerBeachTransition()
+    {
+        Debug.Log("[PoolStoryManager] All memories thrown into pool. Fading out and transitioning to MoroccanBeach scene...");
+        ScreenFader.TransitionToScene("MoroccanBeach", 2.0f);
     }
 }

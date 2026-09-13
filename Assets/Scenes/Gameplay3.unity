@@ -9334,7 +9334,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MetroStorySequenceController
   teddyName: Mistfox
   childName: Yassir
-  currentPhase: 6
+  currentPhase: 7
   transitPassCollected: 0
   vendingMachineInspected: 0
   intercomInspected: 0
@@ -21079,7 +21079,7 @@ MonoBehaviour:
   playerCamera: {fileID: 1676752293}
   fov: 60
   invertCamera: 0
-  cameraCanMove: 0
+  cameraCanMove: 1
   mouseSensitivity: 2
   maxLookAngle: 50
   lockCursor: 1
@@ -21091,7 +21091,7 @@ MonoBehaviour:
   zoomKey: 324
   zoomFOV: 30
   zoomStepTime: 5
-  playerCanMove: 0
+  playerCanMove: 1
   walkSpeed: 3
   maxVelocityChange: 10
   enableSprint: 1

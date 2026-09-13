@@ -210,10 +210,10 @@ public class ClassroomEndingController : MonoBehaviour
 
     public void RestartGame()
     {
-        Debug.Log("[ClassroomEnding] Restart clicked. Resetting state and returning to Gameplay3.");
+        Debug.Log("[ClassroomEnding] Restart clicked - transitioning to MoroccanBeach.");
         IsEndingActive = false;
         Time.timeScale = 1f;
-        SceneManager.LoadScene("Gameplay3");
+        ScreenFader.TransitionToScene("MoroccanBeach", 2.0f);
     }
 
     [ContextMenu("Debug: Force Trigger Ending")]
