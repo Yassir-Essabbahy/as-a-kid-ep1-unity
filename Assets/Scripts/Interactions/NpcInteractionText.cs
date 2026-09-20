@@ -151,11 +151,17 @@ public class NpcInteractionText : MonoBehaviour
     {
         Transform npc = conv.transform;
 
-        // 1. Check for dedicated look target children (e.g. BeggarHead, LookTarget, Head)
-        Transform lookTarget = npc.Find("LookTarget") ?? npc.Find("lookTarget") ?? 
-                               npc.Find("BeggarHead") ?? npc.Find("Head") ?? npc.Find("head");
-        if (lookTarget != null)
-            return lookTarget.position;
+        // 1. Recursive check for dedicated look target or head bones across all descendants
+        var allDescendants = npc.GetComponentsInChildren<Transform>(true);
+        foreach (var t in allDescendants)
+        {
+            string lower = t.name.ToLower();
+            if (lower == "looktarget" || lower == "beggarhead" || lower == "head" || 
+                lower == "mixamorig:head" || lower.EndsWith(":head") || lower.EndsWith("_head"))
+            {
+                return t.position;
+            }
+        }
 
         // 2. Check for humanoid animator head bone
         var anim = npc.GetComponentInChildren<Animator>();
@@ -167,31 +173,25 @@ public class NpcInteractionText : MonoBehaviour
         }
 
         // 3. If there is an animator with named head/face bones in generic rig
-        if (anim != null)
+        foreach (var t in allDescendants)
         {
-            var transforms = npc.GetComponentsInChildren<Transform>();
-            foreach (var t in transforms)
-            {
-                string lower = t.name.ToLower();
-                if (lower.Contains("head") || lower.Contains("face"))
-                    return t.position;
-            }
-
-            var r = npc.GetComponentInChildren<Renderer>();
-            if (r != null)
-            {
-                Bounds b = r.bounds;
-                return new Vector3(b.center.x, b.min.y + b.size.y * 0.85f, b.center.z);
-            }
+            string lower = t.name.ToLower();
+            if (lower.Contains("head") || lower.Contains("face"))
+                return t.position;
         }
 
         // 4. For props, items, dolls, or objects (NO Animator, like Teddy Bear):
-        // Prefer the exact visual MeshRenderer bounds center
+        // If it's a character or NPC, aim near the top (82% height) for eye level
         var rend = hitCol != null ? hitCol.GetComponent<Renderer>() : null;
         if (rend == null) rend = npc.GetComponentInChildren<Renderer>();
         if (rend != null)
         {
-            return rend.bounds.center;
+            Bounds b = rend.bounds;
+            if (b.size.y > 1.0f)
+            {
+                return new Vector3(b.center.x, b.min.y + b.size.y * 0.82f, b.center.z);
+            }
+            return b.center;
         }
 
         // 5. Use raycast hit point if available
@@ -203,10 +203,15 @@ public class NpcInteractionText : MonoBehaviour
         if (col == null) col = npc.GetComponentInChildren<Collider>();
         if (col != null)
         {
-            return col.bounds.center;
+            Bounds b = col.bounds;
+            if (b.size.y > 1.0f)
+            {
+                return new Vector3(b.center.x, b.min.y + b.size.y * 0.82f, b.center.z);
+            }
+            return b.center;
         }
 
-        return npc.position;
+        return npc.position + Vector3.up * 1.5f;
     }
 
     IEnumerator TalkSequence(NpcConversation conv, NpcLookAt look, Collider hitCollider = null, Vector3 hitPoint = default)
@@ -238,95 +243,114 @@ public class NpcInteractionText : MonoBehaviour
         // 2. Find accurate target look position (face height or object center)
         Vector3 targetLookPos = GetTargetLookPosition(conv, hitCollider, hitPoint);
 
-        // Keep cursor locked and invisible throughout dialogue
+        // Keep cursor locked and invisible throughout dialogue start
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
-        // 3. Setup Cinemachine Virtual Cameras if available
-        bool useCinemachine = (cinemachineBrain != null && playerVcam != null && talkZoomVcam != null && playerCamera != null);
+        // 3. Direct smooth camera zoom and look rotation
+        Camera cam = playerCamera != null ? playerCamera.GetComponent<Camera>() : null;
+        float startFov = cam != null ? cam.fieldOfView : (_fpsController != null ? _fpsController.fov : 60f);
+        float targetFov = dialogueZoomFOV > 0f ? dialogueZoomFOV : 40f;
 
-        if (useCinemachine)
+        // Ensure CinemachineBrain is disabled so it doesn't fight our camera orientation or displace localPosition
+        if (cinemachineBrain != null)
+            cinemachineBrain.enabled = false;
+
+        if (playerCamera != null)
         {
-            // Position PlayerVcam to mirror current playerCamera state
-            Camera camComp = playerCamera.GetComponent<Camera>();
-            float currentFov = camComp != null ? camComp.fieldOfView : 60f;
+            playerCamera.localPosition = Vector3.zero;
 
-            playerVcam.transform.SetPositionAndRotation(playerCamera.position, playerCamera.rotation);
-            playerVcam.Lens.FieldOfView = currentFov;
-            playerVcam.Priority.Value = 20;
-
-            // Position TalkZoomVcam at player's eye level (optical zoom, no positional displacement)
             Vector3 camPos = playerCamera.position;
             Vector3 lookDirection = targetLookPos - camPos;
             if (lookDirection.sqrMagnitude < 0.001f)
                 lookDirection = playerCamera.forward;
+            lookDirection.Normalize();
 
-            Quaternion zoomRot = Quaternion.LookRotation(lookDirection);
+            // Calculate target body yaw
+            float targetYaw = Mathf.Atan2(lookDirection.x, lookDirection.z) * Mathf.Rad2Deg;
 
-            talkZoomVcam.transform.SetPositionAndRotation(camPos, zoomRot);
-            talkZoomVcam.Lens.FieldOfView = dialogueZoomFOV;
-            talkZoomVcam.Priority.Value = 10;
+            // Calculate target pitch (camera pitch: looking down is positive, looking up is negative)
+            float targetPitch = -Mathf.Asin(Mathf.Clamp(lookDirection.y, -1f, 1f)) * Mathf.Rad2Deg;
+            if (_fpsController != null)
+                targetPitch = Mathf.Clamp(targetPitch, -_fpsController.maxLookAngle, _fpsController.maxLookAngle);
 
-            // Configure brain blend and activate
-            cinemachineBrain.DefaultBlend = new CinemachineBlendDefinition(
-                CinemachineBlendDefinition.Styles.EaseInOut,
-                blendInDuration
-            );
-            cinemachineBrain.enabled = true;
+            float startYaw = transform.eulerAngles.y;
+            float startPitch = 0f;
+            if (_fpsController != null)
+            {
+                startPitch = _fpsController.Pitch;
+            }
+            else
+            {
+                startPitch = playerCamera.localEulerAngles.x;
+                if (startPitch > 180f) startPitch -= 360f;
+            }
 
-            // Trigger blend to talk zoom camera
-            talkZoomVcam.Priority.Value = 30;
+            // Also mirror to TalkZoomVcam if present in the scene
+            if (talkZoomVcam != null)
+            {
+                talkZoomVcam.transform.SetPositionAndRotation(camPos, Quaternion.LookRotation(lookDirection));
+                talkZoomVcam.Lens.FieldOfView = targetFov;
+            }
 
-            yield return new WaitForSeconds(blendInDuration);
-        }
-        else if (playerCamera != null)
-        {
-            // Fallback smooth rotation if Cinemachine is not wired
-            Quaternion startRot = playerCamera.rotation;
-            Vector3 lookDirection = targetLookPos - playerCamera.position;
-            Quaternion targetRot = lookDirection.sqrMagnitude > 0.001f ? Quaternion.LookRotation(lookDirection) : playerCamera.rotation;
             float t = 0f;
             while (t < blendInDuration)
             {
                 t += Time.deltaTime;
-                float s = Mathf.SmoothStep(0f, 1f, t / blendInDuration);
-                playerCamera.rotation = Quaternion.Slerp(startRot, targetRot, s);
+                float s = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t / blendInDuration));
+
+                float currentYaw = Mathf.LerpAngle(startYaw, targetYaw, s);
+                float currentPitch = Mathf.Lerp(startPitch, targetPitch, s);
+                float currentFov = Mathf.Lerp(startFov, targetFov, s);
+
+                if (_fpsController != null)
+                {
+                    _fpsController.SetViewAngles(currentYaw, currentPitch);
+                }
+                else
+                {
+                    transform.rotation = Quaternion.Euler(0f, currentYaw, 0f);
+                    playerCamera.localRotation = Quaternion.Euler(currentPitch, 0f, 0f);
+                    playerCamera.localPosition = Vector3.zero;
+                }
+
+                if (cam != null)
+                    cam.fieldOfView = currentFov;
+
                 yield return null;
             }
-            playerCamera.rotation = targetRot;
+
+            if (_fpsController != null)
+            {
+                _fpsController.SetViewAngles(targetYaw, targetPitch);
+            }
+            else
+            {
+                transform.rotation = Quaternion.Euler(0f, targetYaw, 0f);
+                playerCamera.localRotation = Quaternion.Euler(targetPitch, 0f, 0f);
+                playerCamera.localPosition = Vector3.zero;
+            }
+            if (cam != null)
+                cam.fieldOfView = targetFov;
         }
 
         // 4. Play conversation
         yield return StartCoroutine(conv.Play());
 
-        // 5. Blend back out
-        if (useCinemachine)
+        // 5. Smoothly zoom FOV back out
+        if (playerCamera != null && cam != null)
         {
-            cinemachineBrain.DefaultBlend = new CinemachineBlendDefinition(
-                CinemachineBlendDefinition.Styles.EaseInOut,
-                blendOutDuration
-            );
-            // Lower TalkZoomVcam priority so Cinemachine smoothly returns to PlayerVcam
-            talkZoomVcam.Priority.Value = 5;
-
-            yield return new WaitForSeconds(blendOutDuration);
-
-            // Disable CinemachineBrain so FirstPersonController has direct, non-interfering camera control
-            cinemachineBrain.enabled = false;
-        }
-        else if (playerCamera != null)
-        {
-            // Fallback return
-            Quaternion lookOutStart = playerCamera.rotation;
-            Quaternion targetRot = transform.rotation;
             float t2 = 0f;
             while (t2 < blendOutDuration)
             {
                 t2 += Time.deltaTime;
-                float s = Mathf.SmoothStep(0f, 1f, t2 / blendOutDuration);
-                playerCamera.rotation = Quaternion.Slerp(lookOutStart, targetRot, s);
+                float s = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t2 / blendOutDuration));
+                cam.fieldOfView = Mathf.Lerp(targetFov, startFov, s);
+                playerCamera.localPosition = Vector3.zero;
                 yield return null;
             }
+            cam.fieldOfView = startFov;
+            playerCamera.localPosition = Vector3.zero;
         }
 
         // 6. Disable NPC look-at
@@ -337,9 +361,10 @@ public class NpcInteractionText : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
-        // 8. Synchronize player view and re-enable controls smoothly
+        // 8. Re-enable player controls smoothly
         if (_fpsController != null && playerCamera != null)
         {
+            playerCamera.localPosition = Vector3.zero;
             _fpsController.SnapViewRotation(playerCamera.rotation);
             _fpsController.SetControlLocked(false);
         }

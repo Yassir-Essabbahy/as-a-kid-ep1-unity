@@ -300,11 +300,11 @@ public static class MetroStoryVerificationTest
         var f3 = System.Array.Find(roots, r => r.name == "Floor3");
 
         var door = f3 != null ? f3.transform.Find("Door_Behind")?.gameObject : null;
-        var room = f3 != null ? f3.transform.Find("BehindDoorRoom")?.gameObject : null;
+        var room = f3 != null ? (f3.transform.Find("interrogation") ?? f3.transform.Find("BehindDoorRoom"))?.gameObject : null;
         var teacher = room != null ? room.transform.Find("Teacher")?.gameObject : null;
         var mother = room != null ? room.transform.Find("Mother")?.gameObject : null;
         var father = room != null ? room.transform.Find("Father")?.gameObject : null;
-        var behindVcam = GameObject.Find("BehindDoorVcam");
+        var behindVcam = GameObject.Find("Interrogation_WideVCam") ?? GameObject.Find("BehindDoorVcam");
 
         bool doorOk = door != null && door.GetComponent<BoxCollider>() != null && door.GetComponent<AudioSource>() != null && door.GetComponent<DoorInteractable>() != null && door.layer == 3;
         bool roomOk = room != null && teacher != null && mother != null && father != null && behindVcam != null;

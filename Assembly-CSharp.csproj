@@ -43,6 +43,7 @@
     <UnityVersion>6000.4.4f1</UnityVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Analyzer Include="C:\Users\moroc\.vscode\extensions\visualstudiotoolsforunity.vstuc-1.3.1\Analyzers\Microsoft.Unity.Analyzers.dll" />
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.4.4f1\Editor\Data\Tools\BuildPipeline\Unity.SourceGenerators\Unity.SourceGenerators.dll" />
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.4.4f1\Editor\Data\Tools\BuildPipeline\Unity.SourceGenerators\Unity.Properties.SourceGenerator.dll" />
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.4.4f1\Editor\Data\Tools\BuildPipeline\Unity.SourceGenerators\Unity.UIToolkit.SourceGenerator.dll" />
@@ -59,11 +60,13 @@
     <Compile Include="Assets\Fears to Fathom Vhs for URP\VHSPostProcessFeature.cs" />
     <Compile Include="Assets\Assets\Backrooms\Characters\Cow\BusMouvement.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\Benchmark02.cs" />
+    <Compile Include="Assets\Scripts\Raft\RaftPiece.cs" />
     <Compile Include="Assets\Scripts\Dialogue\DialogueFadeScreen.cs" />
     <Compile Include="Assets\Scripts\Map\MapCollapseSequence.cs" />
     <Compile Include="Assets\Scripts\Dialogue\DialogueEvents.cs" />
     <Compile Include="Assets\Scripts\Backrooms\InvestigationLookController.cs" />
     <Compile Include="Assets\Scripts\MainMenu\MenuButtonUI.cs" />
+    <Compile Include="Assets\Scripts\Raft\RaftBuildArea.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_ExampleScript_01.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMPro_InstructionOverlay.cs" />
     <Compile Include="Assets\Scripts\Story\MetroStoryVerificationTest.cs" />
@@ -131,6 +134,7 @@
     <Compile Include="Assets\Scripts\ActivateOnTrigger.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TextMeshProFloatingText.cs" />
     <Compile Include="Assets\Scripts\Interactions\NpcInteractionText.cs" />
+    <Compile Include="Assets\Scripts\Raft\RaftPlayerInteraction.cs" />
     <Compile Include="Assets\Scripts\Interactions\NpcConversation.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -38,22 +38,33 @@ public class DoorInteractable : MonoBehaviour
         float dist = Vector3.Distance(transform.position, cam.position);
         if (dist <= interactionDistance)
         {
-            // Raycast check to see if player is looking towards door
             Ray ray = new Ray(cam.position, cam.forward);
+            bool isLookingAtDoor = false;
             if (Physics.Raycast(ray, out RaycastHit hit, interactionDistance))
             {
-                if (hit.collider.gameObject == gameObject || hit.collider.transform.IsChildOf(transform))
+                if (hit.collider.gameObject == gameObject || 
+                    hit.collider.transform.IsChildOf(transform) || 
+                    hit.collider.name.ToLower().Contains("door"))
                 {
-                    playerInRange = true;
-                    if (interactText != null) interactText.text = "Press 'E' to open door";
-
-                    if (Input.GetKeyDown(interactKey))
-                    {
-                        if (interactText != null) interactText.text = "";
-                        MetroStorySequenceController.Instance.OnDoorInteracted();
-                    }
-                    return;
+                    isLookingAtDoor = true;
                 }
+            }
+            if (!isLookingAtDoor && Vector3.Dot(cam.forward, (transform.position - cam.position).normalized) > 0.6f)
+            {
+                isLookingAtDoor = true;
+            }
+
+            if (isLookingAtDoor)
+            {
+                playerInRange = true;
+                if (interactText != null) interactText.text = "Press 'E' to open door";
+
+                if (Input.GetKeyDown(interactKey))
+                {
+                    if (interactText != null) interactText.text = "";
+                    MetroStorySequenceController.Instance.OnDoorInteracted();
+                }
+                return;
             }
         }
 

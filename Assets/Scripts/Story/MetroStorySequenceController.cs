@@ -51,7 +51,12 @@ public class MetroStorySequenceController : MonoBehaviour
         return text;
     }
 
-    private IEnumerator SafeShowDialogue(string[] lines, bool hasChoice = false, Color? dialogueColor = null, TMP_FontAsset dialogueFont = null)
+    private IEnumerator SafeShowDialogue(
+        string[] lines,
+        bool hasChoice = false,
+        Color? dialogueColor = null,
+        TMP_FontAsset dialogueFont = null,
+        Action<int, string> onLineStarted = null)
     {
         var diag = NpcDialogueManager.Instance;
         if (diag == null)
@@ -63,7 +68,10 @@ public class MetroStorySequenceController : MonoBehaviour
                 lines,
                 hasChoice: hasChoice,
                 dialogueColor: dialogueColor ?? Color.white,
-                dialogueFont: dialogueFont
+                dialogueFont: dialogueFont,
+                voiceSource: null,
+                voiceClips: null,
+                onLineStarted: onLineStarted
             ));
         }
         else
@@ -163,6 +171,13 @@ public class MetroStorySequenceController : MonoBehaviour
     public Transform motherTransform;
     public Transform fatherTransform;
 
+    [Header("Interrogation Cinematic Cameras")]
+    public CinemachineCamera interrogationWideVCam;
+    public CinemachineCamera interrogationTeacherVCam;
+    public CinemachineCamera interrogationMotherVCam;
+    public CinemachineCamera interrogationFatherVCam;
+    public CinemachineCamera interrogationDramaticVCam;
+
     [Header("Dark Room & Pool Staging")]
     public GameObject darkRoomObject;
     public CinemachineCamera darkRoomVcam;
@@ -216,6 +231,20 @@ public class MetroStorySequenceController : MonoBehaviour
             objectiveText.gameObject.SetActive(true);
             objectiveText.text = "Explore the platform. Find your teddy bear and speak with the people waiting.";
         }
+
+        ResetCinematicCameras();
+        if (cinemachineBrain != null)
+            cinemachineBrain.enabled = false;
+
+        if (fpsController != null)
+        {
+            fpsController.SetControlLocked(false);
+            if (fpsController.playerCamera != null)
+            {
+                fpsController.playerCamera.transform.localPosition = Vector3.zero;
+                fpsController.playerCamera.transform.localRotation = Quaternion.identity;
+            }
+        }
     }
 
     private void Update()
@@ -266,8 +295,52 @@ public class MetroStorySequenceController : MonoBehaviour
             var dv = GameObject.Find("DarkRoomVcam");
             if (dv != null) darkRoomVcam = dv.GetComponent<CinemachineCamera>();
         }
-        if (poolStoryManager == null)
-            poolStoryManager = FindAnyObjectByType<PoolStoryManager>(FindObjectsInactive.Include);
+
+        if (interrogationWideVCam == null)
+            interrogationWideVCam = GameObject.Find("Interrogation_WideVCam")?.GetComponent<CinemachineCamera>();
+        if (interrogationTeacherVCam == null)
+            interrogationTeacherVCam = GameObject.Find("Interrogation_TeacherVCam")?.GetComponent<CinemachineCamera>();
+        if (interrogationMotherVCam == null)
+            interrogationMotherVCam = GameObject.Find("Interrogation_MotherVCam")?.GetComponent<CinemachineCamera>();
+        if (interrogationFatherVCam == null)
+            interrogationFatherVCam = GameObject.Find("Interrogation_FatherVCam")?.GetComponent<CinemachineCamera>();
+        if (interrogationDramaticVCam == null)
+            interrogationDramaticVCam = GameObject.Find("Interrogation_DramaticVCam")?.GetComponent<CinemachineCamera>();
+
+        if (behindDoorVcam == null)
+            behindDoorVcam = interrogationWideVCam ?? GameObject.Find("BehindDoorVcam")?.GetComponent<CinemachineCamera>();
+
+        if (teacherTransform == null)
+            teacherTransform = GameObject.Find("Teacher")?.transform;
+        if (motherTransform == null)
+            motherTransform = GameObject.Find("Mother")?.transform;
+        if (fatherTransform == null)
+            fatherTransform = GameObject.Find("Father")?.transform;
+
+        if (neighborConversation == null)
+        {
+            var neighbor = GameObject.Find("Floor1/Neigbhor_NPC") ?? GameObject.Find("Neigbhor_NPC");
+            if (neighbor != null) neighborConversation = neighbor.GetComponent<NpcConversation>();
+        }
+
+        if (shopOwnerConversation == null)
+        {
+            var shopOwner = GameObject.Find("Floor1/ShopOwner_NPC") ?? GameObject.Find("ShopOwner_NPC");
+            if (shopOwner != null) shopOwnerConversation = shopOwner.GetComponent<NpcConversation>();
+        }
+
+        if (bullyConversation == null)
+        {
+            var allBullys = Resources.FindObjectsOfTypeAll<NpcConversation>();
+            foreach (var c in allBullys)
+            {
+                if (c.gameObject.scene.name == "Gameplay3" && c.gameObject.name == "Bully_NPC")
+                {
+                    bullyConversation = c;
+                    break;
+                }
+            }
+        }
 
         var elevBtn = FindAnyObjectByType<ElevatorButton>();
         if (elevBtn != null)
@@ -284,14 +357,27 @@ public class MetroStorySequenceController : MonoBehaviour
     private void HookConversations()
     {
         if (neighborConversation != null)
-            neighborConversation.OnConversationFinished += () => OnNpcSpoken(0);
+        {
+            neighborConversation.OnConversationFinished -= HandleNeighborFinished;
+            neighborConversation.OnConversationFinished += HandleNeighborFinished;
+        }
 
         if (shopOwnerConversation != null)
-            shopOwnerConversation.OnConversationFinished += () => OnNpcSpoken(1);
+        {
+            shopOwnerConversation.OnConversationFinished -= HandleShopOwnerFinished;
+            shopOwnerConversation.OnConversationFinished += HandleShopOwnerFinished;
+        }
 
         if (bullyConversation != null)
-            bullyConversation.OnConversationFinished += () => OnNpcSpoken(2);
+        {
+            bullyConversation.OnConversationFinished -= HandleBullyFinished;
+            bullyConversation.OnConversationFinished += HandleBullyFinished;
+        }
     }
+
+    private void HandleNeighborFinished() => OnNpcSpoken(0);
+    private void HandleShopOwnerFinished() => OnNpcSpoken(1);
+    private void HandleBullyFinished() => OnNpcSpoken(2);
 
     public void OnNpcSpoken(int npcIndex)
     {
@@ -435,6 +521,25 @@ public class MetroStorySequenceController : MonoBehaviour
     {
         if (floor3BullyObject != null)
             floor3BullyObject.SetActive(true);
+
+        if (bullyConversation == null)
+        {
+            var allBullys = Resources.FindObjectsOfTypeAll<NpcConversation>();
+            foreach (var c in allBullys)
+            {
+                if (c.gameObject.scene.name == "Gameplay3" && c.gameObject.name == "Bully_NPC")
+                {
+                    bullyConversation = c;
+                    break;
+                }
+            }
+        }
+
+        if (bullyConversation != null)
+        {
+            bullyConversation.OnConversationFinished -= HandleBullyFinished;
+            bullyConversation.OnConversationFinished += HandleBullyFinished;
+        }
 
         if (doorObject != null)
             doorObject.SetActive(true);
@@ -771,25 +876,8 @@ public class MetroStorySequenceController : MonoBehaviour
             fpsController.SetControlLocked(true);
         }
 
-        // Instant camera cut: 0 map travel, 0 duration, immediate cut to cinematic camera position
-        if (behindDoorVcam != null)
-        {
-            behindDoorVcam.Priority.Value = 200;
-            if (playerCamera != null)
-            {
-                playerCamera.position = behindDoorVcam.transform.position;
-                playerCamera.rotation = behindDoorVcam.transform.rotation;
-            }
-        }
-
-        if (cinemachineBrain != null)
-        {
-            cinemachineBrain.DefaultBlend = new CinemachineBlendDefinition(
-                CinemachineBlendDefinition.Styles.Cut,
-                0f
-            );
-            cinemachineBrain.enabled = true;
-        }
+        // Establish initial interrogation camera (Teacher or Wide)
+        SwitchDialogueCamera(interrogationTeacherVCam ?? behindDoorVcam);
 
         string[] cinematicLines = new string[] {
             GetLoc("cinematic_01"),
@@ -809,18 +897,119 @@ public class MetroStorySequenceController : MonoBehaviour
             cinematicLines,
             hasChoice: false,
             dialogueColor: new Color(1f, 0.85f, 0.85f),
-            dialogueFont: null
+            dialogueFont: null,
+            onLineStarted: OnBehindDoorCinematicLineStarted
         ));
 
         yield return StartCoroutine(ChildEpisodeRoutine());
     }
 
+    public void SwitchDialogueCamera(CinemachineCamera targetVcam)
+    {
+        if (targetVcam == null)
+            targetVcam = interrogationWideVCam ?? behindDoorVcam;
+
+        if (targetVcam == null) return;
+
+        ResetCinematicCameras();
+        targetVcam.Priority.Value = 200;
+
+        if (playerCamera != null)
+        {
+            playerCamera.position = targetVcam.transform.position;
+            playerCamera.rotation = targetVcam.transform.rotation;
+        }
+
+        if (cinemachineBrain != null)
+        {
+            cinemachineBrain.DefaultBlend = new CinemachineBlendDefinition(
+                CinemachineBlendDefinition.Styles.Cut,
+                0f
+            );
+            cinemachineBrain.enabled = true;
+        }
+    }
+
+    public void ResetCinematicCameras()
+    {
+        if (behindDoorVcam != null) behindDoorVcam.Priority.Value = 0;
+        if (interrogationWideVCam != null) interrogationWideVCam.Priority.Value = 0;
+        if (interrogationTeacherVCam != null) interrogationTeacherVCam.Priority.Value = 0;
+        if (interrogationMotherVCam != null) interrogationMotherVCam.Priority.Value = 0;
+        if (interrogationFatherVCam != null) interrogationFatherVCam.Priority.Value = 0;
+        if (interrogationDramaticVCam != null) interrogationDramaticVCam.Priority.Value = 0;
+
+        var pv = GameObject.Find("PlayerVcam")?.GetComponent<CinemachineCamera>();
+        if (pv != null) pv.Priority.Value = 0;
+
+        var tz = GameObject.Find("TalkZoomVcam")?.GetComponent<CinemachineCamera>();
+        if (tz != null) tz.Priority.Value = 0;
+    }
+
+    private void OnBehindDoorCinematicLineStarted(int index, string line)
+    {
+        switch (index)
+        {
+            case 0: // Teacher: "It's getting worse."
+                SwitchDialogueCamera(interrogationTeacherVCam);
+                break;
+            case 1: // Mother: "What do we do?"
+                SwitchDialogueCamera(interrogationMotherVCam);
+                break;
+            case 2: // Teacher: "He keeps talking to someone."
+                SwitchDialogueCamera(interrogationTeacherVCam);
+                break;
+            case 3: // Father: "Who?"
+                SwitchDialogueCamera(interrogationFatherVCam);
+                break;
+            case 4: // Teacher: "He calls him by a name."
+            case 5: // Teacher: "But there is nobody there."
+                SwitchDialogueCamera(interrogationTeacherVCam);
+                break;
+            case 6: // Mother: "No... please..."
+                SwitchDialogueCamera(interrogationMotherVCam);
+                break;
+            case 7: // Teacher: "He keeps saying that someone is waiting for him."
+                SwitchDialogueCamera(interrogationTeacherVCam);
+                break;
+            case 8: // Teacher: "He keeps screaming that name." -> Wide establishing shot
+                SwitchDialogueCamera(interrogationWideVCam);
+                break;
+            case 9: // Child scream 1
+            case 10: // Child scream 2
+                SwitchDialogueCamera(interrogationDramaticVCam);
+                break;
+            default:
+                SwitchDialogueCamera(interrogationWideVCam);
+                break;
+        }
+    }
+
+    private void OnChildEpisodeLineStarted(int index, string line)
+    {
+        switch (index)
+        {
+            case 0: // Teacher: "It's happening again!"
+                SwitchDialogueCamera(interrogationTeacherVCam);
+                break;
+            case 1: // Mother: "My son!"
+                SwitchDialogueCamera(interrogationMotherVCam);
+                break;
+            case 2: // Father: "Hold him!"
+                SwitchDialogueCamera(interrogationFatherVCam);
+                break;
+            case 3: // Child: "{TEDDY_NAME}!"
+                SwitchDialogueCamera(interrogationDramaticVCam);
+                break;
+            default:
+                SwitchDialogueCamera(interrogationWideVCam);
+                break;
+        }
+    }
+
     private IEnumerator ChildEpisodeRoutine()
     {
         currentPhase = StoryPhase.ChildEpisode;
-
-        Transform shakeTarget = behindDoorVcam != null ? behindDoorVcam.transform : playerCamera;
-        Coroutine shakeRoutine = StartCoroutine(CameraShakeRoutine(shakeTarget, 5.0f, 0.35f));
 
         string[] episodeLines = new string[] {
             GetLoc("episode_01"),
@@ -832,11 +1021,10 @@ public class MetroStorySequenceController : MonoBehaviour
         yield return StartCoroutine(SafeShowDialogue(
             episodeLines,
             hasChoice: false,
-            dialogueColor: new Color(1f, 0.4f, 0.4f),
-            dialogueFont: null
+            dialogueColor: new Color(1f, 0.85f, 0.85f),
+            dialogueFont: null,
+            onLineStarted: OnChildEpisodeLineStarted
         ));
-
-        if (shakeRoutine != null) StopCoroutine(shakeRoutine);
 
         // After seizure episode, continue directly into the Dark Room Teddy reveal
         yield return StartCoroutine(DarkRoomRoutine());
@@ -856,7 +1044,7 @@ public class MetroStorySequenceController : MonoBehaviour
             while (!fadeOutDone) yield return null;
         }
 
-        if (behindDoorVcam != null) behindDoorVcam.Priority.Value = 0;
+        ResetCinematicCameras();
         if (darkRoomObject != null) darkRoomObject.SetActive(true);
 
         if (darkRoomVcam != null)
@@ -951,8 +1139,7 @@ public class MetroStorySequenceController : MonoBehaviour
     {
         currentPhase = StoryPhase.FinalTeddyMoment;
 
-        if (behindDoorVcam != null)
-            behindDoorVcam.Priority.Value = 0;
+        ResetCinematicCameras();
 
         if (finalTeddyVcam != null)
         {

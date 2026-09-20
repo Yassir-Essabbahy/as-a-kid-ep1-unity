@@ -45,6 +45,9 @@ public class NpcDialogueManager : MonoBehaviour
     [Header("Choice")]
     public int lastChoiceIndex;
 
+    public event System.Action<int, string> OnDialogueLineStarted;
+    public static event System.Action<int, string> OnAnyDialogueLineStarted;
+
     private bool choiceMade;
     private bool dialogueRunning;
     private Coroutine slideCoroutine;
@@ -196,7 +199,8 @@ public class NpcDialogueManager : MonoBehaviour
         Color dialogueColor,
         TMP_FontAsset dialogueFont,
         AudioSource voiceSource = null,
-        AudioClip[] voiceClips = null)
+        AudioClip[] voiceClips = null,
+        System.Action<int, string> onLineStarted = null)
     {
         if (dialogueRunning)
         {
@@ -287,6 +291,10 @@ public class NpcDialogueManager : MonoBehaviour
                     processedLine = processedLine.Replace("{TEDDY_NAME}", tName).Replace("[TEDDY NAME]", tName);
                 }
             }
+
+            onLineStarted?.Invoke(i, processedLine);
+            OnDialogueLineStarted?.Invoke(i, processedLine);
+            OnAnyDialogueLineStarted?.Invoke(i, processedLine);
 
             yield return StartCoroutine(
                 PlayLine(
@@ -539,10 +547,18 @@ public class NpcDialogueManager : MonoBehaviour
     {
         if (choicePack == null) return;
         var yesLabel = choicePack.transform.Find("YesButton/Label")?.GetComponent<TextMeshProUGUI>();
-        if (yesLabel != null) yesLabel.text = optionA;
+        if (yesLabel != null)
+        {
+            string cleanA = optionA.Replace("<size=70%><color=#8E9EAB>[1]</color></size>  ", "").Trim();
+            yesLabel.text = $"<size=70%><color=#8E9EAB>[1]</color></size>  {cleanA.ToUpper()}";
+        }
 
         var noLabel = choicePack.transform.Find("NoButton/Label")?.GetComponent<TextMeshProUGUI>();
-        if (noLabel != null) noLabel.text = optionB;
+        if (noLabel != null)
+        {
+            string cleanB = optionB.Replace("<size=70%><color=#8E9EAB>[2]</color></size>  ", "").Trim();
+            noLabel.text = $"<size=70%><color=#8E9EAB>[2]</color></size>  {cleanB.ToUpper()}";
+        }
     }
 
     private IEnumerator HandleChoices()
@@ -570,7 +586,12 @@ public class NpcDialogueManager : MonoBehaviour
             noBtn.onClick.AddListener(() => MakeChoice(1));
         }
 
+        var cg = choicePack.GetComponent<CanvasGroup>();
+        if (cg == null) cg = choicePack.AddComponent<CanvasGroup>();
+        cg.alpha = 0f;
+
         choicePack.SetActive(true);
+        StartCoroutine(AnimateChoiceEntry(choicePack.transform, cg));
 
         // Unlock mouse cursor so the player can click choice buttons
         Cursor.lockState = CursorLockMode.None;
@@ -586,10 +607,43 @@ public class NpcDialogueManager : MonoBehaviour
             yield return null;
         }
 
+        if (cg != null)
+        {
+            float fadeOut = 0.15f;
+            float elapsed = 0f;
+            while (elapsed < fadeOut)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                cg.alpha = 1f - Mathf.Clamp01(elapsed / fadeOut);
+                yield return null;
+            }
+        }
+
         choicePack.SetActive(false);
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+    }
+
+    private IEnumerator AnimateChoiceEntry(Transform packTransform, CanvasGroup cg)
+    {
+        float duration = 0.22f;
+        float elapsed = 0f;
+        Vector3 startScale = new Vector3(0.96f, 0.96f, 1f);
+        Vector3 endScale = Vector3.one;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float t = Mathf.Clamp01(elapsed / duration);
+            float smoothT = Mathf.SmoothStep(0f, 1f, t);
+            if (cg != null) cg.alpha = smoothT;
+            if (packTransform != null) packTransform.localScale = Vector3.Lerp(startScale, endScale, smoothT);
+            yield return null;
+        }
+
+        if (cg != null) cg.alpha = 1f;
+        if (packTransform != null) packTransform.localScale = endScale;
     }
 
 

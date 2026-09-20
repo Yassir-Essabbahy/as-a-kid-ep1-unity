@@ -38,6 +38,20 @@ public class FirstPersonController : MonoBehaviour
     // Internal Variables
     private float yaw = 0.0f;
     private float pitch = 0.0f;
+    public float Yaw => yaw;
+    public float Pitch => pitch;
+
+    public void SetViewAngles(float newYaw, float newPitch)
+    {
+        yaw = newYaw;
+        pitch = Mathf.Clamp(newPitch, -maxLookAngle, maxLookAngle);
+        transform.rotation = Quaternion.Euler(0f, yaw, 0f);
+        if (playerCamera != null)
+        {
+            playerCamera.transform.localRotation = Quaternion.Euler(pitch, 0f, 0f);
+            playerCamera.transform.localPosition = Vector3.zero;
+        }
+    }
     private Image crosshairObject;
 
     #region Camera Zoom Variables
@@ -178,9 +192,18 @@ public class FirstPersonController : MonoBehaviour
         crosshairObject = GetComponentInChildren<Image>();
 
         // Set internal variables
-        playerCamera.fieldOfView = fov;
+        if (playerCamera != null)
+        {
+            playerCamera.fieldOfView = fov;
+            playerCamera.transform.localPosition = Vector3.zero;
+            playerCamera.transform.localRotation = Quaternion.identity;
+        }
+
+        cameraCanMove = true;
+        playerCanMove = true;
+
         originalScale = transform.localScale;
-        jointOriginalPos = joint.localPosition;
+        if (joint != null) jointOriginalPos = joint.localPosition;
 
         if (!unlimitedSprint)
         {
@@ -269,7 +292,7 @@ public class FirstPersonController : MonoBehaviour
 
         #region Camera Zoom
 
-        if (enableZoom)
+        if (enableZoom && cameraCanMove)
         {
             // Changes isZoomed when key is pressed
             // Behavior for toogle zoom
