@@ -119,6 +119,8 @@
     <Compile Include="Assets\Scripts\Elevator\ElevatorButton.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\DropdownSample.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\VertexColorCycler.cs" />
+    <Compile Include="Assets\Scripts\Raft\BeachIntroController.cs" />
+    <Compile Include="Assets\Scripts\Raft\BeachEndingController.cs" />
     <Compile Include="Assets\MoroccanBeach\Scripts\PSXSceneController.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\ObjectSpin.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_PhoneNumberValidator.cs" />

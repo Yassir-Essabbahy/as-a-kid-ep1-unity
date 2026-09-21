@@ -5,7 +5,13 @@ public class NpcLookAt : MonoBehaviour
     public Animator animator;
     public bool IKActive = false;
     public Transform LookAtObj = null;
-    public float LookWeight = 2f;
+    public float LookWeight = 0f;
+
+    private void Awake()
+    {
+        if (animator == null)
+            animator = GetComponent<Animator>();
+    }
 
     private void OnAnimatorIK(int layerIndex)
     {

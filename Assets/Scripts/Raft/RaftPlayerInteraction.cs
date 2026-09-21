@@ -219,7 +219,21 @@ public class RaftPlayerInteraction : MonoBehaviour
         {
             if (hitBuildArea.IsCompleted)
             {
-                ClearPrompt();
+                if (BeachEndingController.Instance != null && BeachEndingController.Instance.CanBoardRaft)
+                {
+                    SetPrompt("E to get on");
+
+                    if (Input.GetKeyDown(interactKey))
+                    {
+                        ClearPrompt();
+                        BeachEndingController.Instance.StartRaftDeparture();
+                    }
+                }
+                else
+                {
+                    ClearPrompt();
+                }
+                return;
             }
             else if (currentHeldPiece != null)
             {
