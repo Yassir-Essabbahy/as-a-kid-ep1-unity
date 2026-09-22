@@ -17,5 +17,11 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/MoroccanBeach.unity
     guid: e999dd476c1a7524d955fd1ecd7b65f6
+  - enabled: 1
+    path: Assets/Scenes/Credits.unity
+    guid: 7ddc63c8e00a922478b0f395d97cfabe
+  - enabled: 1
+    path: Assets/Scenes/MainMenu.unity
+    guid: cee31d8803caebc438cd5df44c71de60
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}

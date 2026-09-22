@@ -50,6 +50,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\TutorialInfo\Scripts\Editor\ReadmeEditor.cs" />
+    <Compile Include="Assets\Editor\CreditsSceneBuilder.cs" />
     <Compile Include="Assets\Editor\MoroccanBeachSceneBuilder.cs" />
   </ItemGroup>
   <ItemGroup>

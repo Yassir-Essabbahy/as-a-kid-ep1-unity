@@ -78,16 +78,19 @@
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_UiFrameRateCounter.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\VertexZoom.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_TextSelector_B.cs" />
+    <Compile Include="Assets\Scripts\Credits\CreditsRaftBobber.cs" />
     <Compile Include="Assets\Scripts\Story\InteractivePlaceholderItem.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\SkewTextExample.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\WarpTextExample.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\ShaderPropAnimator.cs" />
     <Compile Include="Assets\Scripts\Dialogue\DialogueInputAdvancer.cs" />
+    <Compile Include="Assets\Scripts\Credits\CreditsMusicController.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_TextInfoDebugTool.cs" />
     <Compile Include="Assets\Scripts\Sounds\RandomMetroSound.cs" />
     <Compile Include="Assets\MoroccanBeach\Scripts\PSXWaterSurface.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\VertexShakeA.cs" />
     <Compile Include="Assets\Scripts\Story\PoolStoryManager.cs" />
+    <Compile Include="Assets\Scripts\Credits\CreditsSequenceController.cs" />
     <Compile Include="Assets\Scripts\Carry\TeddyFindQuest.cs" />
     <Compile Include="Assets\Scripts\Story\MetroStorySequenceController.cs" />
     <Compile Include="Assets\Scripts\Carry\CarryableItem.cs" />
@@ -121,6 +124,7 @@
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\VertexColorCycler.cs" />
     <Compile Include="Assets\Scripts\Raft\BeachIntroController.cs" />
     <Compile Include="Assets\Scripts\Raft\BeachEndingController.cs" />
+    <Compile Include="Assets\Scripts\Credits\CreditsTrainMover.cs" />
     <Compile Include="Assets\MoroccanBeach\Scripts\PSXSceneController.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\ObjectSpin.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_PhoneNumberValidator.cs" />

@@ -33,6 +33,10 @@ public class ClassroomEndingController : MonoBehaviour
     public Button restartButton;
     public ScreenFader screenFader;
 
+    [Header("Credits Audio")]
+    public AudioClip creditsMusicClip;
+    public float endingMusicVolume = 0.22f;
+
     private void Awake()
     {
         ResolveReferences();
@@ -133,6 +137,17 @@ public class ClassroomEndingController : MonoBehaviour
             titleCardFont = Resources.Load<TMP_FontAsset>("Fonts/GeistPixel-Regular-VariableFont_ELSH SDF");
         }
 
+        if (creditsMusicClip == null)
+        {
+            creditsMusicClip = Resources.Load<AudioClip>("Sounds/CreditsMusic");
+            if (creditsMusicClip == null)
+            {
+#if UNITY_EDITOR
+                creditsMusicClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Sounds/CreditsMusic.mp3");
+#endif
+            }
+        }
+
         if (restartButton != null)
         {
             restartButton.onClick.RemoveListener(RestartGame);
@@ -143,6 +158,18 @@ public class ClassroomEndingController : MonoBehaviour
     public IEnumerator PlayEndingSequence()
     {
         ResolveReferences();
+
+        if (screenFader != null)
+        {
+            screenFader.SetFadeAudio(false);
+        }
+        AudioListener.volume = 1f;
+
+        // Start CreditsMusic at subtle down volume (underscoring the ending scene)
+        if (creditsMusicClip != null)
+        {
+            Credits.CreditsMusicController.PlayAtEndingVolume(creditsMusicClip, endingMusicVolume, 3.0f);
+        }
 
         // 1. Suppress ClassroomGazeScene
         var gazeScene = FindAnyObjectByType<ClassroomGazeScene>();
@@ -271,56 +298,24 @@ public class ClassroomEndingController : MonoBehaviour
             yield return new WaitForSeconds(2.0f);
         }
 
-        yield return new WaitForSeconds(0.8f);
+        yield return new WaitForSeconds(0.6f);
 
-        // 7. Fade to Black (cinematic bands stay present during fade)
-        if (screenFader != null)
-        {
-            bool fadeDone = false;
-            screenFader.FadeToBlack(2.0f, () => fadeDone = true);
-            while (!fadeDone) yield return null;
-        }
-        else
-        {
-            yield return new WaitForSeconds(2.0f);
-        }
-
-        // Hide dialogue box once screen is black
+        // Hide dialogue box cleanly
         if (s1Diag != null && s1Diag.dialogueBox != null)
         {
             s1Diag.dialogueBox.SetActive(false);
         }
 
-        // 8. Display retro title card: "To be continued..."
+        // Ensure EndOfEpisodePanel is completely disabled (no "To be continued..." title card)
         if (endOfEpisodePanel != null)
         {
-            if (titleText != null)
-            {
-                titleText.text = titleCardString;
-                if (titleCardFont != null) titleText.font = titleCardFont;
-            }
-
-            // Remove/hide restart button completely
-            if (restartButton != null)
-            {
-                restartButton.gameObject.SetActive(false);
-            }
-            var allButtons = endOfEpisodePanel.GetComponentsInChildren<Button>(true);
-            foreach (var b in allButtons)
-            {
-                b.gameObject.SetActive(false);
-            }
-
-            // Hide subtitle to keep title card clean and minimal
-            var sub = endOfEpisodePanel.transform.Find("SubtitleText");
-            if (sub != null) sub.gameObject.SetActive(false);
-
-            endOfEpisodePanel.SetActive(true);
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
+            endOfEpisodePanel.SetActive(false);
         }
 
-        Debug.Log("[ClassroomEnding] Ending complete. Retro title card displayed.");
+        Debug.Log("[ClassroomEnding] Ending scene complete. Transitioning smoothly to Credits scene with music continuing uninterrupted...");
+
+        // Smoothly fade to black over 2.0s without touching audio, then load Credits scene
+        ScreenFader.TransitionToScene("Credits", 2.0f, shouldFadeAudio: false);
     }
 
     public void RestartGame()

@@ -20,6 +20,7 @@ public class ScreenFader : MonoBehaviour
     /// and smoothly fade in.
     /// </summary>
     public static bool StartFromBlack = false;
+    public static bool FadeAudioOnNextTransition = true;
 
     [SerializeField] private CanvasGroup overlay;
     [SerializeField] private bool fadeAudio = true;
@@ -47,7 +48,7 @@ public class ScreenFader : MonoBehaviour
                 overlay.alpha = 1f;
                 overlay.blocksRaycasts = true;
             }
-            if (fadeAudio) AudioListener.volume = 0f;
+            if (fadeAudio && FadeAudioOnNextTransition) AudioListener.volume = 0f;
         }
         else
         {
@@ -73,14 +74,22 @@ public class ScreenFader : MonoBehaviour
         }
     }
 
+    public void SetFadeAudio(bool value)
+    {
+        fadeAudio = value;
+        FadeAudioOnNextTransition = value;
+    }
+
     /// <summary>
     /// Smoothly fades out to black, then loads the target scene and sets it to fade in.
     /// </summary>
-    public static void TransitionToScene(string sceneName, float duration = 2.0f)
+    public static void TransitionToScene(string sceneName, float duration = 2.0f, bool shouldFadeAudio = true)
     {
         StartFromBlack = true;
+        FadeAudioOnNextTransition = shouldFadeAudio;
         if (Instance != null)
         {
+            Instance.fadeAudio = shouldFadeAudio;
             Instance.FadeToBlack(duration, () => {
                 SceneManager.LoadScene(sceneName);
             });

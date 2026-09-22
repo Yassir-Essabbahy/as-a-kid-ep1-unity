@@ -2608,7 +2608,7 @@ AudioSource:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 0
+      value: 1
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -2875,6 +2875,8 @@ MonoBehaviour:
   titleCardString: To be continued...
   restartButton: {fileID: 892266777}
   screenFader: {fileID: 1532204049}
+  creditsMusicClip: {fileID: 8300000, guid: 14a9d8994691b7b4b96dfc87061ffacf, type: 3}
+  endingMusicVolume: 0.22
 --- !u!4 &1542684748
 Transform:
   m_ObjectHideFlags: 0
