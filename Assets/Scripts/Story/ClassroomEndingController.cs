@@ -251,10 +251,26 @@ public class ClassroomEndingController : MonoBehaviour
 
         var npcDiag = NpcDialogueManager.Instance ?? FindAnyObjectByType<NpcDialogueManager>();
 
+        Color teacherColor = NpcDialogueManager.GetSpeakerColor("Teacher");
+        var pixelFont = NpcDialogueManager.DefaultDialogueFont;
+
         if (s1Diag != null && Application.isPlaying && s1Diag.dialogueBox != null)
         {
+            if (s1Diag.speakerText != null)
+            {
+                s1Diag.speakerText.text = "Teacher";
+                s1Diag.speakerText.color = teacherColor;
+                s1Diag.speakerText.fontSize = NpcDialogueManager.STANDARD_FONT_SIZE;
+                if (pixelFont != null) s1Diag.speakerText.font = pixelFont;
+            }
+            if (s1Diag.bodyText != null)
+            {
+                s1Diag.bodyText.color = teacherColor;
+                s1Diag.bodyText.fontSize = NpcDialogueManager.STANDARD_FONT_SIZE;
+                if (pixelFont != null) s1Diag.bodyText.font = pixelFont;
+            }
+
             // Line 1: Teacher: {CHILD_NAME}?
-            if (s1Diag.speakerText != null) s1Diag.speakerText.text = "Teacher";
             if (s1Diag.bodyText != null)
             {
                 string line1 = teacherName;
@@ -265,7 +281,6 @@ public class ClassroomEndingController : MonoBehaviour
             yield return new WaitForSeconds(2.8f);
 
             // Line 2: Teacher: ... Are you with us?
-            if (s1Diag.speakerText != null) s1Diag.speakerText.text = "Teacher";
             if (s1Diag.bodyText != null)
             {
                 string line2 = teacherQuestion;
@@ -280,8 +295,8 @@ public class ClassroomEndingController : MonoBehaviour
             yield return StartCoroutine(npcDiag.ShowDialogue(
                 new string[] { teacherName },
                 hasChoice: false,
-                dialogueColor: Color.white,
-                dialogueFont: null
+                dialogueColor: teacherColor,
+                dialogueFont: pixelFont
             ));
 
             yield return new WaitForSeconds(1.5f);
@@ -289,8 +304,8 @@ public class ClassroomEndingController : MonoBehaviour
             yield return StartCoroutine(npcDiag.ShowDialogue(
                 new string[] { teacherQuestion },
                 hasChoice: false,
-                dialogueColor: Color.white,
-                dialogueFont: null
+                dialogueColor: teacherColor,
+                dialogueFont: pixelFont
             ));
         }
         else

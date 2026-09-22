@@ -1722,8 +1722,8 @@ MonoBehaviour:
   - teddy_metro_03
   - teddy_metro_04
   needsChoiceAtEnd: 0
-  dialogueColor: {r: 0.7735849, g: 0, b: 0, a: 1}
-  dialogueFont: {fileID: 0}
+  dialogueColor: {r: 1, g: 0.65, b: 0.3, a: 1}
+  dialogueFont: {fileID: 11400000, guid: 9760074bf33164947ad4a08727dee0a4, type: 2}
   voiceSource: {fileID: 0}
   voiceClips: []
   becomesCarryableAfterDialogue: 0
@@ -8346,8 +8346,8 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1521147036}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.08, y: 0.44}
-  m_AnchorMax: {x: 0.92, y: 0.92}
+  m_AnchorMin: {x: 0.08, y: 0.25}
+  m_AnchorMax: {x: 0.85, y: 0.88}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -8373,8 +8373,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 9760074bf33164947ad4a08727dee0a4, type: 2}
+  m_sharedMaterial: {fileID: 6179473881242153786, guid: 9760074bf33164947ad4a08727dee0a4, type: 2}
   m_fontSharedMaterials:
   - {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontMaterial: {fileID: 0}
@@ -8399,15 +8399,15 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 22
-  m_fontSizeBase: 22
+  m_fontSize: 28
+  m_fontSizeBase: 28
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
-  m_HorizontalAlignment: 2
-  m_VerticalAlignment: 512
+  m_HorizontalAlignment: 1
+  m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_characterHorizontalScale: 1
@@ -15788,8 +15788,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "CONTINUE \u25B6"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 9760074bf33164947ad4a08727dee0a4, type: 2}
+  m_sharedMaterial: {fileID: 6179473881242153786, guid: 9760074bf33164947ad4a08727dee0a4, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -15813,8 +15813,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 16
-  m_fontSizeBase: 16
+  m_fontSize: 18
+  m_fontSizeBase: 18
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -21395,8 +21395,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Choice 3
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 9760074bf33164947ad4a08727dee0a4, type: 2}
+  m_sharedMaterial: {fileID: 6179473881242153786, guid: 9760074bf33164947ad4a08727dee0a4, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -21420,8 +21420,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 24
-  m_fontSizeBase: 24
+  m_fontSize: 18
+  m_fontSizeBase: 18
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 0
@@ -22387,8 +22387,8 @@ MonoBehaviour:
   - teddy_greet_01
   - teddy_greet_02
   needsChoiceAtEnd: 0
-  dialogueColor: {r: 1, g: 0, b: 0, a: 1}
-  dialogueFont: {fileID: 0}
+  dialogueColor: {r: 1, g: 0.65, b: 0.3, a: 1}
+  dialogueFont: {fileID: 11400000, guid: 9760074bf33164947ad4a08727dee0a4, type: 2}
   voiceSource: {fileID: 0}
   voiceClips: []
   becomesCarryableAfterDialogue: 1
@@ -31651,8 +31651,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: <size=70%><color=#8E9EAB>[2]</color></size>  DARE
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 9760074bf33164947ad4a08727dee0a4, type: 2}
+  m_sharedMaterial: {fileID: 6179473881242153786, guid: 9760074bf33164947ad4a08727dee0a4, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -34245,8 +34245,8 @@ MonoBehaviour:
   - teddy_metro_01
   - teddy_metro_02
   needsChoiceAtEnd: 0
-  dialogueColor: {r: 0.7735849, g: 0, b: 0, a: 1}
-  dialogueFont: {fileID: 0}
+  dialogueColor: {r: 1, g: 0.65, b: 0.3, a: 1}
+  dialogueFont: {fileID: 11400000, guid: 9760074bf33164947ad4a08727dee0a4, type: 2}
   voiceSource: {fileID: 0}
   voiceClips: []
   becomesCarryableAfterDialogue: 0
@@ -36335,8 +36335,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: <size=70%><color=#8E9EAB>[1]</color></size>  TRUTH
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 9760074bf33164947ad4a08727dee0a4, type: 2}
+  m_sharedMaterial: {fileID: 6179473881242153786, guid: 9760074bf33164947ad4a08727dee0a4, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -40702,8 +40702,8 @@ MonoBehaviour:
   - shop_04
   - shop_05
   needsChoiceAtEnd: 0
-  dialogueColor: {r: 0.6, g: 0.85, b: 1, a: 1}
-  dialogueFont: {fileID: 0}
+  dialogueColor: {r: 1, g: 0.55, b: 0.4, a: 1}
+  dialogueFont: {fileID: 11400000, guid: 9760074bf33164947ad4a08727dee0a4, type: 2}
   voiceSource: {fileID: 0}
   voiceClips: []
   becomesCarryableAfterDialogue: 0
@@ -43269,8 +43269,8 @@ MonoBehaviour:
   - neighbor_04
   - neighbor_05
   needsChoiceAtEnd: 0
-  dialogueColor: {r: 1, g: 0.95, b: 0.6, a: 1}
-  dialogueFont: {fileID: 0}
+  dialogueColor: {r: 0.48, g: 0.89, b: 0.58, a: 1}
+  dialogueFont: {fileID: 11400000, guid: 9760074bf33164947ad4a08727dee0a4, type: 2}
   voiceSource: {fileID: 0}
   voiceClips: []
   becomesCarryableAfterDialogue: 0
@@ -46347,8 +46347,8 @@ MonoBehaviour:
   - teddy_metro_05
   - teddy_metro_06
   needsChoiceAtEnd: 0
-  dialogueColor: {r: 0.7735849, g: 0, b: 0, a: 1}
-  dialogueFont: {fileID: 0}
+  dialogueColor: {r: 1, g: 0.65, b: 0.3, a: 1}
+  dialogueFont: {fileID: 11400000, guid: 9760074bf33164947ad4a08727dee0a4, type: 2}
   voiceSource: {fileID: 0}
   voiceClips: []
   becomesCarryableAfterDialogue: 0

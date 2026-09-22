@@ -49,7 +49,7 @@ public class BeachIntroController : MonoBehaviour
         "beach_intro_06"
     };
 
-    public Color dialogueColor = Color.white;
+    public Color dialogueColor = new Color(1.0f, 0.65f, 0.30f, 1.0f);
     public TMP_FontAsset dialogueFont;
 
     [Header("Player & Cutscene Setup")]
@@ -290,25 +290,31 @@ public class BeachIntroController : MonoBehaviour
 
         // 1. Smooth Fade-in from Black
         currentPhase = "FadingFromBlack";
-        if (faderOverlay != null)
+        if (screenFader == null) screenFader = ScreenFader.Instance ?? FindAnyObjectByType<ScreenFader>();
+        if (screenFader != null)
         {
-            faderOverlay.alpha = 1f;
-            faderOverlay.blocksRaycasts = true;
-
+            bool fadeDone = false;
+            screenFader.FadeFromBlack(fadeDuration, () => fadeDone = true);
+            while (!fadeDone) yield return null;
+        }
+        else if (faderOverlay != null)
+        {
             float elapsed = 0f;
             while (elapsed < fadeDuration)
             {
                 elapsed += Time.deltaTime;
                 float t = Mathf.Clamp01(elapsed / fadeDuration);
                 faderOverlay.alpha = 1f - t;
+                AudioListener.volume = Mathf.Lerp(0f, 1f, t);
                 yield return null;
             }
-
             faderOverlay.alpha = 0f;
             faderOverlay.blocksRaycasts = false;
+            AudioListener.volume = 1f;
         }
         else
         {
+            AudioListener.volume = 1f;
             yield return new WaitForSeconds(fadeDuration);
         }
 

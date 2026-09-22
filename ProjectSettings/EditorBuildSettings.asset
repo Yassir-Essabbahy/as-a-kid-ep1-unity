@@ -6,11 +6,8 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/Backrooms.unity
-    guid: 99c9720ab356a0642a771bea13969a05
-  - enabled: 1
-    path: Assets/Scenes/Ending.unity
-    guid: 72f806c3536867f4ea15d6a800e52c48
+    path: Assets/Scenes/Start.unity
+    guid: 52dc24ce817f9f84a9b556dac55df8b4
   - enabled: 1
     path: Assets/Scenes/Gameplay3.unity
     guid: 5989e87aecc20d24ead432e799a59085
@@ -18,10 +15,16 @@ EditorBuildSettings:
     path: Assets/Scenes/MoroccanBeach.unity
     guid: e999dd476c1a7524d955fd1ecd7b65f6
   - enabled: 1
+    path: Assets/Scenes/Ending.unity
+    guid: 72f806c3536867f4ea15d6a800e52c48
+  - enabled: 1
     path: Assets/Scenes/Credits.unity
     guid: 7ddc63c8e00a922478b0f395d97cfabe
   - enabled: 1
     path: Assets/Scenes/MainMenu.unity
     guid: cee31d8803caebc438cd5df44c71de60
+  - enabled: 1
+    path: Assets/Scenes/Backrooms.unity
+    guid: 99c9720ab356a0642a771bea13969a05
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}

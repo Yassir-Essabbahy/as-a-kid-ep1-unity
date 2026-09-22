@@ -17,6 +17,12 @@ public class ClassroomGazeScene : MonoBehaviour
     [Tooltip("Optional - add a CinemachineImpulseSource to this object for a shake on the catch moment.")]
     [SerializeField] private CinemachineImpulseSource catchImpulse;
 
+    [Header("Scene Transition")]
+    [Tooltip("If true, transitions to the next scene instead of teleporting within the same scene.")]
+    [SerializeField] private bool transitionToNextScene = true;
+    [SerializeField] private string targetSceneName = "Gameplay3";
+    [SerializeField] private float sceneTransitionDuration = 1.5f;
+
     [Header("Player handoff")]
     [Tooltip("The FPS rig, pre-placed in the scene but left INACTIVE until handoff.")]
     [SerializeField] private GameObject playerRig;
@@ -139,7 +145,18 @@ public class ClassroomGazeScene : MonoBehaviour
     /// <summary>Wired in the Inspector to BookZoomVCam's CinemachineCameraEvents -> Blend Finished Event.</summary>
     public void OnBookZoomBlendFinished()
     {
-        ScreenFader.Instance.FadeToBlack(teleportFadeDuration, OnTeleportFadeOutComplete);
+        if (transitionToNextScene && !string.IsNullOrEmpty(targetSceneName))
+        {
+            Debug.Log($"[ClassroomGazeScene] Book zoom complete. Transitioning to {targetSceneName}...");
+            ScreenFader.TransitionToScene(targetSceneName, sceneTransitionDuration, shouldFadeAudio: true);
+        }
+        else
+        {
+            if (ScreenFader.Instance != null)
+                ScreenFader.Instance.FadeToBlack(teleportFadeDuration, OnTeleportFadeOutComplete);
+            else
+                OnTeleportFadeOutComplete();
+        }
     }
 
     private void OnTeleportFadeOutComplete()

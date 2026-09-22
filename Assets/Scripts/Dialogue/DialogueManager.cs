@@ -151,8 +151,30 @@ public class DialogueManager : MonoBehaviour
 
         DialogueLine line = currentSequence.lines[currentIndex];
 
-        speakerText.text = line.speakerName;
-bodyText.text = LocalizationManager.Instance.Get(line.key);
+        Color speakerColor = NpcDialogueManager.GetSpeakerColor(line.speakerName);
+        var font = NpcDialogueManager.DefaultDialogueFont;
+
+        if (speakerText != null)
+        {
+            speakerText.text = line.speakerName;
+            speakerText.color = speakerColor;
+            speakerText.fontSize = NpcDialogueManager.STANDARD_FONT_SIZE;
+            if (font != null && (speakerText.font == null || !speakerText.font.name.Contains("GeistPixel")))
+            {
+                speakerText.font = font;
+            }
+        }
+
+        if (bodyText != null)
+        {
+            bodyText.text = LocalizationManager.Instance.Get(line.key);
+            bodyText.color = speakerColor;
+            bodyText.fontSize = NpcDialogueManager.STANDARD_FONT_SIZE;
+            if (font != null && (bodyText.font == null || !bodyText.font.name.Contains("GeistPixel")))
+            {
+                bodyText.font = font;
+            }
+        }
 
         if (line.voiceClip != null)
         {

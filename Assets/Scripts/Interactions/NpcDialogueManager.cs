@@ -56,6 +56,99 @@ public class NpcDialogueManager : MonoBehaviour
     private bool skipTypingRequested;
     private bool isTyping;
 
+    public const float STANDARD_FONT_SIZE = 28f;
+
+    private static TMP_FontAsset _defaultFont;
+    public static TMP_FontAsset DefaultDialogueFont
+    {
+        get
+        {
+            if (_defaultFont == null)
+            {
+                _defaultFont = Resources.Load<TMP_FontAsset>("Fonts/GeistPixel-Regular-VariableFont_ELSH SDF");
+            }
+            return _defaultFont;
+        }
+    }
+
+    private Color currentDialogueColor = Color.white;
+
+    /// <summary>
+    /// Centralized speaker color palette for all NPCs and characters.
+    /// Teddy = Amber/Orange, Teacher = Warm Yellow, Neighbor = Mint Green,
+    /// Shop Owner = Warm Coral, Bully = Crimson Red, Brother = Soft Cyan,
+    /// Mother = Soft Lilac, Father = Slate Blue, Intercom = Terminal Aqua,
+    /// Player/Child/Default = Pure Crisp White.
+    /// </summary>
+    public static Color GetSpeakerColor(string speakerOrNpcName)
+    {
+        if (string.IsNullOrEmpty(speakerOrNpcName)) return Color.white;
+        string s = speakerOrNpcName.Trim().ToLowerInvariant();
+
+        // Teddy / Mistfox
+        if (s.Contains("teddy") || s.Contains("mistfox") || s.Contains("nounours") || s.Contains("الدب"))
+            return new Color(1.0f, 0.65f, 0.30f, 1.0f); // #FFA64D Soft Amber / Orange
+
+        // Teacher
+        if (s.Contains("teacher") || s.Contains("professeur") || s.Contains("prof") || s.Contains("المعلم"))
+            return new Color(1.0f, 0.94f, 0.63f, 1.0f); // #FFF0A0 Warm Pale Yellow / Cream
+
+        // Neighbor
+        if (s.Contains("neighbor") || s.Contains("neigbhor") || s.Contains("voisin") || s.Contains("الجار"))
+            return new Color(0.48f, 0.89f, 0.58f, 1.0f); // #7BE495 Soft Mint / Lime Green
+
+        // Shop Owner / Merchant
+        if (s.Contains("shop") || s.Contains("owner") || s.Contains("commercant") || s.Contains("merchant") || s.Contains("المتجر"))
+            return new Color(1.0f, 0.55f, 0.40f, 1.0f); // #FF8C66 Warm Coral / Peach
+
+        // Bully
+        if (s.Contains("bully") || s.Contains("harceleur") || s.Contains("المتنمر"))
+            return new Color(1.0f, 0.42f, 0.42f, 1.0f); // #FF6B6B Muted Crimson / Red
+
+        // Brother
+        if (s.Contains("brother") || s.Contains("frere") || s.Contains("الأخ") || s.Contains("اخ"))
+            return new Color(0.36f, 0.88f, 0.90f, 1.0f); // #5CE1E6 Soft Sky Blue / Cyan
+
+        // Mother
+        if (s.Contains("mother") || s.Contains("mere") || s.Contains("الأم") || s.Contains("ام"))
+            return new Color(0.87f, 0.63f, 0.87f, 1.0f); // #DDA0DD Soft Lilac / Lavender
+
+        // Father
+        if (s.Contains("father") || s.Contains("pere") || s.Contains("الأب") || s.Contains("اب"))
+            return new Color(0.56f, 0.80f, 0.96f, 1.0f); // #90CDF4 Slate / Steel Blue
+
+        // Intercom / System / Announcement
+        if (s.Contains("intercom") || s.Contains("interphone") || s.Contains("system") || s.Contains("مكبر"))
+            return new Color(0.50f, 1.0f, 0.83f, 1.0f); // #80FFD4 Retro Terminal Aqua
+
+        // Child / Player / Protagonist / Default
+        return Color.white;
+    }
+
+    /// <summary>
+    /// Dynamically resolves line color based on speaker prefix if present,
+    /// or falls back to the default conversation color.
+    /// </summary>
+    public static Color ResolveColorForLine(string line, Color defaultColor)
+    {
+        if (!string.IsNullOrEmpty(line))
+        {
+            int colonIdx = line.IndexOf(':');
+            if (colonIdx > 0 && colonIdx < 30)
+            {
+                string speaker = line.Substring(0, colonIdx).Trim();
+                if (speaker.StartsWith("{") && speaker.EndsWith("}"))
+                {
+                    return GetSpeakerColor("teddy");
+                }
+                return GetSpeakerColor(speaker);
+            }
+        }
+        if (defaultColor != Color.white && defaultColor.a > 0.01f)
+            return defaultColor;
+        return Color.white;
+    }
+
     public bool IsDialogueRunning => dialogueRunning;
 
 
@@ -237,14 +330,18 @@ public class NpcDialogueManager : MonoBehaviour
             yield break;
         }
 
-        // --------------------------------------------------------
-        // UI SETUP
-        // --------------------------------------------------------
-
-        dialogueText.color = dialogueColor;
+        currentDialogueColor = dialogueColor;
 
         if (dialogueFont != null)
             dialogueText.font = dialogueFont;
+        else if (dialogueText.font == null || dialogueText.font.name.Contains("Liberation"))
+        {
+            var f = DefaultDialogueFont;
+            if (f != null) dialogueText.font = f;
+        }
+
+        dialogueText.fontSize = STANDARD_FONT_SIZE;
+        dialogueText.color = ResolveColorForLine(lines[0], dialogueColor);
 
         EnsureBandsBound();
         ResetBandsOffscreen();
@@ -423,6 +520,21 @@ public class NpcDialogueManager : MonoBehaviour
             }
         }
 
+
+        // --------------------------------------------------------
+        // COLOR & FONT SETUP FOR THIS LINE
+        // --------------------------------------------------------
+
+        if (dialogueText != null)
+        {
+            dialogueText.fontSize = STANDARD_FONT_SIZE;
+            dialogueText.color = ResolveColorForLine(line, currentDialogueColor);
+            if (dialogueText.font == null || dialogueText.font.name.Contains("Liberation"))
+            {
+                var f = DefaultDialogueFont;
+                if (f != null) dialogueText.font = f;
+            }
+        }
 
         // --------------------------------------------------------
         // TYPE TEXT

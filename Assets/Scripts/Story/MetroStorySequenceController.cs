@@ -1170,20 +1170,9 @@ public class MetroStorySequenceController : MonoBehaviour
             dialogueFont: null
         ));
 
-        if (screenFader != null)
-        {
-            bool fadeDone = false;
-            screenFader.FadeToBlack(2.0f, () => fadeDone = true);
-            while (!fadeDone) yield return null;
-        }
-        else
-        {
-            yield return new WaitForSeconds(1.5f);
-        }
-
         currentPhase = StoryPhase.EndOfPrototype;
-        Debug.Log("[MetroStory] Sequence complete. Fading out and transitioning to MoroccanBeach...");
-        ScreenFader.TransitionToScene("MoroccanBeach", 2.0f);
+        Debug.Log("[MetroStory] Sequence complete. Smoothly transitioning to MoroccanBeach...");
+        ScreenFader.TransitionToScene("MoroccanBeach", 2.0f, shouldFadeAudio: true);
     }
 
     public void RestartSequence()
