@@ -133,6 +133,8 @@ public class MetroStorySequenceController : MonoBehaviour
     public bool vendingMachineInspected = false;
     public bool intercomInspected = false;
     public bool isPowerRestored = false;
+    public bool fuseBoxInspected = false;
+    public bool neighborGaveAdvice = false;
     public bool IsElevatorUnlocked => transitPassCollected || (neighborSpoken && shopOwnerSpoken);
 
     [Header("Floor 3 Exploration Tasks")]
@@ -376,7 +378,52 @@ public class MetroStorySequenceController : MonoBehaviour
         }
     }
 
-    private void HandleNeighborFinished() => OnNpcSpoken(0);
+    private void HandleNeighborFinished()
+    {
+        if (fuseBoxInspected && !neighborGaveAdvice)
+        {
+            neighborGaveAdvice = true;
+            Debug.Log("[MetroStory] Neighbor gave electrical advice!");
+            if (objectiveText != null)
+            {
+                objectiveText.gameObject.SetActive(true);
+                objectiveText.text = "Return to the fuse box and flip all 5 triggers down to restore power.";
+            }
+
+            if (neighborConversation != null)
+            {
+                neighborConversation.lineKeys = new string[] {
+                    "neighbor_fuse_reminder_01"
+                };
+            }
+        }
+
+        OnNpcSpoken(0);
+    }
+
+    public void OnFuseBoxInspected()
+    {
+        if (fuseBoxInspected) return;
+        fuseBoxInspected = true;
+        Debug.Log("[MetroStory] Fusebox inspected! Neighbor advice quest activated.");
+
+        if (objectiveText != null)
+        {
+            objectiveText.gameObject.SetActive(true);
+            objectiveText.text = "Talk to the neighbor on the platform for electrical advice.";
+        }
+
+        if (neighborConversation != null)
+        {
+            neighborConversation.lineKeys = new string[] {
+                "neighbor_fuse_advice_01",
+                "neighbor_fuse_advice_02",
+                "neighbor_fuse_advice_03",
+                "neighbor_fuse_advice_04",
+                "neighbor_fuse_advice_05"
+            };
+        }
+    }
     private void HandleShopOwnerFinished() => OnNpcSpoken(1);
     private void HandleBullyFinished() => OnNpcSpoken(2);
 

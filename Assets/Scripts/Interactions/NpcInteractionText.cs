@@ -7,8 +7,23 @@ public class NpcInteractionText : MonoBehaviour
 {
     [Header("UI & Settings")]
     public TextMeshProUGUI InteractText;
+    public GameObject promptBox;
+    public RectTransform promptBoxRect;
+    public UnityEngine.UI.Button promptButton;
     public float InteractionDistance = 5f;
     private bool CanInteract = true;
+
+    public static NpcInteractionText Instance { get; private set; }
+
+    // Cached current interaction targets
+    private InteractivePlaceholderItem currentPlaceholder;
+    private bool currentIsTeddy;
+    private CarryableItem currentCarryable;
+    private NpcConversation currentNpcConv;
+    private NpcLookAt currentNpcLook;
+    private Collider currentHitCol;
+    private Vector3 currentHitPoint;
+    private string currentPromptString = "";
 
     [Header("Cameras & Cinemachine")]
     public Transform playerCamera;
@@ -30,7 +45,17 @@ public class NpcInteractionText : MonoBehaviour
 
     void Awake()
     {
+        if (Instance != null && Instance != this)
+        {
+            // Keep existing singleton instance
+        }
+        else
+        {
+            Instance = this;
+        }
+
         ResolveReferences();
+        ClearPrompt();
     }
 
     void OnValidate()
@@ -69,6 +94,102 @@ public class NpcInteractionText : MonoBehaviour
             var tv = GameObject.Find("TalkZoomVcam");
             if (tv != null) talkZoomVcam = tv.GetComponent<CinemachineCamera>();
         }
+
+        if (promptBox == null)
+        {
+            var pb = GameObject.Find("PromptBox");
+            if (pb != null)
+            {
+                promptBox = pb;
+                promptBoxRect = pb.GetComponent<RectTransform>();
+                promptButton = pb.GetComponent<UnityEngine.UI.Button>();
+            }
+        }
+
+        if (promptButton != null)
+        {
+            promptButton.onClick.RemoveListener(TriggerCurrentInteraction);
+            promptButton.onClick.AddListener(TriggerCurrentInteraction);
+        }
+    }
+
+    public string GetCurrentPrompt() => currentPromptString;
+
+    public void SetPrompt(string text)
+    {
+        currentPromptString = text ?? "";
+
+        if (string.IsNullOrEmpty(text))
+        {
+            ClearPrompt();
+            return;
+        }
+
+        if (InteractText != null)
+        {
+            InteractText.text = text;
+            InteractText.gameObject.SetActive(true);
+        }
+
+        if (promptBox != null)
+        {
+            promptBox.SetActive(true);
+            if (promptBoxRect != null)
+            {
+                float targetWidth = Mathf.Max(160f, text.Length * 9.5f + 36f);
+                promptBoxRect.sizeDelta = new Vector2(targetWidth, 38f);
+            }
+        }
+    }
+
+    public void ClearPrompt()
+    {
+        currentPromptString = "";
+
+        if (InteractText != null)
+        {
+            InteractText.text = "";
+        }
+
+        if (promptBox != null)
+        {
+            promptBox.SetActive(false);
+        }
+    }
+
+    public void TriggerCurrentInteraction()
+    {
+        if (currentPlaceholder != null)
+        {
+            currentPlaceholder.TriggerInteraction();
+            return;
+        }
+
+        if (currentNpcConv != null)
+        {
+            if (currentIsTeddy)
+            {
+                if (currentCarryable != null && !currentCarryable.IsBeingCarried)
+                {
+                    var cp = GameObject.Find("CarryPoint")?.transform;
+                    if (cp != null) currentCarryable.StartCarrying(cp);
+                }
+
+                if (MetroStorySequenceController.Instance != null && MetroStorySequenceController.Instance.TryHandleTeddyInteraction())
+                {
+                    return;
+                }
+            }
+
+            StartCoroutine(TalkSequence(currentNpcConv, currentNpcLook, currentHitCol, currentHitPoint));
+            return;
+        }
+
+        if (MetroFuseBoxPuzzle.Instance != null && MetroFuseBoxPuzzle.Instance.IsPlayerNear)
+        {
+            MetroFuseBoxPuzzle.Instance.OpenInspection();
+            return;
+        }
     }
 
     void Update()
@@ -82,69 +203,60 @@ public class NpcInteractionText : MonoBehaviour
             var placeholder = hit.collider.GetComponent<InteractivePlaceholderItem>() ?? hit.collider.GetComponentInParent<InteractivePlaceholderItem>();
             if (placeholder != null && (!placeholder.oneTimeOnly || !placeholder.hasBeenInteracted))
             {
-                InteractText.text = placeholder.promptText;
+                currentPlaceholder = placeholder;
+                currentNpcConv = null;
+                SetPrompt(placeholder.promptText);
+
                 if (Input.GetKeyDown(KeyCode.E))
                 {
-                    placeholder.TriggerInteraction();
+                    TriggerCurrentInteraction();
                 }
                 return;
             }
 
             if (hit.collider.CompareTag("InteractNPC"))
             {
-                bool isTeddy = hit.collider.gameObject.name.Contains("Teddy") || (MetroStorySequenceController.Instance != null && hit.collider.gameObject == MetroStorySequenceController.Instance.teddyBearObject);
-                var carryable = isTeddy ? hit.collider.GetComponent<CarryableItem>() : null;
-                bool isCarried = carryable != null && carryable.IsBeingCarried;
+                currentPlaceholder = null;
+                currentHitCol = hit.collider;
+                currentHitPoint = hit.point;
+                currentIsTeddy = hit.collider.gameObject.name.Contains("Teddy") || (MetroStorySequenceController.Instance != null && hit.collider.gameObject == MetroStorySequenceController.Instance.teddyBearObject);
+                currentCarryable = currentIsTeddy ? hit.collider.GetComponent<CarryableItem>() : null;
+                bool isCarried = currentCarryable != null && currentCarryable.IsBeingCarried;
 
-                if (isTeddy && !isCarried)
-                {
-                    InteractText.text = "Press 'E' to Take Teddy";
-                }
-                else
-                {
-                    InteractText.text = "Press 'E' To Talk";
-                }
+                currentNpcConv = hit.collider.GetComponent<NpcConversation>();
+                currentNpcLook = hit.collider.GetComponent<NpcLookAt>();
+
+                string prompt = (currentIsTeddy && !isCarried) ? "Press 'E' to Take Teddy" : "Press 'E' To Talk";
+                SetPrompt(prompt);
 
                 if (Input.GetKeyDown(KeyCode.E))
                 {
-                    if (isTeddy)
-                    {
-                        if (carryable != null && !carryable.IsBeingCarried)
-                        {
-                            var cp = GameObject.Find("CarryPoint")?.transform;
-                            if (cp != null)
-                            {
-                                carryable.StartCarrying(cp);
-                            }
-                        }
-
-                        if (MetroStorySequenceController.Instance != null && MetroStorySequenceController.Instance.TryHandleTeddyInteraction())
-                        {
-                            return;
-                        }
-                    }
-
-                    NpcConversation npcConv =
-                        hit.collider.GetComponent<NpcConversation>();
-
-                    NpcLookAt npcLook =
-                        hit.collider.GetComponent<NpcLookAt>();
-
-                    if (npcConv != null)
-                    {
-                        StartCoroutine(TalkSequence(npcConv, npcLook, hit.collider, hit.point));
-                    }
+                    TriggerCurrentInteraction();
                 }
-            }
-            else
-            {
-                InteractText.text = "";
+                return;
             }
         }
-        else
+
+        // Proximity check for Metro Fusebox
+        if (MetroFuseBoxPuzzle.Instance != null && MetroFuseBoxPuzzle.Instance.IsPlayerNear)
         {
-            InteractText.text = "";
+            currentPlaceholder = null;
+            currentNpcConv = null;
+            string prompt = MetroFuseBoxPuzzle.Instance.isPowerRestored
+                ? MetroFuseBoxPuzzle.Instance.promptPoweredText
+                : MetroFuseBoxPuzzle.Instance.promptOpenText;
+            SetPrompt(prompt);
+
+            if (Input.GetKeyDown(KeyCode.E))
+            {
+                TriggerCurrentInteraction();
+            }
+            return;
         }
+
+        currentPlaceholder = null;
+        currentNpcConv = null;
+        ClearPrompt();
     }
 
     private Vector3 GetTargetLookPosition(NpcConversation conv, Collider hitCol, Vector3 hitPoint)

@@ -44,8 +44,18 @@ public class MetroFuseBoxPuzzle : MonoBehaviour
     [Header("Puzzle State")]
     public bool isPowerRestored = false;
     public bool isInspecting = false;
+    public bool hasTeddyHintPlayed = false;
     private bool isTransitioning = false;
     private bool isCompleting = false;
+
+    public bool IsPlayerNear
+    {
+        get
+        {
+            if (isInspecting || playerTransform == null) return false;
+            return Vector3.Distance(transform.position, playerTransform.position) <= interactionDistance;
+        }
+    }
 
     // References
     private FirstPersonController fpsController;
@@ -502,6 +512,36 @@ public class MetroFuseBoxPuzzle : MonoBehaviour
 
         if (activeTransitionCoroutine != null) StopCoroutine(activeTransitionCoroutine);
         activeTransitionCoroutine = StartCoroutine(AnimateCameraToInspection(targetPos, targetRot, transitionDuration));
+
+        // Trigger Teddy Bear hint conversation on first inspection before power is restored
+        if (!hasTeddyHintPlayed && !isPowerRestored)
+        {
+            hasTeddyHintPlayed = true;
+            StartCoroutine(PlayTeddyHintRoutine());
+        }
+    }
+
+    private IEnumerator PlayTeddyHintRoutine()
+    {
+        yield return new WaitForSeconds(transitionDuration + 0.15f);
+
+        if (MetroStorySequenceController.Instance != null)
+        {
+            MetroStorySequenceController.Instance.OnFuseBoxInspected();
+        }
+
+        if (NpcDialogueManager.Instance != null && LocalizationManager.Instance != null)
+        {
+            string line1 = LocalizationManager.Instance.Get("teddy_fuse_hint_01");
+            string line2 = LocalizationManager.Instance.Get("teddy_fuse_hint_02");
+
+            yield return StartCoroutine(NpcDialogueManager.Instance.ShowDialogue(
+                new string[] { line1, line2 },
+                hasChoice: false,
+                dialogueColor: NpcDialogueManager.GetSpeakerColor("teddy"),
+                dialogueFont: NpcDialogueManager.DefaultDialogueFont
+            ));
+        }
     }
 
     public void CloseInspection()
