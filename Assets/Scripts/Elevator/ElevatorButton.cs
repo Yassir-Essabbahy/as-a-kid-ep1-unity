@@ -69,12 +69,43 @@ public class ElevatorButton : MonoBehaviour
 
     private bool isRunning;
 
-    public bool CanAcceptDoorZoneRequest => !isRunning && (isPowered || (MetroStorySequenceController.Instance != null && MetroStorySequenceController.Instance.isPowerRestored));
+    public bool CanAcceptDoorZoneRequest => !isRunning && 
+        (isPowered || (MetroStorySequenceController.Instance != null && MetroStorySequenceController.Instance.isPowerRestored)) &&
+        (MetroStorySequenceController.Instance == null || MetroStorySequenceController.Instance.IsElevatorUnlocked);
 
     public void RequestDoorOpenFromZone()
     {
         if (!CanAcceptDoorZoneRequest) return;
         SetDoors(true);
+    }
+
+    public void NotifyDoorBlocked()
+    {
+        if (isRunning) return;
+        if (NpcDialogueManager.Instance != null && !NpcDialogueManager.Instance.IsDialogueRunning)
+        {
+            bool powerReady = isPowered || (MetroStorySequenceController.Instance != null && MetroStorySequenceController.Instance.isPowerRestored);
+            bool hasTicket = MetroStorySequenceController.Instance == null || MetroStorySequenceController.Instance.IsElevatorUnlocked;
+
+            if (!powerReady)
+            {
+                StartCoroutine(NpcDialogueManager.Instance.ShowDialogue(
+                    new string[] { "Child: The elevator doors won't open. The power grid is offline." },
+                    false,
+                    Color.white,
+                    null
+                ));
+            }
+            else if (!hasTicket)
+            {
+                StartCoroutine(NpcDialogueManager.Instance.ShowDialogue(
+                    new string[] { "Child: The elevator requires a train ticket to open and operate." },
+                    false,
+                    Color.white,
+                    null
+                ));
+            }
+        }
     }
 
     void Update()
@@ -86,7 +117,7 @@ public class ElevatorButton : MonoBehaviour
         if (dist <= interactDistance && Input.GetKeyDown(interactKey))
         {
             bool powerReady = isPowered || (MetroStorySequenceController.Instance != null && MetroStorySequenceController.Instance.isPowerRestored);
-            bool storyUnlocked = MetroStorySequenceController.Instance != null && MetroStorySequenceController.Instance.IsElevatorUnlocked;
+            bool storyUnlocked = MetroStorySequenceController.Instance == null || MetroStorySequenceController.Instance.IsElevatorUnlocked;
             bool questCompleted = currentFloorQuest == null || currentFloorQuest.questCompleted;
 
             if (!powerReady)
@@ -103,12 +134,12 @@ public class ElevatorButton : MonoBehaviour
                 return;
             }
 
-            if (!storyUnlocked && !questCompleted)
+            if (!storyUnlocked || !questCompleted)
             {
                 if (NpcDialogueManager.Instance != null && !NpcDialogueManager.Instance.IsDialogueRunning)
                 {
                     StartCoroutine(NpcDialogueManager.Instance.ShowDialogue(
-                        new string[] { "Child: The elevator has power now, but I still need to find the station transit keycard." },
+                        new string[] { "Child: The elevator has power now, but I can't ride it without a train ticket." },
                         false,
                         Color.white,
                         null

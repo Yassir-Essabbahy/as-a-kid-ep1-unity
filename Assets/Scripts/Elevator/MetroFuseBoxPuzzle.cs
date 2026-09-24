@@ -41,6 +41,10 @@ public class MetroFuseBoxPuzzle : MonoBehaviour
     public Light cabinetLight;
     public AudioSource audioSource;
 
+    [Header("Puzzle Target Pattern")]
+    [Tooltip("Target ON/OFF states: true = DOWN/ON (-90 deg), false = UP/OFF (0 deg). Default: 1, 2, 4, 5 DOWN, 3 UP")]
+    public bool[] targetPattern = new bool[] { true, true, false, true, true };
+
     [Header("Puzzle State")]
     public bool isPowerRestored = false;
     public bool isInspecting = false;
@@ -265,31 +269,41 @@ public class MetroFuseBoxPuzzle : MonoBehaviour
 
         if (inRange)
         {
-            if (interactUI != null)
+            if (NpcDialogueManager.Instance == null || !NpcDialogueManager.Instance.IsDialogueRunning)
             {
-                interactUI.text = isPowerRestored ? promptPoweredText : promptOpenText;
-            }
+                string prompt = isPowerRestored ? promptPoweredText : promptOpenText;
+                if (NpcInteractionText.Instance != null)
+                {
+                    NpcInteractionText.Instance.SetPrompt(prompt);
+                }
+                else if (interactUI != null)
+                {
+                    interactUI.text = prompt;
+                }
 
-            if (mobileOpenButton != null && !mobileOpenButton.gameObject.activeSelf)
-            {
-                mobileOpenButton.gameObject.SetActive(true);
+                if (Input.GetKeyDown(KeyCode.E))
+                {
+                    OpenInspection();
+                }
             }
-
-            if (Input.GetKeyDown(KeyCode.E))
+            else
             {
-                OpenInspection();
+                if (NpcInteractionText.Instance != null)
+                    NpcInteractionText.Instance.ClearPrompt();
+                else if (interactUI != null)
+                    interactUI.text = "";
             }
         }
         else
         {
-            if (interactUI != null && (interactUI.text == promptOpenText || interactUI.text == promptPoweredText))
+            if (NpcInteractionText.Instance != null && 
+                (NpcInteractionText.Instance.GetCurrentPrompt() == promptOpenText || NpcInteractionText.Instance.GetCurrentPrompt() == promptPoweredText))
+            {
+                NpcInteractionText.Instance.ClearPrompt();
+            }
+            else if (interactUI != null && (interactUI.text == promptOpenText || interactUI.text == promptPoweredText))
             {
                 interactUI.text = "";
-            }
-
-            if (mobileOpenButton != null && mobileOpenButton.gameObject.activeSelf)
-            {
-                mobileOpenButton.gameObject.SetActive(false);
             }
         }
     }
@@ -297,6 +311,16 @@ public class MetroFuseBoxPuzzle : MonoBehaviour
     private void HandleInspectionInput()
     {
         if (isTransitioning) return;
+
+        // Block all fuse box interaction and closing while dialogue is playing
+        if (NpcDialogueManager.Instance != null && NpcDialogueManager.Instance.IsDialogueRunning)
+            return;
+
+        // Ensure cursor remains unlocked and visible during inspection
+        if (Cursor.lockState != CursorLockMode.None)
+            Cursor.lockState = CursorLockMode.None;
+        if (!Cursor.visible)
+            Cursor.visible = true;
 
         // PC Exit keys
         if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.E))
@@ -412,17 +436,22 @@ public class MetroFuseBoxPuzzle : MonoBehaviour
     {
         if (isPowerRestored || isCompleting) return;
 
-        bool allOn = true;
+        if (targetPattern == null || targetPattern.Length != switchTriggers.Length)
+        {
+            targetPattern = new bool[] { true, true, false, true, true };
+        }
+
+        bool matched = true;
         for (int i = 0; i < switchTriggers.Length; i++)
         {
-            if (switchTriggers[i] != null && !switchTriggers[i].isOn)
+            if (switchTriggers[i] != null && switchTriggers[i].isOn != targetPattern[i])
             {
-                allOn = false;
+                matched = false;
                 break;
             }
         }
 
-        if (allOn)
+        if (matched)
         {
             if (Application.isPlaying)
             {
@@ -486,9 +515,13 @@ public class MetroFuseBoxPuzzle : MonoBehaviour
         isInspecting = true;
 
         if (interactUI != null) interactUI.text = "";
+        if (NpcInteractionText.Instance != null) NpcInteractionText.Instance.ClearPrompt();
 
         if (mobileOpenButton != null) mobileOpenButton.gameObject.SetActive(false);
-        if (mobileCloseButton != null) mobileCloseButton.gameObject.SetActive(true);
+
+        // Hide close button if dialogue is about to play; otherwise show it immediately
+        bool willPlayDialogue = (!hasTeddyHintPlayed && !isPowerRestored);
+        if (mobileCloseButton != null) mobileCloseButton.gameObject.SetActive(!willPlayDialogue);
 
         if (fpsController != null)
         {
@@ -541,6 +574,19 @@ public class MetroFuseBoxPuzzle : MonoBehaviour
                 dialogueColor: NpcDialogueManager.GetSpeakerColor("teddy"),
                 dialogueFont: NpcDialogueManager.DefaultDialogueFont
             ));
+        }
+
+        // Re-unlock and show cursor after dialogue completes
+        if (isInspecting)
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+
+        // Reveal the close button now that dialogue has ended
+        if (mobileCloseButton != null && isInspecting)
+        {
+            mobileCloseButton.gameObject.SetActive(true);
         }
     }
 

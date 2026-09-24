@@ -135,7 +135,7 @@ public class MetroStorySequenceController : MonoBehaviour
     public bool isPowerRestored = false;
     public bool fuseBoxInspected = false;
     public bool neighborGaveAdvice = false;
-    public bool IsElevatorUnlocked => transitPassCollected || (neighborSpoken && shopOwnerSpoken);
+    public bool IsElevatorUnlocked => transitPassCollected;
 
     [Header("Floor 3 Exploration Tasks")]
     public bool departureBoardInspected = false;
@@ -387,7 +387,7 @@ public class MetroStorySequenceController : MonoBehaviour
             if (objectiveText != null)
             {
                 objectiveText.gameObject.SetActive(true);
-                objectiveText.text = "Return to the fuse box and flip all 5 triggers down to restore power.";
+                objectiveText.text = "Return to the fuse box: flip switches 1, 2, 4, and 5 DOWN, and leave the center switch UP.";
             }
 
             if (neighborConversation != null)
@@ -507,7 +507,7 @@ public class MetroStorySequenceController : MonoBehaviour
             if (objectiveText != null)
             {
                 objectiveText.gameObject.SetActive(true);
-                objectiveText.text = "Power restored! Find your teddy bear and talk to the people on the platform.";
+                objectiveText.text = "Power restored! Find your train ticket to access the elevator.";
             }
         }
     }

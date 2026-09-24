@@ -117,6 +117,12 @@ public class NpcInteractionText : MonoBehaviour
 
     public void SetPrompt(string text)
     {
+        if (NpcDialogueManager.Instance != null && NpcDialogueManager.Instance.IsDialogueRunning)
+        {
+            ClearPrompt();
+            return;
+        }
+
         currentPromptString = text ?? "";
 
         if (string.IsNullOrEmpty(text))
@@ -149,6 +155,7 @@ public class NpcInteractionText : MonoBehaviour
         if (InteractText != null)
         {
             InteractText.text = "";
+            InteractText.gameObject.SetActive(false);
         }
 
         if (promptBox != null)
@@ -159,6 +166,9 @@ public class NpcInteractionText : MonoBehaviour
 
     public void TriggerCurrentInteraction()
     {
+        if (NpcDialogueManager.Instance != null && NpcDialogueManager.Instance.IsDialogueRunning)
+            return;
+
         if (currentPlaceholder != null)
         {
             currentPlaceholder.TriggerInteraction();
@@ -194,11 +204,31 @@ public class NpcInteractionText : MonoBehaviour
 
     void Update()
     {
-        if (!CanInteract) return;
+        // Keep the prompt box hidden whenever any dialogue is running
+        if (NpcDialogueManager.Instance != null && NpcDialogueManager.Instance.IsDialogueRunning)
+        {
+            ClearPrompt();
+            return;
+        }
 
-        Ray ray = new Ray(transform.position, transform.forward);
+        if (!CanInteract)
+        {
+            ClearPrompt();
+            return;
+        }
 
-        if (Physics.Raycast(ray, out RaycastHit hit, InteractionDistance))
+        Transform camT = playerCamera != null ? playerCamera : (_fpsController != null && _fpsController.playerCamera != null ? _fpsController.playerCamera.transform : (Camera.main != null ? Camera.main.transform : transform));
+        Vector3 rayOrigin = camT != null ? camT.position : transform.position;
+        Vector3 rayDir = camT != null ? camT.forward : transform.forward;
+        Ray ray = new Ray(rayOrigin, rayDir);
+
+        bool hasHit = Physics.Raycast(ray, out RaycastHit hit, InteractionDistance);
+        if (!hasHit)
+        {
+            hasHit = Physics.SphereCast(ray, 0.4f, out hit, InteractionDistance);
+        }
+
+        if (hasHit)
         {
             var placeholder = hit.collider.GetComponent<InteractivePlaceholderItem>() ?? hit.collider.GetComponentInParent<InteractivePlaceholderItem>();
             if (placeholder != null && (!placeholder.oneTimeOnly || !placeholder.hasBeenInteracted))
@@ -329,7 +359,7 @@ public class NpcInteractionText : MonoBehaviour
     IEnumerator TalkSequence(NpcConversation conv, NpcLookAt look, Collider hitCollider = null, Vector3 hitPoint = default)
     {
         CanInteract = false;
-        InteractText.text = "";
+        ClearPrompt();
 
         ResolveReferences();
 

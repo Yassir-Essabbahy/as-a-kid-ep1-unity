@@ -23,10 +23,17 @@ public class ElevatorZone : MonoBehaviour
         if (elevator == null)
             elevator = FindAnyObjectByType<ElevatorButton>();
 
-        if (elevator != null && elevator.CanAcceptDoorZoneRequest)
+        if (elevator != null)
         {
-            hasOpened = true;
-            elevator.RequestDoorOpenFromZone();
+            if (elevator.CanAcceptDoorZoneRequest)
+            {
+                hasOpened = true;
+                elevator.RequestDoorOpenFromZone();
+            }
+            else
+            {
+                elevator.NotifyDoorBlocked();
+            }
         }
     }
 

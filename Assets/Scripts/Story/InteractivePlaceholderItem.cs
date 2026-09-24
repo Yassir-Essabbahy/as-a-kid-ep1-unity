@@ -59,14 +59,32 @@ public class InteractivePlaceholderItem : MonoBehaviour
         float dist = Vector3.Distance(transform.position, playerTransform.position);
         if (dist <= interactionDistance)
         {
-            if (interactUI != null && (!oneTimeOnly || !hasBeenInteracted))
+            if (NpcDialogueManager.Instance == null || !NpcDialogueManager.Instance.IsDialogueRunning)
             {
-                interactUI.text = promptText;
-            }
+                if (NpcInteractionText.Instance != null && (!oneTimeOnly || !hasBeenInteracted))
+                {
+                    NpcInteractionText.Instance.SetPrompt(promptText);
+                }
+                else if (interactUI != null && (!oneTimeOnly || !hasBeenInteracted))
+                {
+                    interactUI.text = promptText;
+                }
 
-            if (Input.GetKeyDown(KeyCode.E))
+                if (Input.GetKeyDown(KeyCode.E))
+                {
+                    TriggerInteraction();
+                }
+            }
+        }
+        else
+        {
+            if (NpcInteractionText.Instance != null && NpcInteractionText.Instance.GetCurrentPrompt() == promptText)
             {
-                TriggerInteraction();
+                NpcInteractionText.Instance.ClearPrompt();
+            }
+            else if (interactUI != null && interactUI.text == promptText)
+            {
+                interactUI.text = "";
             }
         }
     }
@@ -75,6 +93,9 @@ public class InteractivePlaceholderItem : MonoBehaviour
     {
         if (oneTimeOnly && hasBeenInteracted) return;
         hasBeenInteracted = true;
+
+        if (NpcInteractionText.Instance != null)
+            NpcInteractionText.Instance.ClearPrompt();
 
         if (interactUI != null)
             interactUI.text = "";
