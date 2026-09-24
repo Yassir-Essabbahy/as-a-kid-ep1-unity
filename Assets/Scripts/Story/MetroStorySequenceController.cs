@@ -132,6 +132,7 @@ public class MetroStorySequenceController : MonoBehaviour
     public bool transitPassCollected = false;
     public bool vendingMachineInspected = false;
     public bool intercomInspected = false;
+    public bool isPowerRestored = false;
     public bool IsElevatorUnlocked => transitPassCollected || (neighborSpoken && shopOwnerSpoken);
 
     [Header("Floor 3 Exploration Tasks")]
@@ -440,16 +441,52 @@ public class MetroStorySequenceController : MonoBehaviour
         }
     }
 
+    public void OnPowerRestored()
+    {
+        isPowerRestored = true;
+        Debug.Log("[MetroStory] Elevator power restored via fuse box puzzle!");
+
+        if (IsElevatorUnlocked)
+        {
+            currentPhase = StoryPhase.Floor1_ElevatorReady;
+            if (objectiveText != null)
+            {
+                objectiveText.gameObject.SetActive(true);
+                objectiveText.text = "Power restored! Walk into the elevator and take it upstairs.";
+            }
+        }
+        else
+        {
+            if (objectiveText != null)
+            {
+                objectiveText.gameObject.SetActive(true);
+                objectiveText.text = "Power restored! Find your teddy bear and talk to the people on the platform.";
+            }
+        }
+    }
+
     public void CheckFloor1Progress()
     {
         if (currentPhase == StoryPhase.Floor1_Exploration && IsElevatorUnlocked)
         {
-            currentPhase = StoryPhase.Floor1_ElevatorReady;
-            Debug.Log("[MetroStory] Floor 1 requirements met. Elevator is unlocked!");
-            if (objectiveText != null)
+            if (isPowerRestored)
             {
-                objectiveText.gameObject.SetActive(true);
-                objectiveText.text = "Walk up the stairs and take the elevator to the upper platform.";
+                currentPhase = StoryPhase.Floor1_ElevatorReady;
+                Debug.Log("[MetroStory] Floor 1 requirements met & power restored. Elevator is unlocked!");
+                if (objectiveText != null)
+                {
+                    objectiveText.gameObject.SetActive(true);
+                    objectiveText.text = "Walk up the stairs and take the elevator to the upper platform.";
+                }
+            }
+            else
+            {
+                Debug.Log("[MetroStory] Floor 1 people spoken/pass collected, but elevator has no power!");
+                if (objectiveText != null)
+                {
+                    objectiveText.gameObject.SetActive(true);
+                    objectiveText.text = "The elevator power is off. Restore power at the fuse box near the elevator.";
+                }
             }
         }
     }

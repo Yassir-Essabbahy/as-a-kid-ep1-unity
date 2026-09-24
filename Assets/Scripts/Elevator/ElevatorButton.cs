@@ -59,9 +59,17 @@ public class ElevatorButton : MonoBehaviour
     public event System.Action OnFalseStopTriggered;
     public event System.Action OnArrivalOnNewFloor;
 
+    [Header("Power Grid")]
+    public bool isPowered = false;
+
+    public void OnPowerRestored()
+    {
+        isPowered = true;
+    }
+
     private bool isRunning;
 
-    public bool CanAcceptDoorZoneRequest => !isRunning;
+    public bool CanAcceptDoorZoneRequest => !isRunning && (isPowered || (MetroStorySequenceController.Instance != null && MetroStorySequenceController.Instance.isPowerRestored));
 
     public void RequestDoorOpenFromZone()
     {
@@ -77,15 +85,30 @@ public class ElevatorButton : MonoBehaviour
         float dist = Vector3.Distance(transform.position, playerTransform.position);
         if (dist <= interactDistance && Input.GetKeyDown(interactKey))
         {
+            bool powerReady = isPowered || (MetroStorySequenceController.Instance != null && MetroStorySequenceController.Instance.isPowerRestored);
             bool storyUnlocked = MetroStorySequenceController.Instance != null && MetroStorySequenceController.Instance.IsElevatorUnlocked;
             bool questCompleted = currentFloorQuest == null || currentFloorQuest.questCompleted;
+
+            if (!powerReady)
+            {
+                if (NpcDialogueManager.Instance != null && !NpcDialogueManager.Instance.IsDialogueRunning)
+                {
+                    StartCoroutine(NpcDialogueManager.Instance.ShowDialogue(
+                        new string[] { "Child: The elevator power is completely offline. I need to restore it at the fuse box nearby." },
+                        false,
+                        Color.white,
+                        null
+                    ));
+                }
+                return;
+            }
 
             if (!storyUnlocked && !questCompleted)
             {
                 if (NpcDialogueManager.Instance != null && !NpcDialogueManager.Instance.IsDialogueRunning)
                 {
                     StartCoroutine(NpcDialogueManager.Instance.ShowDialogue(
-                        new string[] { "Child: The elevator power is off. I need to find the station transit keycard." },
+                        new string[] { "Child: The elevator has power now, but I still need to find the station transit keycard." },
                         false,
                         Color.white,
                         null

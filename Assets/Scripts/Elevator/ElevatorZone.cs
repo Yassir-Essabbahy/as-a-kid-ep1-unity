@@ -20,13 +20,14 @@ public class ElevatorZone : MonoBehaviour
         if (hasOpened) return;
         if (!other.CompareTag(playerTag)) return;
 
-        hasOpened = true;
-
         if (elevator == null)
             elevator = FindAnyObjectByType<ElevatorButton>();
 
-        if (elevator != null)
+        if (elevator != null && elevator.CanAcceptDoorZoneRequest)
+        {
+            hasOpened = true;
             elevator.RequestDoorOpenFromZone();
+        }
     }
 
     void OnTriggerExit(Collider other)
