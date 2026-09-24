@@ -9,12 +9,14 @@ public class TeddyFindQuest : MonoBehaviour
 
     void OnEnable()
     {
-        askConversation.OnConversationFinished += HandleAskFinished;
+        if (askConversation != null)
+            askConversation.OnConversationFinished += HandleAskFinished;
     }
 
     void OnDisable()
     {
-        askConversation.OnConversationFinished -= HandleAskFinished;
+        if (askConversation != null)
+            askConversation.OnConversationFinished -= HandleAskFinished;
     }
 
     void HandleAskFinished()
@@ -24,9 +26,12 @@ public class TeddyFindQuest : MonoBehaviour
 
     public void CompleteQuest()
     {
-        if (!questActive || questCompleted) return;
+        if (questCompleted) return;
         questActive = false;
         questCompleted = true;
-        StartCoroutine(foundConversation.Play());
+        if (foundConversation != null)
+        {
+            StartCoroutine(foundConversation.Play());
+        }
     }
 }

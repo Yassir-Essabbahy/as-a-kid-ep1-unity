@@ -17,6 +17,7 @@ public class NpcInteractionText : MonoBehaviour
 
     // Cached current interaction targets
     private InteractivePlaceholderItem currentPlaceholder;
+    private FindableItem currentFindable;
     private bool currentIsTeddy;
     private CarryableItem currentCarryable;
     private NpcConversation currentNpcConv;
@@ -151,6 +152,9 @@ public class NpcInteractionText : MonoBehaviour
     public void ClearPrompt()
     {
         currentPromptString = "";
+        currentFindable = null;
+        currentPlaceholder = null;
+        currentNpcConv = null;
 
         if (InteractText != null)
         {
@@ -168,6 +172,13 @@ public class NpcInteractionText : MonoBehaviour
     {
         if (NpcDialogueManager.Instance != null && NpcDialogueManager.Instance.IsDialogueRunning)
             return;
+
+        if (currentFindable != null)
+        {
+            currentFindable.Collect();
+            currentFindable = null;
+            return;
+        }
 
         if (currentPlaceholder != null)
         {
@@ -230,6 +241,21 @@ public class NpcInteractionText : MonoBehaviour
 
         if (hasHit)
         {
+            var findable = hit.collider.GetComponent<FindableItem>() ?? hit.collider.GetComponentInParent<FindableItem>();
+            if (findable != null && !findable.IsCollected)
+            {
+                currentFindable = findable;
+                currentPlaceholder = null;
+                currentNpcConv = null;
+                SetPrompt(findable.promptText);
+
+                if (Input.GetKeyDown(KeyCode.E))
+                {
+                    TriggerCurrentInteraction();
+                }
+                return;
+            }
+
             var placeholder = hit.collider.GetComponent<InteractivePlaceholderItem>() ?? hit.collider.GetComponentInParent<InteractivePlaceholderItem>();
             if (placeholder != null && (!placeholder.oneTimeOnly || !placeholder.hasBeenInteracted))
             {
