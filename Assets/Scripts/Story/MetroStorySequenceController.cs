@@ -232,7 +232,7 @@ public class MetroStorySequenceController : MonoBehaviour
         if (objectiveText != null)
         {
             objectiveText.gameObject.SetActive(true);
-            objectiveText.text = "Explore the platform. Find your teddy bear and speak with the people waiting.";
+            objectiveText.text = "Find Teddy...";
         }
 
         ResetCinematicCameras();
@@ -387,7 +387,7 @@ public class MetroStorySequenceController : MonoBehaviour
             if (objectiveText != null)
             {
                 objectiveText.gameObject.SetActive(true);
-                objectiveText.text = "Return to the fuse box: flip switches 1, 2, 4, and 5 DOWN, and leave the center switch UP.";
+                objectiveText.text = "Restore the circuit...";
             }
 
             if (neighborConversation != null)
@@ -410,7 +410,7 @@ public class MetroStorySequenceController : MonoBehaviour
         if (objectiveText != null)
         {
             objectiveText.gameObject.SetActive(true);
-            objectiveText.text = "Talk to the neighbor on the platform for electrical advice.";
+            objectiveText.text = "The neighbor might know...";
         }
 
         if (neighborConversation != null)
@@ -499,7 +499,7 @@ public class MetroStorySequenceController : MonoBehaviour
             if (objectiveText != null)
             {
                 objectiveText.gameObject.SetActive(true);
-                objectiveText.text = "Power restored! Walk into the elevator and take it upstairs.";
+                objectiveText.text = "Head upstairs...";
             }
         }
         else
@@ -507,7 +507,7 @@ public class MetroStorySequenceController : MonoBehaviour
             if (objectiveText != null)
             {
                 objectiveText.gameObject.SetActive(true);
-                objectiveText.text = "Power restored! Find your train ticket to access the elevator.";
+                objectiveText.text = "Need a ticket...";
             }
         }
     }
@@ -523,7 +523,7 @@ public class MetroStorySequenceController : MonoBehaviour
                 if (objectiveText != null)
                 {
                     objectiveText.gameObject.SetActive(true);
-                    objectiveText.text = "Walk up the stairs and take the elevator to the upper platform.";
+                    objectiveText.text = "Head upstairs...";
                 }
             }
             else
@@ -532,7 +532,7 @@ public class MetroStorySequenceController : MonoBehaviour
                 if (objectiveText != null)
                 {
                     objectiveText.gameObject.SetActive(true);
-                    objectiveText.text = "The elevator power is off. Restore power at the fuse box near the elevator.";
+                    objectiveText.text = "The grid is dead...";
                 }
             }
         }
@@ -596,7 +596,7 @@ public class MetroStorySequenceController : MonoBehaviour
         if (objectiveText != null)
         {
             objectiveText.gameObject.SetActive(true);
-            objectiveText.text = "Explore Floor 3. Find out what this place is.";
+            objectiveText.text = "Where are we...?";
         }
         Debug.Log($"[MetroStory] Arrived on Floor 3 (Index {floorIndex}).");
     }
@@ -856,7 +856,7 @@ public class MetroStorySequenceController : MonoBehaviour
         if (objectiveText != null)
         {
             objectiveText.gameObject.SetActive(true);
-            objectiveText.text = "Dare: Walk to the end of the platform.";
+            objectiveText.text = "Into the dark...";
         }
 
         if (fpsController != null) fpsController.SetControlLocked(false);
@@ -933,7 +933,7 @@ public class MetroStorySequenceController : MonoBehaviour
         if (objectiveText != null)
         {
             objectiveText.gameObject.SetActive(true);
-            objectiveText.text = "Investigate the sounds coming from the door...";
+            objectiveText.text = "Behind the door...";
         }
 
         if (fpsController != null) fpsController.SetControlLocked(false);
