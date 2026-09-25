@@ -98,7 +98,7 @@ public class ElevatorButton : MonoBehaviour
             if (!powerReady)
             {
                 StartCoroutine(NpcDialogueManager.Instance.ShowDialogue(
-                    new string[] { "Child: The elevator doors won't open. The power grid is offline." },
+                    new string[] { MetroStorySequenceController.GetLoc("elevator_door_no_power") },
                     false,
                     Color.white,
                     null
@@ -109,7 +109,7 @@ public class ElevatorButton : MonoBehaviour
                 if (currentFloorQuest == null || currentFloorQuest.questActive)
                 {
                     StartCoroutine(NpcDialogueManager.Instance.ShowDialogue(
-                        new string[] { "Child: The elevator requires a train ticket to open and operate." },
+                        new string[] { MetroStorySequenceController.GetLoc("elevator_door_no_ticket") },
                         false,
                         Color.white,
                         null
@@ -136,7 +136,7 @@ public class ElevatorButton : MonoBehaviour
                 if (NpcDialogueManager.Instance != null && !NpcDialogueManager.Instance.IsDialogueRunning)
                 {
                     StartCoroutine(NpcDialogueManager.Instance.ShowDialogue(
-                        new string[] { "Child: The elevator power is completely offline. I need to restore it at the fuse box nearby." },
+                        new string[] { MetroStorySequenceController.GetLoc("elevator_btn_no_power") },
                         false,
                         Color.white,
                         null
@@ -150,7 +150,7 @@ public class ElevatorButton : MonoBehaviour
                 if (NpcDialogueManager.Instance != null && !NpcDialogueManager.Instance.IsDialogueRunning)
                 {
                     StartCoroutine(NpcDialogueManager.Instance.ShowDialogue(
-                        new string[] { "Child: The elevator has power now, but I can't ride it without a train ticket." },
+                        new string[] { MetroStorySequenceController.GetLoc("elevator_btn_no_ticket") },
                         false,
                         Color.white,
                         null
@@ -164,7 +164,7 @@ public class ElevatorButton : MonoBehaviour
                 if (NpcDialogueManager.Instance != null && !NpcDialogueManager.Instance.IsDialogueRunning)
                 {
                     StartCoroutine(NpcDialogueManager.Instance.ShowDialogue(
-                        new string[] { "Child: I can't leave without my teddy bear. He's somewhere on the platform." },
+                        new string[] { MetroStorySequenceController.GetLoc("elevator_btn_no_teddy") },
                         false,
                         Color.white,
                         null

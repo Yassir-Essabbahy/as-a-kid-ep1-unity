@@ -121,6 +121,10 @@ public class NpcDialogueManager : MonoBehaviour
         if (s.Contains("intercom") || s.Contains("interphone") || s.Contains("system") || s.Contains("مكبر"))
             return new Color(0.50f, 1.0f, 0.83f, 1.0f); // #80FFD4 Retro Terminal Aqua
 
+        // Old Traveler / Beggar
+        if (s.Contains("traveler") || s.Contains("beggar") || s.Contains("voyageur") || s.Contains("mendiant") || s.Contains("مسافر") || s.Contains("متسول") || s.Contains("عجوز"))
+            return new Color(0.92f, 0.80f, 0.60f, 1.0f); // #EBCCA0 Weathered Muted Amber
+
         // Child / Player / Protagonist / Default
         return Color.white;
     }
