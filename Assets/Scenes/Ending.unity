@@ -418,6 +418,9 @@ MonoBehaviour:
   bookVCam: {fileID: 413787760}
   bookZoomVCam: {fileID: 46623337}
   catchImpulse: {fileID: 0}
+  transitionToNextScene: 1
+  targetSceneName: Gameplay3
+  sceneTransitionDuration: 1.5
   playerRig: {fileID: 4459864850832140142}
   playerHandoffPoint: {fileID: 1351441053}
   teleportFadeDuration: 0.75
@@ -2503,7 +2506,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LocalizationManager
   csvFileName: dialogue
-  defaultLanguage: fr
+  defaultLanguage: en
 --- !u!4 &1402215536
 Transform:
   m_ObjectHideFlags: 0

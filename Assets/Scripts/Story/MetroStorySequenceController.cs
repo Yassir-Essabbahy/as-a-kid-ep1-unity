@@ -157,6 +157,11 @@ public class MetroStorySequenceController : MonoBehaviour
     public NpcConversation teddyConversation;
     public CarryableItem teddyCarryable;
 
+    [Header("Truth / Dare Table Paper")]
+    public GameObject tablePaperObject;
+    public PaperInspectController paperInspectController;
+    public bool paperObjectiveCompleted = false;
+
     [Header("Dare Objective")]
     public GameObject platformEndTrigger;
     public bool dareObjectiveCompleted = false;
@@ -350,6 +355,16 @@ public class MetroStorySequenceController : MonoBehaviour
             elevBtn.OnFalseStopTriggered += OnElevatorFalseStop;
             elevBtn.OnArrivalOnNewFloor -= () => OnFloorArrived(1);
             elevBtn.OnArrivalOnNewFloor += () => OnFloorArrived(1);
+        }
+
+        if (paperInspectController == null)
+        {
+            paperInspectController = FindAnyObjectByType<PaperInspectController>(FindObjectsInactive.Include);
+            if (paperInspectController == null)
+            {
+                var paperObj = new GameObject("PaperInspectSystem");
+                paperInspectController = paperObj.AddComponent<PaperInspectController>();
+            }
         }
     }
 
@@ -830,9 +845,7 @@ public class MetroStorySequenceController : MonoBehaviour
 
         string[] truthLines = new string[] {
             GetLoc("truth_01"),
-            GetLoc("truth_02"),
-            GetLoc("truth_03"),
-            GetLoc("truth_04")
+            GetLoc("truth_02")
         };
 
         yield return StartCoroutine(SafeShowDialogue(
@@ -842,9 +855,15 @@ public class MetroStorySequenceController : MonoBehaviour
             dialogueFont: null
         ));
 
-        yield return new WaitForSeconds(0.8f);
+        if (objectiveText != null)
+        {
+            objectiveText.gameObject.SetActive(true);
+            objectiveText.text = "Inspect the paper on the back table...";
+        }
 
-        yield return StartCoroutine(TeddyTurnRoutine());
+        if (fpsController != null) fpsController.SetControlLocked(false);
+        sequenceBusy = false;
+        Debug.Log("[MetroStory] Truth branch started. Objective: find truth paper on the back table.");
     }
 
     private IEnumerator DareBranchRoutine()
@@ -866,50 +885,50 @@ public class MetroStorySequenceController : MonoBehaviour
             dialogueFont: null
         ));
 
-        // The psychological Dare: Close eyes, darkness envelops screen
-        if (screenFader != null)
+        if (objectiveText != null)
         {
-            bool fadeDone = false;
-            screenFader.FadeToBlack(1.0f, () => fadeDone = true);
-            while (!fadeDone) yield return null;
+            objectiveText.gameObject.SetActive(true);
+            objectiveText.text = "Solve math paper on the back table...";
         }
 
-        // Camera subtly trembles in the darkness with ambient echo
-        if (playerCamera != null)
-        {
-            StartCoroutine(CameraShakeRoutine(playerCamera, 1.5f, 0.02f));
-        }
-        yield return new WaitForSeconds(1.8f);
-
-        // Open eyes: Fade back in from black
-        if (screenFader != null)
-        {
-            screenFader.FadeFromBlack(1.0f);
-        }
-        yield return new WaitForSeconds(0.6f);
-
-        dareObjectiveCompleted = true;
-
-        string[] dareCompleteLines = new string[] {
-            GetLoc("dare_complete_01")
-        };
-
-        yield return StartCoroutine(SafeShowDialogue(
-            dareCompleteLines,
-            hasChoice: false,
-            dialogueColor: Color.white,
-            dialogueFont: null
-        ));
-
-        yield return new WaitForSeconds(0.8f);
-
-        yield return StartCoroutine(TeddyTurnRoutine());
+        if (fpsController != null) fpsController.SetControlLocked(false);
+        sequenceBusy = false;
+        Debug.Log("[MetroStory] Dare branch started. Objective: solve math paper on the back table.");
     }
 
     public void OnPlatformEndReached()
     {
         if (platformEndTrigger != null)
             platformEndTrigger.SetActive(false);
+    }
+
+    public void OnPaperInspectionFinished(PaperInspectController.PaperMode mode)
+    {
+        paperObjectiveCompleted = true;
+        dareObjectiveCompleted = true;
+        StartCoroutine(PaperCompletedRoutine(mode));
+    }
+
+    private IEnumerator PaperCompletedRoutine(PaperInspectController.PaperMode mode)
+    {
+        sequenceBusy = true;
+        if (fpsController != null) fpsController.SetControlLocked(true);
+        if (objectiveText != null) objectiveText.gameObject.SetActive(false);
+
+        string[] reactLines = (mode == PaperInspectController.PaperMode.Dare_Math)
+            ? new string[] { GetLoc("dare_complete_01") }
+            : new string[] { GetLoc("truth_complete_01") };
+
+        yield return StartCoroutine(SafeShowDialogue(
+            reactLines,
+            hasChoice: false,
+            dialogueColor: Color.white,
+            dialogueFont: null
+        ));
+
+        yield return new WaitForSeconds(0.6f);
+
+        yield return StartCoroutine(TeddyTurnRoutine());
     }
 
     private IEnumerator TeddyTurnRoutine()
@@ -934,9 +953,18 @@ public class MetroStorySequenceController : MonoBehaviour
             dialogueFont: null
         ));
 
-        if (doorAudioSource != null && !doorAudioSource.isPlaying)
+        if (doorAudioSource != null)
         {
-            doorAudioSource.Play();
+            // Ensure no elevator loop audio is played on door
+            if (doorAudioSource.clip != null && doorAudioSource.clip.name.ToLower().Contains("elevator"))
+            {
+                doorAudioSource.Stop();
+                doorAudioSource.clip = null;
+            }
+            else if (doorAudioSource.clip != null && !doorAudioSource.isPlaying)
+            {
+                doorAudioSource.Play();
+            }
         }
 
         if (doorTrigger != null)
@@ -961,6 +989,33 @@ public class MetroStorySequenceController : MonoBehaviour
         StartCoroutine(BehindDoorCinematicRoutine());
     }
 
+    public void SilenceOutsideAmbience()
+    {
+        Debug.Log("[MetroStory] Silencing all outside ambience for interrogation room entrance...");
+
+        if (doorAudioSource != null)
+        {
+            doorAudioSource.Stop();
+        }
+
+        var allAudio = Object.FindObjectsByType<AudioSource>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        var behindRoom = GameObject.Find("BehindDoorRoom") ?? GameObject.Find("interrogation");
+
+        foreach (var audio in allAudio)
+        {
+            if (audio == null) continue;
+
+            // Preserve character dialogue/voice audio sources and any audio inside BehindDoorRoom
+            if (teacherTransform != null && audio.transform.IsChildOf(teacherTransform)) continue;
+            if (motherTransform != null && audio.transform.IsChildOf(motherTransform)) continue;
+            if (fatherTransform != null && audio.transform.IsChildOf(fatherTransform)) continue;
+            if (behindRoom != null && audio.transform.IsChildOf(behindRoom.transform)) continue;
+
+            audio.Stop();
+            audio.volume = 0f;
+        }
+    }
+
     public IEnumerator BehindDoorCinematicRoutine()
     {
         sequenceBusy = true;
@@ -973,6 +1028,9 @@ public class MetroStorySequenceController : MonoBehaviour
         {
             fpsController.SetControlLocked(true);
         }
+
+        // Silence outside ambience completely upon room entry
+        SilenceOutsideAmbience();
 
         // Establish initial interrogation camera (Teacher or Wide)
         SwitchDialogueCamera(interrogationTeacherVCam ?? behindDoorVcam);

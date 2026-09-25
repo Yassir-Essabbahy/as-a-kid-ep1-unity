@@ -663,16 +663,37 @@ public class NpcDialogueManager : MonoBehaviour
     {
         if (choicePack == null) return;
 
+        var packRect = choicePack.GetComponent<RectTransform>();
+        if (packRect != null)
+        {
+            // Position above the 220px bottom cinematic letterbox band
+            packRect.anchorMin = new Vector2(0.5f, 0f);
+            packRect.anchorMax = new Vector2(0.5f, 0f);
+            packRect.pivot = new Vector2(0.5f, 0.5f);
+            packRect.anchoredPosition = new Vector2(0f, 275f);
+            packRect.sizeDelta = new Vector2(560f, 56f);
+        }
+
         var yesBtnTransform = choicePack.transform.Find("YesButton");
         var noBtnTransform = choicePack.transform.Find("NoButton");
 
-        StyleChoiceButton(yesBtnTransform);
-        StyleChoiceButton(noBtnTransform);
+        StyleChoiceButton(yesBtnTransform, -135f);
+        StyleChoiceButton(noBtnTransform, 135f);
     }
 
-    private void StyleChoiceButton(Transform btnTransform)
+    private void StyleChoiceButton(Transform btnTransform, float posX)
     {
         if (btnTransform == null) return;
+
+        var btnRect = btnTransform.GetComponent<RectTransform>();
+        if (btnRect != null)
+        {
+            btnRect.anchorMin = new Vector2(0.5f, 0.5f);
+            btnRect.anchorMax = new Vector2(0.5f, 0.5f);
+            btnRect.pivot = new Vector2(0.5f, 0.5f);
+            btnRect.anchoredPosition = new Vector2(posX, 0f);
+            btnRect.sizeDelta = new Vector2(240f, 44f);
+        }
 
         var img = btnTransform.GetComponent<UnityEngine.UI.Image>();
         if (img != null)
@@ -698,7 +719,7 @@ public class NpcDialogueManager : MonoBehaviour
             var cb = btn.colors;
             cb.normalColor = Color.white;
             cb.highlightedColor = new Color(0.85f, 0.85f, 0.85f, 1f);
-            cb.pressedColor = new Color(0.45f, 0.45f, 0.45f, 1f);
+            cb.pressedColor = new Color(0.6f, 0.6f, 0.6f, 1f);
             cb.selectedColor = Color.white;
             cb.disabledColor = new Color(0.3f, 0.3f, 0.3f, 0.5f);
             cb.fadeDuration = 0.1f;
@@ -713,6 +734,7 @@ public class NpcDialogueManager : MonoBehaviour
                 label.font = DefaultDialogueFont;
             }
             label.color = Color.white;
+            label.alignment = TextAlignmentOptions.Center;
         }
     }
 
