@@ -62,6 +62,14 @@ public class ElevatorButton : MonoBehaviour
     [Header("Power Grid")]
     public bool isPowered = false;
 
+    void Start()
+    {
+        if (MetroStorySequenceController.Instance != null)
+        {
+            isPowered = MetroStorySequenceController.Instance.isPowerRestored;
+        }
+    }
+
     public void OnPowerRestored()
     {
         isPowered = true;
@@ -98,12 +106,15 @@ public class ElevatorButton : MonoBehaviour
             }
             else if (!hasTicket)
             {
-                StartCoroutine(NpcDialogueManager.Instance.ShowDialogue(
-                    new string[] { "Child: The elevator requires a train ticket to open and operate." },
-                    false,
-                    Color.white,
-                    null
-                ));
+                if (currentFloorQuest == null || currentFloorQuest.questActive)
+                {
+                    StartCoroutine(NpcDialogueManager.Instance.ShowDialogue(
+                        new string[] { "Child: The elevator requires a train ticket to open and operate." },
+                        false,
+                        Color.white,
+                        null
+                    ));
+                }
             }
         }
     }

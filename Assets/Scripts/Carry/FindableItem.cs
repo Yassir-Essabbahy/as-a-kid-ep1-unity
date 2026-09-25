@@ -19,6 +19,14 @@ public class FindableItem : MonoBehaviour
         if (player != null) playerTransform = player.transform;
     }
 
+    private void OnDisable()
+    {
+        if (NpcInteractionText.Instance != null && NpcInteractionText.Instance.GetCurrentPrompt() == promptText)
+        {
+            NpcInteractionText.Instance.ClearPrompt();
+        }
+    }
+
     void Update()
     {
         if (collected) return;

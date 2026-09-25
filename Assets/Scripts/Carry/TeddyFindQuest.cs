@@ -4,8 +4,17 @@ public class TeddyFindQuest : MonoBehaviour
 {
     public NpcConversation askConversation;   // the existing "go find X" NpcConversation
     public NpcConversation foundConversation; // the existing "you found it" NpcConversation
+    public GameObject itemToFind;             // Item to spawn/activate when quest starts
     public bool questActive = false;
     public bool questCompleted = false;
+
+    void Awake()
+    {
+        if (itemToFind != null && !questActive && !questCompleted)
+        {
+            itemToFind.SetActive(false);
+        }
+    }
 
     void OnEnable()
     {
@@ -22,6 +31,10 @@ public class TeddyFindQuest : MonoBehaviour
     void HandleAskFinished()
     {
         questActive = true;
+        if (itemToFind != null)
+        {
+            itemToFind.SetActive(true);
+        }
     }
 
     public void CompleteQuest()

@@ -507,6 +507,18 @@ public class MetroStorySequenceController : MonoBehaviour
             if (objectiveText != null)
             {
                 objectiveText.gameObject.SetActive(true);
+                objectiveText.text = "Check the elevator...";
+            }
+        }
+    }
+
+    public void OnElevatorTicketTriggered()
+    {
+        if (!IsElevatorUnlocked)
+        {
+            if (objectiveText != null)
+            {
+                objectiveText.gameObject.SetActive(true);
                 objectiveText.text = "Need a ticket...";
             }
         }
