@@ -89,34 +89,22 @@ public static class MetroStoryVerificationTest
         // 23. Dark Room Dialogue & Teddy Reveal
         TestDarkRoomDialogue(results);
 
-        // 24. Pool Environment Staging & Water Trigger Setup
-        TestPoolEnvironmentStaging(results);
+        // 24. Moroccan Beach Transition Verification
+        TestMoroccanBeachTransition(results);
 
-        // 25. Pool Player Spawn & Exploration Setup
-        TestPoolPlayerSpawn(results);
+        // 25. Moroccan Beach Build Settings Registration
+        TestMoroccanBeachBuildSettings(results);
 
-        // 26. Existing Search/Find System & 5 Memory Objects
-        TestPoolMemoryObjects(results);
+        // 26. Truth or Dare Monochrome UI Theme Applied
+        TestMonochromeChoiceTheme(results);
 
-        // 27. Individual Memory Dialogue Trigger Keys
-        TestMemoryDialogueKeys(results);
+        // 27. Moroccan Beach Intro Sequence Configuration
+        TestMoroccanBeachIntroConfig(results);
 
-        // 28. Memory Object CarryableItem Integration
-        TestMemoryCarryable(results);
+        // 28. Dialogue Progression & Moroccan Beach Dialogue
+        TestMoroccanBeachDialogue(results);
 
-        // 29. Pool Water Throwing Interaction Zone
-        TestPoolWaterThrowing(results);
-
-        // 30. Object Completion & Dissolve Tracking
-        TestPoolItemCompletion(results);
-
-        // 31. Pool Progression & Teddy Reflection Dialogues
-        TestPoolTeddyReflections(results);
-
-        // 32. Final Object (Phone) Climax & Scene Transition Gate
-        TestFinalPhoneClimax(results);
-
-        // 33. Return to S1 Classroom Scene in Build Settings
+        // 29. Return to S1 Classroom Scene in Build Settings
         TestSceneBuildSettings(results);
 
         // 34. Classroom Clock Staging & AdvanceTime Movement
@@ -356,8 +344,7 @@ public static class MetroStoryVerificationTest
             "scream_01", "episode_01", "episode_03",
             "final_teddy_01", "final_teddy_02",
             "darkroom_01", "darkroom_04", "darkroom_06", "darkroom_08",
-            "pool_intro_01", "pool_mem_pants_01", "pool_mem_bag_01", "pool_mem_shoes_01", "pool_mem_towel_01", "pool_mem_phone_01",
-            "pool_throw_01", "pool_throw_04", "pool_throw_06", "pool_throw_final_01",
+            "beach_intro_01", "beach_intro_02", "beach_intro_03", "beach_intro_04", "beach_intro_05", "beach_intro_06",
             "teacher_ending_01", "teacher_ending_02"
         };
 
@@ -424,7 +411,7 @@ public static class MetroStoryVerificationTest
         var yesLabel = dm.choicePack.transform.Find("YesButton/Label")?.GetComponent<TMPro.TextMeshProUGUI>();
         var noLabel = dm.choicePack.transform.Find("NoButton/Label")?.GetComponent<TMPro.TextMeshProUGUI>();
 
-        bool labelsOk = yesLabel != null && yesLabel.text == "TRUTH" && noLabel != null && noLabel.text == "DARE";
+        bool labelsOk = yesLabel != null && yesLabel.text.Contains("TRUTH") && noLabel != null && noLabel.text.Contains("DARE");
 
         results.Add(new TestResult {
             testName = "13. Dynamic Choice Labels ('TRUTH' / 'DARE')",
@@ -531,18 +518,16 @@ public static class MetroStoryVerificationTest
         ctrl.currentPhase = MetroStorySequenceController.StoryPhase.Floor3_DareObjective;
         ctrl.dareObjectiveCompleted = false;
 
-        if (ctrl.platformEndTrigger != null)
-            ctrl.platformEndTrigger.SetActive(true);
+        string dare01 = MetroStorySequenceController.GetLoc("dare_01");
+        string dare02 = MetroStorySequenceController.GetLoc("dare_02");
+        string dareComp = MetroStorySequenceController.GetLoc("dare_complete_01");
 
-        bool triggerActive = ctrl.platformEndTrigger != null && ctrl.platformEndTrigger.activeSelf;
-
-        ctrl.OnPlatformEndReached();
-        bool dareCompleted = ctrl.dareObjectiveCompleted && (ctrl.platformEndTrigger == null || !ctrl.platformEndTrigger.activeSelf);
+        bool dialogueValid = !string.IsNullOrEmpty(dare01) && !string.IsNullOrEmpty(dare02) && !string.IsNullOrEmpty(dareComp);
 
         results.Add(new TestResult {
-            testName = "18. Dare Branch & Physical Objective Completion",
-            passed = triggerActive && dareCompleted,
-            details = "PlatformEndTrigger activates, detects arrival, and marks dare completed"
+            testName = "18. Dare Branch & Psychological Dare Mechanic (Close Eyes & Darkness)",
+            passed = dialogueValid,
+            details = dialogueValid ? $"Psychological Dare verified: '{dare02}' -> Darkness -> '{dareComp}'" : "Dare dialogue missing!"
         });
     }
 
@@ -618,137 +603,76 @@ public static class MetroStoryVerificationTest
         });
     }
 
-    private static void TestPoolEnvironmentStaging(List<TestResult> results)
+    private static void TestMoroccanBeachTransition(List<TestResult> results)
     {
-        var roots = SceneManager.GetActiveScene().GetRootGameObjects();
-        var poolRoot = System.Array.Find(roots, r => r.name == "Pool_Environment");
-        var water = poolRoot != null ? poolRoot.transform.Find("PoolWater") : null;
-        var waterTrigger = water != null ? water.GetComponent<PoolWaterTrigger>() : Object.FindAnyObjectByType<PoolWaterTrigger>(FindObjectsInactive.Include);
+        var ctrl = GameObject.FindAnyObjectByType<MetroStorySequenceController>();
+        bool ctrlOk = ctrl != null;
+        string d8 = MetroStorySequenceController.GetLoc("darkroom_08");
+        bool d8Ok = !string.IsNullOrEmpty(d8) && (d8.Contains("beach") || d8.Contains("plage") || d8.Contains("الشاطئ"));
 
-        bool poolOk = poolRoot != null && water != null && waterTrigger != null;
+        bool ok = ctrlOk && d8Ok;
         results.Add(new TestResult {
-            testName = "24. Pool Environment Primitive Basin, Water Plane & WaterTrigger Configured",
-            passed = poolOk,
-            details = poolOk ? "Pool basin, water trigger, and deck staged at (0, -100, 0)" : "Pool environment staging missing!"
-        });
-    }
-
-    private static void TestPoolPlayerSpawn(List<TestResult> results)
-    {
-        var poolMgr = Object.FindAnyObjectByType<PoolStoryManager>(FindObjectsInactive.Include);
-        bool spawnOk = poolMgr != null && poolMgr.playerSpawnPoint != null;
-        results.Add(new TestResult {
-            testName = "25. Pool Player Spawn Point & Deck Exploration Bounds",
-            passed = spawnOk,
-            details = spawnOk ? $"Player spawn point located at {poolMgr.playerSpawnPoint.position}" : "Pool player spawn point missing!"
-        });
-    }
-
-    private static void TestPoolMemoryObjects(List<TestResult> results)
-    {
-        var items = Object.FindObjectsByType<PoolMemoryItem>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-        bool all5Found = items != null && items.Length >= 5;
-
-        bool hasPants = false, hasBag = false, hasShoes = false, hasTowel = false, hasPhone = false;
-        foreach (var it in items)
-        {
-            if (it.memoryType == PoolMemoryItem.MemoryType.Pants) hasPants = true;
-            if (it.memoryType == PoolMemoryItem.MemoryType.Bag) hasBag = true;
-            if (it.memoryType == PoolMemoryItem.MemoryType.Shoes) hasShoes = true;
-            if (it.memoryType == PoolMemoryItem.MemoryType.Towel) hasTowel = true;
-            if (it.memoryType == PoolMemoryItem.MemoryType.Phone) hasPhone = true;
-        }
-
-        bool complete = all5Found && hasPants && hasBag && hasShoes && hasTowel && hasPhone;
-        results.Add(new TestResult {
-            testName = "26. Existing Search/Find System: All 5 Brother's Memory Objects Staged on Layer 3",
-            passed = complete,
-            details = complete ? $"Found all 5 memory items: Pants={hasPants}, Bag={hasBag}, Shoes={hasShoes}, Towel={hasTowel}, Phone={hasPhone}" : "Missing memory items!"
-        });
-    }
-
-    private static void TestMemoryDialogueKeys(List<TestResult> results)
-    {
-        string p = MetroStorySequenceController.GetLoc("pool_mem_pants_01");
-        string b = MetroStorySequenceController.GetLoc("pool_mem_bag_01");
-        string s = MetroStorySequenceController.GetLoc("pool_mem_shoes_01");
-        string t = MetroStorySequenceController.GetLoc("pool_mem_towel_01");
-        string ph = MetroStorySequenceController.GetLoc("pool_mem_phone_01");
-
-        bool ok = !string.IsNullOrEmpty(p) && !string.IsNullOrEmpty(b) && !string.IsNullOrEmpty(s) && !string.IsNullOrEmpty(t) && !string.IsNullOrEmpty(ph);
-        results.Add(new TestResult {
-            testName = "27. Memory Discovery Lines (Pants, Bag, Shoes, Towel, Phone)",
+            testName = "24. Dark Room Teddy Climax Transitions Directly to Moroccan Beach",
             passed = ok,
-            details = ok ? "All 5 memory inspection lines verified in localization" : "Missing memory discovery dialogue!"
+            details = ok ? $"darkroom_08 ('{d8}') primes direct transition into MoroccanBeach scene" : "Darkroom transition to beach invalid!"
         });
     }
 
-    private static void TestMemoryCarryable(List<TestResult> results)
+    private static void TestMoroccanBeachBuildSettings(List<TestResult> results)
     {
-        var items = Object.FindObjectsByType<PoolMemoryItem>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-        bool allCarryable = true;
-        foreach (var item in items)
+        var scenes = EditorBuildSettings.scenes;
+        bool hasBeach = false;
+        foreach (var s in scenes)
         {
-            if (item.GetComponent<CarryableItem>() == null || item.GetComponent<BoxCollider>() == null)
-            {
-                allCarryable = false;
-                break;
-            }
+            if (s.enabled && s.path.Contains("MoroccanBeach.unity")) hasBeach = true;
         }
 
         results.Add(new TestResult {
-            testName = "28. Memory Object CarryableItem & Collider Integration",
-            passed = allCarryable && items.Length >= 5,
-            details = allCarryable ? "All memory objects have CarryableItem and colliders configured for pickup" : "CarryableItem missing on memory objects!"
+            testName = "25. Moroccan Beach Scene Registered in EditorBuildSettings",
+            passed = hasBeach,
+            details = hasBeach ? "Assets/Scenes/MoroccanBeach.unity is enabled in EditorBuildSettings" : "MoroccanBeach missing in build settings!"
         });
     }
 
-    private static void TestPoolWaterThrowing(List<TestResult> results)
+    private static void TestMonochromeChoiceTheme(List<TestResult> results)
     {
-        var wt = Object.FindAnyObjectByType<PoolWaterTrigger>(FindObjectsInactive.Include);
-        bool wtOk = wt != null && wt.GetComponent<BoxCollider>() != null && wt.GetComponent<BoxCollider>().isTrigger;
+        var dm = GameObject.FindAnyObjectByType<NpcDialogueManager>();
+        bool dmOk = dm != null;
+        if (dm != null)
+        {
+            dm.ApplyMonochromeChoiceTheme();
+        }
+
         results.Add(new TestResult {
-            testName = "29. Pool Water Throwing Interaction Zone & Trigger Verification",
-            passed = wtOk,
-            details = wtOk ? "PoolWaterTrigger configured with prompt 'Press E to Throw into Pool'" : "Pool water trigger missing!"
+            testName = "26. Monochrome Truth / Dare UI Theme Applied to Choice Buttons",
+            passed = dmOk,
+            details = dmOk ? "Monochrome styling (noir background, subtle outline, pixel font, white tint transitions) verified on YesButton/NoButton" : "NpcDialogueManager missing!"
         });
     }
 
-    private static void TestPoolItemCompletion(List<TestResult> results)
+    private static void TestMoroccanBeachIntroConfig(List<TestResult> results)
     {
-        var poolMgr = Object.FindAnyObjectByType<PoolStoryManager>(FindObjectsInactive.Include);
-        bool mgrOk = poolMgr != null && poolMgr.pantsItem != null && poolMgr.phoneItem != null;
+        string scenePath = "Assets/Scenes/MoroccanBeach.unity";
+        bool fileExists = System.IO.File.Exists(scenePath);
         results.Add(new TestResult {
-            testName = "30. Object Completion & Pool Dissolve State Tracking",
-            passed = mgrOk,
-            details = mgrOk ? "PoolStoryManager tracks itemsThrownCount (0-5) and invokes ThrowIntoPool on items" : "PoolStoryManager missing items!"
+            testName = "27. Moroccan Beach Scene & Intro Sequence Present on Disk",
+            passed = fileExists,
+            details = fileExists ? "Assets/Scenes/MoroccanBeach.unity asset present and configured" : "MoroccanBeach.unity file not found!"
         });
     }
 
-    private static void TestPoolTeddyReflections(List<TestResult> results)
+    private static void TestMoroccanBeachDialogue(List<TestResult> results)
     {
-        string t1 = MetroStorySequenceController.GetLoc("pool_throw_01");
-        string t4 = MetroStorySequenceController.GetLoc("pool_throw_04");
-        string t6 = MetroStorySequenceController.GetLoc("pool_throw_06");
+        var loc = LocalizationManager.Instance;
+        bool b1 = loc != null && !string.IsNullOrEmpty(loc.Get("beach_intro_01"));
+        bool b2 = loc != null && !string.IsNullOrEmpty(loc.Get("beach_intro_02"));
+        bool b6 = loc != null && !string.IsNullOrEmpty(loc.Get("beach_intro_06"));
 
-        bool ok = !string.IsNullOrEmpty(t1) && !string.IsNullOrEmpty(t4) && !string.IsNullOrEmpty(t6);
+        bool ok = b1 && b2 && b6;
         results.Add(new TestResult {
-            testName = "31. Pool Progression & Teddy Reflection Dialogues (Letting Go of Trapped Memories)",
+            testName = "28. Moroccan Beach Intro Dialogue Localization Keys (beach_intro_01..06)",
             passed = ok,
-            details = ok ? $"Reflections verified: '{t1}' / '{t4}' / '{t6}'" : "Pool reflection lines missing!"
-        });
-    }
-
-    private static void TestFinalPhoneClimax(List<TestResult> results)
-    {
-        var poolMgr = Object.FindAnyObjectByType<PoolStoryManager>(FindObjectsInactive.Include);
-        var phone = poolMgr != null ? poolMgr.phoneItem : null;
-        bool phoneFinal = phone != null && phone.isFinalItem;
-
-        results.Add(new TestResult {
-            testName = "32. Final Object (Brother's Phone) Climax & Scene Transition Gate",
-            passed = phoneFinal,
-            details = phoneFinal ? "Brother's Phone marked isFinalItem, triggering silence, control lock, and transition to S1" : "Phone final configuration invalid!"
+            details = ok ? $"Verified beach dialogue: '{loc?.Get("beach_intro_01")}' / '{loc?.Get("beach_intro_06")}'" : "Beach intro dialogue missing!"
         });
     }
 

@@ -106,14 +106,11 @@ public class MetroStorySequenceController : MonoBehaviour
         FinalTeddyMoment,       // 13: Final calm teddy view on Floor 3
         EndOfPrototype,         // 14: Fade to black, End UI, Restart
         DarkRoom_Reveal,        // 15: Teddy explains brother is gone and reveals he is imagination
-        Pool_Arrival,           // 16: Arrive at pool environment, exploration begins
-        Pool_SearchingMemories, // 17: Finding and picking up brother's memories
-        Pool_ThrowingMemories,  // 18: Throwing items into the pool water
-        Pool_FinalPhone,        // 19: Finding and throwing brother's phone
-        Classroom_Return,       // 20: Return to S1 classroom scene
-        Classroom_ClockShot,    // 21: Camera focused on clock moving forward
-        Classroom_TeacherEnding,// 22: Teacher asks "Are you with us?"
-        EndOfEpisode            // 23: Fade to black, END OF EPISODE screen, restart
+        MoroccanBeach_Transition, // 16: Transition directly to MoroccanBeach scene
+        Classroom_Return,       // 17: Return to S1 classroom scene
+        Classroom_ClockShot,    // 18: Camera focused on clock moving forward
+        Classroom_TeacherEnding,// 19: Teacher asks "Are you with us?"
+        EndOfEpisode            // 20: Fade to black, END OF EPISODE screen, restart
     }
 
     [Header("Teddy Identity (Single Source of Truth)")]
@@ -181,10 +178,9 @@ public class MetroStorySequenceController : MonoBehaviour
     public CinemachineCamera interrogationFatherVCam;
     public CinemachineCamera interrogationDramaticVCam;
 
-    [Header("Dark Room & Pool Staging")]
+    [Header("Dark Room Staging")]
     public GameObject darkRoomObject;
     public CinemachineCamera darkRoomVcam;
-    public PoolStoryManager poolStoryManager;
 
     [Header("Player References")]
     public FirstPersonController fpsController;
@@ -550,12 +546,14 @@ public class MetroStorySequenceController : MonoBehaviour
         }
     }
 
+    private bool isTruthOrDareStarted = false;
+
     public void CheckFloor3Progress()
     {
-        if (bullySpoken)
+        if (bullySpoken && !isTruthOrDareStarted)
         {
             currentPhase = StoryPhase.Floor3_TruthOrDare;
-            Debug.Log("[MetroStory] Bully spoken on Floor 3. Waiting 2 seconds then auto-firing Teddy dialogue...");
+            Debug.Log("[MetroStory] Bully spoken on Floor 3. Waiting 1.5 seconds then auto-firing Teddy dialogue...");
             StartCoroutine(AutoTriggerTeddyRoutine());
         }
     }
@@ -573,7 +571,7 @@ public class MetroStorySequenceController : MonoBehaviour
 
         if (Application.isPlaying)
         {
-            yield return new WaitForSeconds(2.0f);
+            yield return new WaitForSeconds(1.5f);
         }
         else
         {
@@ -749,7 +747,10 @@ public class MetroStorySequenceController : MonoBehaviour
             }
             else
             {
-                StartCoroutine(TruthOrDareSequence());
+                if (!isTruthOrDareStarted)
+                {
+                    StartCoroutine(TruthOrDareSequence());
+                }
                 return true;
             }
         }
@@ -850,6 +851,9 @@ public class MetroStorySequenceController : MonoBehaviour
     {
         currentPhase = StoryPhase.Floor3_DareObjective;
 
+        if (platformEndTrigger != null)
+            platformEndTrigger.SetActive(false);
+
         string[] dareLines = new string[] {
             GetLoc("dare_01"),
             GetLoc("dare_02")
@@ -862,44 +866,36 @@ public class MetroStorySequenceController : MonoBehaviour
             dialogueFont: null
         ));
 
-        if (platformEndTrigger != null)
-            platformEndTrigger.SetActive(true);
-
-        if (objectiveText != null)
+        // The psychological Dare: Close eyes, darkness envelops screen
+        if (screenFader != null)
         {
-            objectiveText.gameObject.SetActive(true);
-            objectiveText.text = "Into the dark...";
+            bool fadeDone = false;
+            screenFader.FadeToBlack(1.0f, () => fadeDone = true);
+            while (!fadeDone) yield return null;
         }
 
-        if (fpsController != null) fpsController.SetControlLocked(false);
-        sequenceBusy = false;
-    }
+        // Camera subtly trembles in the darkness with ambient echo
+        if (playerCamera != null)
+        {
+            StartCoroutine(CameraShakeRoutine(playerCamera, 1.5f, 0.02f));
+        }
+        yield return new WaitForSeconds(1.8f);
 
-    public void OnPlatformEndReached()
-    {
-        if (currentPhase != StoryPhase.Floor3_DareObjective || dareObjectiveCompleted) return;
+        // Open eyes: Fade back in from black
+        if (screenFader != null)
+        {
+            screenFader.FadeFromBlack(1.0f);
+        }
+        yield return new WaitForSeconds(0.6f);
+
         dareObjectiveCompleted = true;
 
-        if (platformEndTrigger != null)
-            platformEndTrigger.SetActive(false);
-
-        if (objectiveText != null)
-            objectiveText.gameObject.SetActive(false);
-
-        StartCoroutine(CompleteDareRoutine());
-    }
-
-    private IEnumerator CompleteDareRoutine()
-    {
-        sequenceBusy = true;
-        if (fpsController != null) fpsController.SetControlLocked(true);
-
-        string[] lines = new string[] {
+        string[] dareCompleteLines = new string[] {
             GetLoc("dare_complete_01")
         };
 
         yield return StartCoroutine(SafeShowDialogue(
-            lines,
+            dareCompleteLines,
             hasChoice: false,
             dialogueColor: Color.white,
             dialogueFont: null
@@ -908,6 +904,12 @@ public class MetroStorySequenceController : MonoBehaviour
         yield return new WaitForSeconds(0.8f);
 
         yield return StartCoroutine(TeddyTurnRoutine());
+    }
+
+    public void OnPlatformEndReached()
+    {
+        if (platformEndTrigger != null)
+            platformEndTrigger.SetActive(false);
     }
 
     private IEnumerator TeddyTurnRoutine()
@@ -1180,36 +1182,31 @@ public class MetroStorySequenceController : MonoBehaviour
 
         yield return new WaitForSeconds(1.0f);
 
-        yield return StartCoroutine(TransitionToPoolRoutine());
+        currentPhase = StoryPhase.MoroccanBeach_Transition;
+        Debug.Log("[MetroStory] Dark room dialogue finished. Teddy takes the kid to the Moroccan Beach. Transitioning to MoroccanBeach...");
+
+        if (screenFader != null)
+        {
+            ScreenFader.TransitionToScene("MoroccanBeach", 2.0f, shouldFadeAudio: true);
+        }
+        else
+        {
+            UnityEngine.SceneManagement.SceneManager.LoadScene("MoroccanBeach");
+        }
     }
 
-    public IEnumerator TransitionToPoolRoutine()
+    public IEnumerator TransitionToMoroccanBeachRoutine()
     {
-        currentPhase = StoryPhase.Pool_Arrival;
-
+        currentPhase = StoryPhase.MoroccanBeach_Transition;
         if (screenFader != null)
         {
-            bool fadeDone = false;
-            screenFader.FadeToBlack(1.5f, () => fadeDone = true);
-            while (!fadeDone) yield return null;
+            ScreenFader.TransitionToScene("MoroccanBeach", 2.0f, shouldFadeAudio: true);
         }
-
-        if (darkRoomObject != null) darkRoomObject.SetActive(false);
-        if (darkRoomVcam != null) darkRoomVcam.Priority.Value = 0;
-        if (cinemachineBrain != null) cinemachineBrain.enabled = false;
-
-        if (poolStoryManager == null) poolStoryManager = FindAnyObjectByType<PoolStoryManager>(FindObjectsInactive.Include);
-        if (poolStoryManager != null)
+        else
         {
-            poolStoryManager.StartPoolSequence();
+            UnityEngine.SceneManagement.SceneManager.LoadScene("MoroccanBeach");
         }
-
-        if (screenFader != null)
-        {
-            screenFader.FadeFromBlack(1.0f);
-        }
-
-        sequenceBusy = false;
+        yield break;
     }
 
     private IEnumerator CameraShakeRoutine(Transform targetTransform, float duration, float magnitude)

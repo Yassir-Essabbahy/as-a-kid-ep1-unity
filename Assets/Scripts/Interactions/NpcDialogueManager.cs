@@ -659,21 +659,80 @@ public class NpcDialogueManager : MonoBehaviour
     // CHOICES
     // ============================================================
 
+    public void ApplyMonochromeChoiceTheme()
+    {
+        if (choicePack == null) return;
+
+        var yesBtnTransform = choicePack.transform.Find("YesButton");
+        var noBtnTransform = choicePack.transform.Find("NoButton");
+
+        StyleChoiceButton(yesBtnTransform);
+        StyleChoiceButton(noBtnTransform);
+    }
+
+    private void StyleChoiceButton(Transform btnTransform)
+    {
+        if (btnTransform == null) return;
+
+        var img = btnTransform.GetComponent<UnityEngine.UI.Image>();
+        if (img != null)
+        {
+            img.color = new Color(0.04f, 0.04f, 0.04f, 0.95f);
+        }
+
+        var outline = btnTransform.GetComponent<UnityEngine.UI.Outline>();
+        if (outline == null)
+        {
+            outline = btnTransform.gameObject.AddComponent<UnityEngine.UI.Outline>();
+        }
+        if (outline != null)
+        {
+            outline.effectColor = new Color(1f, 1f, 1f, 0.45f);
+            outline.effectDistance = new Vector2(1.2f, -1.2f);
+        }
+
+        var btn = btnTransform.GetComponent<Button>();
+        if (btn != null)
+        {
+            btn.transition = Selectable.Transition.ColorTint;
+            var cb = btn.colors;
+            cb.normalColor = Color.white;
+            cb.highlightedColor = new Color(0.85f, 0.85f, 0.85f, 1f);
+            cb.pressedColor = new Color(0.45f, 0.45f, 0.45f, 1f);
+            cb.selectedColor = Color.white;
+            cb.disabledColor = new Color(0.3f, 0.3f, 0.3f, 0.5f);
+            cb.fadeDuration = 0.1f;
+            btn.colors = cb;
+        }
+
+        var label = btnTransform.Find("Label")?.GetComponent<TextMeshProUGUI>();
+        if (label != null)
+        {
+            if (DefaultDialogueFont != null)
+            {
+                label.font = DefaultDialogueFont;
+            }
+            label.color = Color.white;
+        }
+    }
+
     public void SetChoiceLabels(string optionA, string optionB)
     {
         if (choicePack == null) return;
+        ApplyMonochromeChoiceTheme();
+
         var yesLabel = choicePack.transform.Find("YesButton/Label")?.GetComponent<TextMeshProUGUI>();
         if (yesLabel != null)
         {
-            string cleanA = optionA.Replace("<size=70%><color=#8E9EAB>[1]</color></size>  ", "").Trim();
-            yesLabel.text = $"<size=70%><color=#8E9EAB>[1]</color></size>  {cleanA.ToUpper()}";
+            string cleanA = optionA.Replace("<size=70%><color=#8E9EAB>[1]</color></size>  ", "").Replace("[1]", "").Trim();
+            yesLabel.text = $"<size=75%><color=#CCCCCC>[1]</color></size>  <b>{cleanA.ToUpper()}</b>";
         }
 
         var noLabel = choicePack.transform.Find("NoButton/Label")?.GetComponent<TextMeshProUGUI>();
         if (noLabel != null)
         {
-            string cleanB = optionB.Replace("<size=70%><color=#8E9EAB>[2]</color></size>  ", "").Trim();
-            noLabel.text = $"<size=70%><color=#8E9EAB>[2]</color></size>  {cleanB.ToUpper()}";
+            string cleanB = optionB.Replace("<size=70%><color=#8E9EAB>[2]</color></size>  ", "").Replace("[2]", "").Trim();
+            noLabel.text = $"<size=75%><color=#CCCCCC>[2]</color></size>  <b>{cleanB.ToUpper()}</b>";
         }
     }
 
@@ -681,6 +740,8 @@ public class NpcDialogueManager : MonoBehaviour
     {
         if (choicePack == null)
             yield break;
+
+        ApplyMonochromeChoiceTheme();
 
         choiceMade = false;
 

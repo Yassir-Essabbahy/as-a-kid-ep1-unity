@@ -1,4 +1,4 @@
-﻿<Project>
+<Project>
   <!-- Generated file, do not modify, your changes will be overwritten (use AssetPostprocessor.OnGeneratedCSProject) -->
   <PropertyGroup>
     <BaseIntermediateOutputPath>Temp\obj\$(MSBuildProjectName)</BaseIntermediateOutputPath>
@@ -90,7 +90,6 @@
     <Compile Include="Assets\Scripts\Sounds\RandomMetroSound.cs" />
     <Compile Include="Assets\MoroccanBeach\Scripts\PSXWaterSurface.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\VertexShakeA.cs" />
-    <Compile Include="Assets\Scripts\Story\PoolStoryManager.cs" />
     <Compile Include="Assets\Scripts\Credits\CreditsSequenceController.cs" />
     <Compile Include="Assets\Scripts\Carry\TeddyFindQuest.cs" />
     <Compile Include="Assets\Scripts\Story\MetroStorySequenceController.cs" />
@@ -118,7 +117,6 @@
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\Benchmark03.cs" />
     <Compile Include="Assets\Scripts\Carry\CarriedItemSpeaker.cs" />
     <Compile Include="Assets\Assets\Backrooms\Characters\Cow\CowMove.cs" />
-    <Compile Include="Assets\Scripts\Story\PoolMemoryItem.cs" />
     <Compile Include="Assets\Scripts\Elevator\FloorManager.cs" />
     <Compile Include="Assets\Scripts\Elevator\ElevatorButton.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\DropdownSample.cs" />
@@ -136,7 +134,6 @@
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_TextEventCheck.cs" />
     <Compile Include="Assets\Scripts\Interactions\BeggarInteraction.cs" />
     <Compile Include="Assets\Scripts\Dialogue\DialogueSequence.cs" />
-    <Compile Include="Assets\Scripts\Story\PoolWaterTrigger.cs" />
     <Compile Include="Assets\Scripts\Interactions\NpcLookAt.cs" />
     <Compile Include="Assets\Scripts\ActivateOnTrigger.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TextMeshProFloatingText.cs" />
