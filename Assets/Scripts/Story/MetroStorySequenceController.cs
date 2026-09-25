@@ -998,7 +998,7 @@ public class MetroStorySequenceController : MonoBehaviour
             doorAudioSource.Stop();
         }
 
-        var allAudio = Object.FindObjectsByType<AudioSource>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        var allAudio = UnityEngine.Object.FindObjectsByType<AudioSource>(FindObjectsInactive.Include);
         var behindRoom = GameObject.Find("BehindDoorRoom") ?? GameObject.Find("interrogation");
 
         foreach (var audio in allAudio)

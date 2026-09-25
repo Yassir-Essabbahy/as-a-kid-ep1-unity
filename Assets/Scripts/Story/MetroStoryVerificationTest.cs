@@ -672,8 +672,12 @@ public static class MetroStoryVerificationTest
         float yPos = 0f;
         if (dm != null && dm.choicePack != null)
         {
-            yPos = dm.choicePack.anchoredPosition.y;
-            posOk = yPos >= 240f;
+            var rt = dm.choicePack.GetComponent<RectTransform>();
+            if (rt != null)
+            {
+                yPos = rt.anchoredPosition.y;
+                posOk = yPos >= 240f;
+            }
         }
 
         results.Add(new TestResult {
@@ -685,8 +689,11 @@ public static class MetroStoryVerificationTest
 
     private static void TestFloor3TableAndPaper(List<TestResult> results)
     {
-        var table = GameObject.Find("Floor3_Table_Back");
-        var paper = GameObject.Find("Floor3_Paper_Interactable");
+        var roots = SceneManager.GetActiveScene().GetRootGameObjects();
+        var f3 = System.Array.Find(roots, r => r.name == "Floor3");
+
+        var table = GameObject.Find("Floor3_Table_Back") ?? (f3 != null ? f3.transform.Find("Floor3_Table_Back")?.gameObject : null);
+        var paper = GameObject.Find("Floor3_Paper_Interactable") ?? (table != null ? table.transform.Find("Floor3_Paper_Interactable")?.gameObject : null);
         var paperInteractable = paper != null ? paper.GetComponent<Floor3PaperInteractable>() : null;
         var metro = GameObject.FindAnyObjectByType<MetroStorySequenceController>();
 
@@ -721,7 +728,9 @@ public static class MetroStoryVerificationTest
 
     private static void TestDoorAudioSpamEliminated(List<TestResult> results)
     {
-        var doorObj = GameObject.Find("Door_Behind");
+        var roots = SceneManager.GetActiveScene().GetRootGameObjects();
+        var f3 = System.Array.Find(roots, r => r.name == "Floor3");
+        var doorObj = GameObject.Find("Door_Behind") ?? (f3 != null ? f3.transform.Find("Door_Behind")?.gameObject : null);
         AudioSource doorAudio = doorObj != null ? doorObj.GetComponent<AudioSource>() : null;
 
         bool spamEliminated = false;
@@ -735,7 +744,7 @@ public static class MetroStoryVerificationTest
         results.Add(new TestResult {
             testName = "30. Door Behind Teacher Audio Spam Eliminated (No Elevator Loop)",
             passed = spamEliminated,
-            details = spamEliminated ? "Door_Behind AudioSource has elevator loop removed (clip null/clean, loop disabled)" : "Door_Behind still has looping elevator audio!"
+            details = spamEliminated ? "Door_Behind AudioSource has elevator loop removed (clip null/clean, loop disabled)" : "Door_Behind missing or still has looping elevator audio!"
         });
     }
 
