@@ -18,9 +18,9 @@ public class PaperInspectController : MonoBehaviour
     public PaperMode currentMode = PaperMode.Dare_Math;
 
     [Header("Drawing Settings")]
-    public int textureWidth = 512;
-    public int textureHeight = 512;
-    public Color pencilColor = new Color(0.18f, 0.22f, 0.28f, 0.95f);
+    public int textureWidth = 620;
+    public int textureHeight = 820;
+    public Color pencilColor = new Color(0.12f, 0.16f, 0.22f, 0.95f);
     public int brushRadius = 3;
 
     [Header("State")]
@@ -36,6 +36,7 @@ public class PaperInspectController : MonoBehaviour
     private Color32[] textureBuffer;
     private TextMeshProUGUI headerText;
     private TextMeshProUGUI bodyText;
+    private RectTransform footerRect;
     private Button doneButton;
     private Button clearButton;
     private CanvasGroup canvasGroup;
@@ -124,6 +125,7 @@ public class PaperInspectController : MonoBehaviour
         headerText.color = new Color(0.12f, 0.12f, 0.15f, 1f);
         headerText.fontStyle = FontStyles.Bold;
         headerText.alignment = TextAlignmentOptions.TopLeft;
+        headerText.raycastTarget = false;
 
         // Body Text
         var bodyGo = new GameObject("BodyText");
@@ -133,35 +135,34 @@ public class PaperInspectController : MonoBehaviour
         bodyRect.anchorMax = new Vector2(1f, 1f);
         bodyRect.pivot = new Vector2(0.5f, 1f);
         bodyRect.anchoredPosition = new Vector2(0f, -85f);
-        bodyRect.sizeDelta = new Vector2(-50f, 260f);
+        bodyRect.sizeDelta = new Vector2(-50f, 320f);
 
         bodyText = bodyGo.AddComponent<TextMeshProUGUI>();
-        bodyText.fontSize = 17;
+        bodyText.fontSize = 18;
         bodyText.color = new Color(0.15f, 0.15f, 0.2f, 1f);
-        bodyText.lineSpacing = 1.25f;
+        bodyText.lineSpacing = 1.35f;
         bodyText.alignment = TextAlignmentOptions.TopLeft;
+        bodyText.raycastTarget = false;
 
-        // Drawing Area (RawImage with Texture2D)
+        // Drawing Area (RawImage with Texture2D) - covers the ENTIRE paper sheet!
         var drawGo = new GameObject("DrawingArea");
         drawGo.transform.SetParent(sheetGo.transform, false);
         var drawRect = drawGo.AddComponent<RectTransform>();
-        drawRect.anchorMin = new Vector2(0f, 0f);
-        drawRect.anchorMax = new Vector2(1f, 1f);
+        drawRect.anchorMin = Vector2.zero;
+        drawRect.anchorMax = Vector2.one;
         drawRect.pivot = new Vector2(0.5f, 0.5f);
-        drawRect.anchoredPosition = new Vector2(0f, -90f);
-        drawRect.sizeDelta = new Vector2(-50f, -340f);
-
-        var drawBorder = drawGo.AddComponent<Outline>();
-        drawBorder.effectColor = new Color(0.6f, 0.65f, 0.7f, 0.45f);
-        drawBorder.effectDistance = new Vector2(1f, -1f);
+        drawRect.anchoredPosition = Vector2.zero;
+        drawRect.sizeDelta = Vector2.zero;
 
         drawingImage = drawGo.AddComponent<RawImage>();
+        drawingImage.color = Color.white;
+        drawingImage.raycastTarget = true;
         InitDrawingTexture();
 
         // Footer Buttons Container
         var footerGo = new GameObject("FooterButtons");
         footerGo.transform.SetParent(sheetGo.transform, false);
-        var footerRect = footerGo.AddComponent<RectTransform>();
+        footerRect = footerGo.AddComponent<RectTransform>();
         footerRect.anchorMin = new Vector2(0f, 0f);
         footerRect.anchorMax = new Vector2(1f, 0f);
         footerRect.pivot = new Vector2(0.5f, 0f);
@@ -169,11 +170,11 @@ public class PaperInspectController : MonoBehaviour
         footerRect.sizeDelta = new Vector2(-40f, 50f);
 
         // Done / Put Down Button
-        doneButton = CreateButton(footerGo.transform, "DoneButton", "DONE [E]", new Vector2(85f, 0f), new Vector2(160f, 42f));
+        doneButton = CreateButton(footerGo.transform, "DoneButton", "DONE [E]", new Vector2(95f, 0f), new Vector2(180f, 38f));
         doneButton.onClick.AddListener(ClosePaper);
 
         // Clear Button (for drawing)
-        clearButton = CreateButton(footerGo.transform, "ClearButton", "ERASE WORK", new Vector2(-85f, 0f), new Vector2(160f, 42f));
+        clearButton = CreateButton(footerGo.transform, "ClearButton", "ERASE WORK", new Vector2(-95f, 0f), new Vector2(180f, 38f));
         clearButton.onClick.AddListener(ClearDrawing);
     }
 
@@ -190,14 +191,11 @@ public class PaperInspectController : MonoBehaviour
         rt.sizeDelta = size;
 
         var img = btnGo.AddComponent<Image>();
-        img.color = new Color(0.06f, 0.06f, 0.08f, 0.95f);
-
-        var outline = btnGo.AddComponent<Outline>();
-        outline.effectColor = new Color(1f, 1f, 1f, 0.45f);
-        outline.effectDistance = new Vector2(1.2f, -1.2f);
+        img.color = new Color(0f, 0f, 0f, 1f);
 
         var btn = btnGo.AddComponent<Button>();
         btn.transition = Selectable.Transition.ColorTint;
+        btn.targetGraphic = img;
         var cb = btn.colors;
         cb.normalColor = Color.white;
         cb.highlightedColor = new Color(0.85f, 0.85f, 0.85f, 1f);
@@ -213,10 +211,14 @@ public class PaperInspectController : MonoBehaviour
 
         var tmp = textGo.AddComponent<TextMeshProUGUI>();
         tmp.text = label;
-        tmp.fontSize = 15;
+        tmp.fontSize = 18;
         tmp.color = Color.white;
+        if (NpcDialogueManager.DefaultDialogueFont != null)
+        {
+            tmp.font = NpcDialogueManager.DefaultDialogueFont;
+        }
         tmp.alignment = TextAlignmentOptions.Center;
-        tmp.fontStyle = FontStyles.Bold;
+        tmp.fontStyle = FontStyles.Normal;
 
         return btn;
     }
@@ -232,10 +234,10 @@ public class PaperInspectController : MonoBehaviour
 
     private void ClearDrawingBuffer()
     {
-        Color32 paperColor = new Color32(245, 243, 238, 255);
+        Color32 transparent = new Color32(0, 0, 0, 0);
         for (int i = 0; i < textureBuffer.Length; i++)
         {
-            textureBuffer[i] = paperColor;
+            textureBuffer[i] = transparent;
         }
         if (drawingTexture != null)
         {
@@ -283,11 +285,12 @@ public class PaperInspectController : MonoBehaviour
         if (mode == PaperMode.Dare_Math)
         {
             headerText.text = $"<b>MATHEMATICS - CLASSWORK</b>\n<size=65%><color=#555555>Student: {childName}   |   Grade 5   |   Room 204</color></size>";
-            bodyText.text = "<b>Solve the exercises below:</b>\n" +
-                            "1)  3x + 14 = 35   ➔   <b>x = ?</b>\n" +
-                            "2)  (128 ÷ 4) + (15 × 3) = <b>?</b>\n" +
-                            "3)  Calculate the area of a triangle: <i>base = 8cm, height = 5cm</i>\n" +
-                            "<size=80%><color=#666677><i>(Use your pencil to calculate and draw your answers below)</i></color></size>";
+            bodyText.text = "<b>Solve the exercises below:</b>\n\n" +
+                            "1)  3x + 14 = 35   ➔   <b>x = </b>\n\n" +
+                            "2)  (128 ÷ 4) + (15 × 3) = \n\n" +
+                            "3)  Calculate area of triangle: <i>base = 8cm, height = 5cm</i>\n" +
+                            "    <b>Area = </b>\n\n" +
+                            "<size=80%><color=#666677><i>(Use your mouse cursor to write and draw anywhere on this paper)</i></color></size>";
 
             drawingImage.gameObject.SetActive(true);
             clearButton.gameObject.SetActive(true);
@@ -392,11 +395,24 @@ public class PaperInspectController : MonoBehaviour
     {
         var drawRect = drawingImage.rectTransform;
 
+        // Do not draw when clicking over the footer buttons
+        if (footerRect != null)
+        {
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(footerRect, Input.mousePosition, paperCanvas.worldCamera, out Vector2 fPoint))
+            {
+                if (footerRect.rect.Contains(fPoint))
+                {
+                    lastDrawPos = null;
+                    return;
+                }
+            }
+        }
+
         if (Input.GetMouseButton(0))
         {
             if (RectTransformUtility.ScreenPointToLocalPointInRectangle(drawRect, Input.mousePosition, paperCanvas.worldCamera, out Vector2 localPoint))
             {
-                // Check if inside bounds
+                // Check if inside bounds of the paper sheet
                 Rect r = drawRect.rect;
                 if (r.Contains(localPoint))
                 {

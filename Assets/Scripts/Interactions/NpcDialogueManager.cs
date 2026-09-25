@@ -692,35 +692,31 @@ public class NpcDialogueManager : MonoBehaviour
             btnRect.anchorMax = new Vector2(0.5f, 0.5f);
             btnRect.pivot = new Vector2(0.5f, 0.5f);
             btnRect.anchoredPosition = new Vector2(posX, 0f);
-            btnRect.sizeDelta = new Vector2(240f, 44f);
+            btnRect.sizeDelta = new Vector2(220f, 38f);
         }
 
         var img = btnTransform.GetComponent<UnityEngine.UI.Image>();
         if (img != null)
         {
-            img.color = new Color(0.04f, 0.04f, 0.04f, 0.95f);
+            img.color = new Color(0f, 0f, 0f, 1f);
         }
 
         var outline = btnTransform.GetComponent<UnityEngine.UI.Outline>();
-        if (outline == null)
-        {
-            outline = btnTransform.gameObject.AddComponent<UnityEngine.UI.Outline>();
-        }
         if (outline != null)
         {
-            outline.effectColor = new Color(1f, 1f, 1f, 0.45f);
-            outline.effectDistance = new Vector2(1.2f, -1.2f);
+            outline.enabled = false;
         }
 
         var btn = btnTransform.GetComponent<Button>();
         if (btn != null)
         {
             btn.transition = Selectable.Transition.ColorTint;
+            btn.targetGraphic = img;
             var cb = btn.colors;
             cb.normalColor = Color.white;
             cb.highlightedColor = new Color(0.85f, 0.85f, 0.85f, 1f);
             cb.pressedColor = new Color(0.6f, 0.6f, 0.6f, 1f);
-            cb.selectedColor = Color.white;
+            cb.selectedColor = new Color(0.96f, 0.96f, 0.96f, 1f);
             cb.disabledColor = new Color(0.3f, 0.3f, 0.3f, 0.5f);
             cb.fadeDuration = 0.1f;
             btn.colors = cb;
@@ -734,6 +730,8 @@ public class NpcDialogueManager : MonoBehaviour
                 label.font = DefaultDialogueFont;
             }
             label.color = Color.white;
+            label.fontSize = 22f;
+            label.fontStyle = FontStyles.Normal;
             label.alignment = TextAlignmentOptions.Center;
         }
     }
@@ -747,14 +745,16 @@ public class NpcDialogueManager : MonoBehaviour
         if (yesLabel != null)
         {
             string cleanA = optionA.Replace("<size=70%><color=#8E9EAB>[1]</color></size>  ", "").Replace("[1]", "").Trim();
-            yesLabel.text = $"<size=75%><color=#CCCCCC>[1]</color></size>  <b>{cleanA.ToUpper()}</b>";
+            yesLabel.text = $"[1]  {cleanA.ToUpper()}";
+            yesLabel.color = Color.white;
         }
 
         var noLabel = choicePack.transform.Find("NoButton/Label")?.GetComponent<TextMeshProUGUI>();
         if (noLabel != null)
         {
             string cleanB = optionB.Replace("<size=70%><color=#8E9EAB>[2]</color></size>  ", "").Replace("[2]", "").Trim();
-            noLabel.text = $"<size=75%><color=#CCCCCC>[2]</color></size>  <b>{cleanB.ToUpper()}</b>";
+            noLabel.text = $"[2]  {cleanB.ToUpper()}";
+            noLabel.color = Color.white;
         }
     }
 
