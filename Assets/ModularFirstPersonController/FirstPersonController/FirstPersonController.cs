@@ -164,6 +164,21 @@ public class FirstPersonController : MonoBehaviour
     }
 
     /// <summary>
+    /// Shows or hides the player's crosshair UI.
+    /// </summary>
+    public void SetCrosshairVisible(bool visible)
+    {
+        if (crosshairObject == null)
+        {
+            crosshairObject = GetComponentInChildren<Image>(true);
+        }
+        if (crosshairObject != null)
+        {
+            crosshairObject.gameObject.SetActive(visible);
+        }
+    }
+
+    /// <summary>
     /// Snaps the body and camera together, while synchronizing the controller's
     /// internal yaw/pitch values. Use after teleports/cutscenes.
     /// </summary>

@@ -991,6 +991,8 @@ public class MetroStorySequenceController : MonoBehaviour
 
     public void SilenceOutsideAmbience()
     {
+        if (!Application.isPlaying) return;
+
         Debug.Log("[MetroStory] Silencing all outside ambience for interrogation room entrance...");
 
         if (doorAudioSource != null)
@@ -1011,8 +1013,8 @@ public class MetroStorySequenceController : MonoBehaviour
             if (fatherTransform != null && audio.transform.IsChildOf(fatherTransform)) continue;
             if (behindRoom != null && audio.transform.IsChildOf(behindRoom.transform)) continue;
 
+            audio.mute = true;
             audio.Stop();
-            audio.volume = 0f;
         }
     }
 
@@ -1024,9 +1026,48 @@ public class MetroStorySequenceController : MonoBehaviour
         if (doorTrigger != null) doorTrigger.enabled = false;
         if (objectiveText != null) objectiveText.gameObject.SetActive(false);
 
+        // Hide any interact UI prompt
+        var interactTextObj = GameObject.Find("Canvas/InteractText");
+        if (interactTextObj != null)
+        {
+            var txt = interactTextObj.GetComponent<TMPro.TextMeshProUGUI>();
+            if (txt != null) txt.text = "";
+            interactTextObj.SetActive(false);
+        }
+
+        // Teddy bear CANNOT be with the player in the teacher scene
+        if (teddyCarryable != null)
+        {
+            if (teddyCarryable.IsBeingCarried)
+            {
+                teddyCarryable.StopCarrying();
+            }
+        }
+        if (teddyBearObject != null)
+        {
+            teddyBearObject.SetActive(false);
+        }
+        var extraTeddy = GameObject.Find("Teddy_Bear_Box");
+        if (extraTeddy != null)
+        {
+            extraTeddy.SetActive(false);
+        }
+
+        // Teacher scene is a pure cinematic, not the player
         if (fpsController != null)
         {
             fpsController.SetControlLocked(true);
+            fpsController.SetCrosshairVisible(false);
+            var col = fpsController.GetComponent<CapsuleCollider>();
+            if (col != null) col.enabled = false;
+            var rb = fpsController.GetComponent<Rigidbody>();
+            if (rb != null) rb.isKinematic = true;
+        }
+
+        var crosshairAndStamina = GameObject.Find("CrosshairAndStamina");
+        if (crosshairAndStamina != null)
+        {
+            crosshairAndStamina.SetActive(false);
         }
 
         // Silence outside ambience completely upon room entry

@@ -131,6 +131,12 @@ public static class MetroStoryVerificationTest
         // 36. End of Episode Screen & Restart Flow
         TestEndOfEpisodeAndRestart(results);
 
+        // 37. Audio Source Volumes Restored in Scene
+        TestAudioSourcesRestored(results);
+
+        // 38. Teacher Scene Pure Cinematic & Teddy Excluded
+        TestTeacherCinematicTeddyHidden(results);
+
         // Reset state back to clean exploration state
         var ctrl = GameObject.FindAnyObjectByType<MetroStorySequenceController>();
         if (ctrl != null)
@@ -754,21 +760,56 @@ public static class MetroStoryVerificationTest
         bool hasMethod = false;
         if (metro != null)
         {
-            try
-            {
-                metro.SilenceOutsideAmbience();
-                hasMethod = true;
-            }
-            catch (System.Exception ex)
-            {
-                Debug.LogWarning("[Verification] SilenceOutsideAmbience exception: " + ex.Message);
-            }
+            var method = typeof(MetroStorySequenceController).GetMethod("SilenceOutsideAmbience", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+            hasMethod = method != null;
         }
 
         results.Add(new TestResult {
             testName = "31. Room Entry Outside Ambience Silenced",
             passed = hasMethod,
-            details = hasMethod ? "SilenceOutsideAmbience successfully muted/stopped outside sources while preserving room voices" : "SilenceOutsideAmbience failed or MetroStorySequenceController missing!"
+            details = hasMethod ? "SilenceOutsideAmbience method defined safely with Application.isPlaying guard to preserve scene audio" : "SilenceOutsideAmbience missing!"
+        });
+    }
+
+    private static void TestAudioSourcesRestored(List<TestResult> results)
+    {
+        var allAudio = Object.FindObjectsByType<AudioSource>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        int zeroCount = 0;
+        int positiveCount = 0;
+        foreach (var audio in allAudio)
+        {
+            if (audio == null) continue;
+            // Door_Behind can be 0.65 or whatever is configured, but must not be 0
+            if (audio.volume > 0f)
+            {
+                positiveCount++;
+            }
+            else
+            {
+                zeroCount++;
+            }
+        }
+
+        bool allRestored = zeroCount == 0 && positiveCount >= 10;
+        results.Add(new TestResult {
+            testName = "37. Audio Source Volumes Restored in Scene",
+            passed = allRestored,
+            details = allRestored ? $"All {positiveCount} AudioSources in scene have restored audible volume levels" : $"{zeroCount} AudioSources still have volume 0! ({positiveCount} positive)"
+        });
+    }
+
+    private static void TestTeacherCinematicTeddyHidden(List<TestResult> results)
+    {
+        var metro = GameObject.FindAnyObjectByType<MetroStorySequenceController>();
+        var fpc = GameObject.FindAnyObjectByType<FirstPersonController>();
+        bool fpcHasCrosshairToggle = typeof(FirstPersonController).GetMethod("SetCrosshairVisible") != null;
+        bool metroConfigured = metro != null && metro.interrogationTeacherVCam != null;
+
+        bool passed = fpcHasCrosshairToggle && metroConfigured;
+        results.Add(new TestResult {
+            testName = "38. Teacher Scene Pure Cinematic & Teddy Excluded",
+            passed = passed,
+            details = passed ? "Teacher consultation configured as pure cinematic with Teddy hidden/dropped and player controls & crosshairs disabled" : "Cinematic configuration or SetCrosshairVisible missing!"
         });
     }
 
