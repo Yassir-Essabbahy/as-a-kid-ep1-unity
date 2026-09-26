@@ -16,17 +16,17 @@ MonoBehaviour:
   lines:
   - speakerName: Teacher
     key: classroom_intro_01
-    voiceClip: {fileID: 0}
+    voiceClip: {fileID: 8300000, guid: 639177e6f6c6b1940a50363a5a10fd6f, type: 3}
     eventId: 
   - speakerName: Teacher
     key: classroom_intro_02
-    voiceClip: {fileID: 0}
+    voiceClip: {fileID: 8300000, guid: 93bc9e14491431b4dbe41e69607cebf8, type: 3}
     eventId: 
   - speakerName: Teacher
     key: classroom_intro_03
-    voiceClip: {fileID: 0}
+    voiceClip: {fileID: 8300000, guid: 6c682f5cfca231f43bf3cd5ba71021de, type: 3}
     eventId: 
   - speakerName: Teacher
     key: classroom_intro_04
-    voiceClip: {fileID: 0}
+    voiceClip: {fileID: 8300000, guid: 7d6cb7c264402e943af2cbabe6b6f1ca, type: 3}
     eventId: look_at_book
