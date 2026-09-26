@@ -224,6 +224,9 @@ public class MetroStorySequenceController : MonoBehaviour
         if (endPrototypePanel != null)
             endPrototypePanel.SetActive(false);
 
+        if (paperInspectController != null)
+            paperInspectController.CloseInspectImmediate();
+
         if (restartButton != null)
         {
             restartButton.onClick.RemoveListener(RestartSequence);

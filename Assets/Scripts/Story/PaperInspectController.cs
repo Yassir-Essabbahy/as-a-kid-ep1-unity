@@ -53,13 +53,46 @@ public class PaperInspectController : MonoBehaviour
             return;
         }
 
+        // Clean up or deactivate any serialized canvas instances
+        for (int i = transform.childCount - 1; i >= 0; i--)
+        {
+            var child = transform.GetChild(i);
+            if (child.name.StartsWith("PaperInspect_Canvas"))
+            {
+                if (Application.isPlaying)
+                {
+                    Destroy(child.gameObject);
+                }
+                else
+                {
+                    child.gameObject.SetActive(false);
+                }
+            }
+        }
+
         EnsureUIBuilt();
+
+        if (paperCanvas != null)
+            paperCanvas.gameObject.SetActive(false);
+        if (paperRoot != null)
+            paperRoot.SetActive(false);
     }
 
     private void Start()
     {
+        if (paperCanvas != null)
+            paperCanvas.gameObject.SetActive(false);
         if (paperRoot != null)
             paperRoot.SetActive(false);
+
+        for (int i = 0; i < transform.childCount; i++)
+        {
+            var child = transform.GetChild(i);
+            if (child.name.StartsWith("PaperInspect_Canvas"))
+            {
+                child.gameObject.SetActive(false);
+            }
+        }
     }
 
     private void EnsureUIBuilt()
@@ -176,6 +209,12 @@ public class PaperInspectController : MonoBehaviour
         // Clear Button (for drawing)
         clearButton = CreateButton(footerGo.transform, "ClearButton", "ERASE WORK", new Vector2(-95f, 0f), new Vector2(180f, 38f));
         clearButton.onClick.AddListener(ClearDrawing);
+
+        // Deactivate both canvas and root overlay immediately upon construction
+        if (paperRoot != null)
+            paperRoot.SetActive(false);
+        if (canvasGo != null)
+            canvasGo.SetActive(false);
     }
 
     private Button CreateButton(Transform parent, string name, string label, Vector2 pos, Vector2 size)
@@ -271,6 +310,11 @@ public class PaperInspectController : MonoBehaviour
 
         ConfigureForMode(mode);
 
+        if (paperCanvas != null)
+        {
+            paperCanvas.gameObject.SetActive(true);
+        }
+
         if (paperRoot != null)
         {
             paperRoot.SetActive(true);
@@ -337,6 +381,27 @@ public class PaperInspectController : MonoBehaviour
         StartCoroutine(ClosePaperRoutine());
     }
 
+    public void CloseInspect()
+    {
+        ClosePaper();
+    }
+
+    public void CloseInspectImmediate()
+    {
+        isInspecting = false;
+        if (paperRoot != null) paperRoot.SetActive(false);
+        if (paperCanvas != null) paperCanvas.gameObject.SetActive(false);
+
+        for (int i = 0; i < transform.childCount; i++)
+        {
+            var child = transform.GetChild(i);
+            if (child.name.StartsWith("PaperInspect_Canvas"))
+            {
+                child.gameObject.SetActive(false);
+            }
+        }
+    }
+
     private IEnumerator ClosePaperRoutine()
     {
         isInspecting = false;
@@ -354,6 +419,7 @@ public class PaperInspectController : MonoBehaviour
         }
 
         if (paperRoot != null) paperRoot.SetActive(false);
+        if (paperCanvas != null) paperCanvas.gameObject.SetActive(false);
 
         // Relock cursor
         Cursor.lockState = CursorLockMode.Locked;

@@ -137,6 +137,9 @@ public static class MetroStoryVerificationTest
         // 38. Teacher Scene Pure Cinematic & Teddy Excluded
         TestTeacherCinematicTeddyHidden(results);
 
+        // 39. UI Canvases Start Inactive on Scene Load
+        TestCanvasesStartInactive(results);
+
         // Reset state back to clean exploration state
         var ctrl = GameObject.FindAnyObjectByType<MetroStorySequenceController>();
         if (ctrl != null)
@@ -810,6 +813,38 @@ public static class MetroStoryVerificationTest
             testName = "38. Teacher Scene Pure Cinematic & Teddy Excluded",
             passed = passed,
             details = passed ? "Teacher consultation configured as pure cinematic with Teddy hidden/dropped and player controls & crosshairs disabled" : "Cinematic configuration or SetCrosshairVisible missing!"
+        });
+    }
+
+    private static void TestCanvasesStartInactive(List<TestResult> results)
+    {
+        var allCanvases = Object.FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        bool paperActive = false;
+        bool fuseUIActive = false;
+
+        foreach (var c in allCanvases)
+        {
+            if (c == null) continue;
+            if (c.gameObject.name.Contains("PaperInspect_Canvas") && c.gameObject.activeInHierarchy)
+            {
+                paperActive = true;
+            }
+        }
+
+        var fuseUI = GameObject.Find("MobileFuseBoxUI");
+        if (fuseUI != null && fuseUI.activeInHierarchy)
+        {
+            fuseUIActive = true;
+        }
+
+        var paperRoot = GameObject.Find("PaperRoot");
+        bool paperRootActive = paperRoot != null && paperRoot.activeInHierarchy;
+
+        bool passed = !paperActive && !fuseUIActive && !paperRootActive;
+        results.Add(new TestResult {
+            testName = "39. UI Canvases Start Inactive on Scene Load",
+            passed = passed,
+            details = passed ? "PaperInspect_Canvas, PaperRoot, and MobileFuseBoxUI start completely inactive on scene load" : $"UI started active on scene load! paperCanvasActive={paperActive}, paperRootActive={paperRootActive}, fuseUIActive={fuseUIActive}"
         });
     }
 
