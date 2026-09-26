@@ -357,7 +357,7 @@ public class ClassroomGazeScene : MonoBehaviour
                     string loc = LocalizationManager.Instance != null
                         ? LocalizationManager.Instance.Get("desk_book_locked_01")
                         : "I should listen to what the teacher is saying first.";
-                    ClassroomLifeIsStrangeUI.Instance?.ShowThought(loc, 2.5f);
+                    ClassroomLifeIsStrangeUI.Instance?.ShowDialogueLine("Child", loc, 2.5f);
                 }
             }
             else if (_currentHoverItem.isInteractable)
@@ -368,7 +368,7 @@ public class ClassroomGazeScene : MonoBehaviour
                 string thought = _currentHoverItem.GetNextThought();
                 if (!string.IsNullOrEmpty(thought))
                 {
-                    ClassroomLifeIsStrangeUI.Instance?.ShowThought(thought, 3.8f);
+                    ClassroomLifeIsStrangeUI.Instance?.ShowDialogueLine("Child", thought, 3.8f);
                 }
 
                 CheckDeskProgression();
@@ -495,7 +495,7 @@ public class ClassroomGazeScene : MonoBehaviour
         }
 
         float duration = clip != null ? clip.length : 3.2f;
-        ClassroomLifeIsStrangeUI.Instance?.ShowTeacherSubtitle("Teacher", text, duration);
+        ClassroomLifeIsStrangeUI.Instance?.ShowDialogueLine("Teacher", text, duration);
 
         yield return new WaitForSeconds(duration);
     }
@@ -511,7 +511,6 @@ public class ClassroomGazeScene : MonoBehaviour
         isSeatedLookActive = false;
 
         ClassroomLifeIsStrangeUI.Instance?.HidePrompt();
-        ClassroomLifeIsStrangeUI.Instance?.SetLetterboxBands(true);
 
         _bookSequenceCoroutine = StartCoroutine(BookSequenceRoutine());
     }
@@ -546,22 +545,22 @@ public class ClassroomGazeScene : MonoBehaviour
         // 3. Child self-talk monologue lines
         // Line 1: I am getting enough of this.
         string line1 = GetLoc("player_intro_01", "I am getting enough of this.");
-        ClassroomLifeIsStrangeUI.Instance?.ShowThought(line1, 3.2f);
+        ClassroomLifeIsStrangeUI.Instance?.ShowDialogueLine("Child", line1, 3.2f);
         yield return StartCoroutine(WaitForSelfTalkAdvance(3.2f));
 
         // Line 2: Didn't we study that last week?
         string line2 = GetLoc("player_intro_02", "Didn't we study that last week?");
-        ClassroomLifeIsStrangeUI.Instance?.ShowThought(line2, 3.2f);
+        ClassroomLifeIsStrangeUI.Instance?.ShowDialogueLine("Child", line2, 3.2f);
         yield return StartCoroutine(WaitForSelfTalkAdvance(3.2f));
 
         // Line 3: Wait... this illustration wasn't here before.
         string line3 = GetLoc("lookback_book_01", "Wait... this illustration wasn't here before.");
-        ClassroomLifeIsStrangeUI.Instance?.ShowThought(line3, 3.5f);
+        ClassroomLifeIsStrangeUI.Instance?.ShowDialogueLine("Child", line3, 3.5f);
         yield return StartCoroutine(WaitForSelfTalkAdvance(3.5f));
 
         // Line 4: It feels like... it's calling to me.
         string line4 = GetLoc("lookback_book_02", "It feels like... it's calling to me.");
-        ClassroomLifeIsStrangeUI.Instance?.ShowThought(line4, 3.5f);
+        ClassroomLifeIsStrangeUI.Instance?.ShowDialogueLine("Child", line4, 3.5f);
         yield return StartCoroutine(WaitForSelfTalkAdvance(3.5f));
 
         // 4. Trigger the cinematic psychological thriller transition into Gameplay3!
