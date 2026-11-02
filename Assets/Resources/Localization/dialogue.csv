@@ -121,3 +121,7 @@ desk_book_locked_01,"I should listen to what the teacher is saying first.","Je d
 beach_choice_prompt,"What should I do?","Que dois-je faire ?","ماذا علي أن أفعل؟"
 beach_choice_leave,"Leave him and go","Le laisser et partir","اتركه وارحل"
 beach_choice_send,"Put Teddy on the boat and send him away","Mettre Teddy sur le bateau et le laisser partir","ضع تيدي على القارب ودعه يرحل"
+
+beach_teddy_pickup,"Pick up Teddy","Prends Teddy","احمل تيدي"
+beach_teddy_place,"Hold to place Teddy","Maintiens pour poser Teddy","اضغط مطولاً لوضع تيدي"
+beach_teddy_farewell,"Child: Goodbye, Teddy.","Enfant : Au revoir, Teddy.","الطفل: وداعاً يا تيدي."

@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 /// <summary>
 /// Coordinates the psychological ending cutscene in Moroccan Beach:
@@ -27,6 +28,29 @@ public class BeachEndingController : MonoBehaviour
     [SerializeField] private string leaveChoiceKey = "beach_choice_leave";
     [SerializeField] private string sendChoiceKey = "beach_choice_send";
     private bool choosingEnding;
+    private enum TeddyFlowState { Idle, Pickup, Carrying, Placing, Sending, Done }
+    private TeddyFlowState teddyState;
+    [Header("Teddy boat ending")]
+    [SerializeField] private float teddyPickupDistance = 3f;
+    [SerializeField] private float teddyPlaceDistance = 4.5f;
+    [SerializeField] private float teddyPlaceDuration = 1.5f;
+    [SerializeField] private float teddyPlacementTime = 0.7f;
+    [SerializeField] private float teddyDriftDistance = 12f;
+    [SerializeField] private Vector3 teddyBoatOffset = new Vector3(0f, 1f, 0f);
+    [SerializeField] private AudioClip teddyPlaceSound;
+    [SerializeField] private string teddyPickupKey = "beach_teddy_pickup";
+    [SerializeField] private string teddyPlaceKey = "beach_teddy_place";
+    [SerializeField] private string teddyFarewellKey = "beach_teddy_farewell";
+    private RaftPlayerInteraction teddyInteraction;
+    private CarryableItem teddyCarry;
+    private TMPro.TextMeshProUGUI teddyPrompt;
+    private float teddyHold;
+    private bool teddyNeedsRelease;
+    private GameObject teddyMobileButton;
+    private Image teddyProgress;
+    private string teddyPlacePrompt;
+    private int lastTeddyPercent = -1;
+
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetStatics()
@@ -267,7 +291,180 @@ public class BeachEndingController : MonoBehaviour
 
     public void StartTeddyBoatEnding()
     {
-        Debug.Log("[BeachEndingController] Teddy boat ending selected; not implemented yet.");
+        if (teddyState != TeddyFlowState.Idle) return;
+        ResolveReferences();
+        teddyInteraction = FindAnyObjectByType<RaftPlayerInteraction>();
+        if (teddyTransform == null || assembledRaftVisuals == null || playerController == null || teddyInteraction == null || teddyInteraction.playerCamera == null)
+        {
+            Debug.LogError("[BeachEndingController] Teddy ending is missing scene references; returning to the choice.");
+            CanBoardRaft = true;
+            return;
+        }
+        CanBoardRaft = false;
+        teddyInteraction.enabled = false;
+        teddyCarry = teddyTransform.GetComponent<CarryableItem>();
+        if (teddyCarry == null) teddyCarry = teddyTransform.gameObject.AddComponent<CarryableItem>();
+        teddyPrompt = teddyInteraction.promptText;
+        teddyPlacePrompt = LocalizationManager.Instance.Get(teddyPlaceKey);
+        CreateTeddyUI();
+        teddyNeedsRelease = true;
+        teddyState = TeddyFlowState.Pickup;
+        currentPhase = "TeddyPickup";
+        ShowTeddyPrompt(LocalizationManager.Instance.Get(teddyPickupKey));
+    }
+
+    private void ShowTeddyPrompt(string message)
+    {
+        if (teddyPrompt != null) teddyPrompt.text = message;
+        if (teddyInteraction != null && teddyInteraction.promptBox != null)
+            teddyInteraction.promptBox.SetActive(!string.IsNullOrEmpty(message));
+    }
+
+    private void Update()
+    {
+        if (teddyState != TeddyFlowState.Pickup && teddyState != TeddyFlowState.Carrying) return;
+        var input = teddyInteraction.interactInput;
+        if (input == null) return;
+        if (teddyNeedsRelease)
+        {
+            if (!input.IsHeld) teddyNeedsRelease = false;
+            return;
+        }
+        if (teddyState == TeddyFlowState.Pickup)
+        {
+            if (Vector3.Distance(playerController.transform.position, teddyTransform.position) <= teddyPickupDistance && input.WasPressed)
+            {
+                teddyCarry.StartCarrying(teddyInteraction.playerCamera.transform);
+                teddyState = TeddyFlowState.Carrying;
+                teddyNeedsRelease = true;
+                ShowTeddyPrompt(teddyPlacePrompt);
+            }
+            return;
+        }
+        if (!teddyCarry.IsBeingCarried) teddyCarry.StartCarrying(teddyInteraction.playerCamera.transform);
+        bool nearBoat = Vector3.Distance(playerController.transform.position, raftBuildArea != null ? raftBuildArea.transform.position : assembledRaftVisuals.position) <= teddyPlaceDistance;
+        if (nearBoat && input.IsHeld)
+        {
+            teddyHold += Time.deltaTime;
+            int percent = Mathf.RoundToInt(Mathf.Clamp01(teddyHold / Mathf.Max(0.01f, teddyPlaceDuration)) * 100f);
+            if (percent != lastTeddyPercent)
+            {
+                lastTeddyPercent = percent;
+                ShowTeddyPrompt(teddyPlacePrompt + " " + percent + "%");
+            }
+            if (teddyProgress != null) teddyProgress.fillAmount = Mathf.Clamp01(teddyHold / Mathf.Max(0.01f, teddyPlaceDuration));
+            if (teddyHold >= teddyPlaceDuration)
+            {
+                teddyState = TeddyFlowState.Placing;
+                StartCoroutine(PlaceAndSendTeddy());
+            }
+        }
+        else
+        {
+            if (teddyHold > 0f) ShowTeddyPrompt(teddyPlacePrompt);
+            teddyHold = 0f;
+            lastTeddyPercent = -1;
+            if (teddyProgress != null) teddyProgress.fillAmount = 0f;
+        }
+    }
+
+    private void CreateTeddyUI()
+    {
+        var diag = NpcDialogueManager.Instance;
+        if (diag == null || diag.continueButton == null) return;
+        var source = diag.continueButton;
+        var canvas = source.GetComponentInParent<Canvas>();
+        if (canvas == null) return;
+        if (Application.isMobilePlatform)
+        {
+            teddyMobileButton = Instantiate(source.gameObject, canvas.transform);
+            teddyMobileButton.name = "TeddyInteractButton";
+            var button = teddyMobileButton.GetComponent<Button>();
+            if (button != null) button.onClick.RemoveAllListeners();
+            var rect = teddyMobileButton.GetComponent<RectTransform>();
+            rect.anchorMin = rect.anchorMax = new Vector2(0.87f, 0.18f);
+            rect.anchoredPosition = Vector2.zero;
+            rect.sizeDelta = new Vector2(160f, 90f);
+            var label = teddyMobileButton.GetComponentInChildren<TMPro.TextMeshProUGUI>();
+            if (label != null) label.text = "E";
+            var input = teddyMobileButton.AddComponent<InteractHoldInput>();
+            input.SetKey(teddyInteraction.interactKey);
+            teddyInteraction.interactInput = input;
+            teddyMobileButton.SetActive(true);
+        }
+        var image = source.GetComponent<Image>();
+        if (image != null)
+        {
+            var progressObject = Instantiate(image.gameObject, canvas.transform);
+            progressObject.name = "TeddyHoldProgress";
+            var button = progressObject.GetComponent<Button>();
+            if (button != null) Destroy(button);
+            var label = progressObject.GetComponentInChildren<TMPro.TextMeshProUGUI>();
+            if (label != null) Destroy(label.gameObject);
+            var rect = progressObject.GetComponent<RectTransform>();
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.2f);
+            rect.anchoredPosition = Vector2.zero;
+            rect.sizeDelta = new Vector2(180f, 12f);
+            teddyProgress = progressObject.GetComponent<Image>();
+            teddyProgress.type = Image.Type.Filled;
+            teddyProgress.fillMethod = Image.FillMethod.Horizontal;
+            teddyProgress.fillAmount = 0f;
+            teddyProgress.raycastTarget = false;
+            progressObject.SetActive(true);
+        }
+    }
+
+    private IEnumerator PlaceAndSendTeddy()
+    {
+        ShowTeddyPrompt("");
+        if (teddyMobileButton != null) teddyMobileButton.SetActive(false);
+        if (teddyProgress != null) teddyProgress.gameObject.SetActive(false);
+        playerController.SetControlLocked(true);
+        teddyCarry.StopCarrying();
+        var body = teddyTransform.GetComponent<Rigidbody>();
+        if (body != null) { body.isKinematic = true; body.useGravity = false; }
+        var start = teddyTransform.position;
+        var startRotation = teddyTransform.rotation;
+        float elapsed = 0f;
+        while (elapsed < teddyPlacementTime)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / Mathf.Max(0.01f, teddyPlacementTime)));
+            teddyTransform.position = Vector3.Lerp(start, assembledRaftVisuals.TransformPoint(teddyBoatOffset), t);
+            teddyTransform.rotation = Quaternion.Slerp(startRotation, assembledRaftVisuals.rotation, t);
+            yield return null;
+        }
+        teddyTransform.SetParent(assembledRaftVisuals, true);
+        if (teddyPlaceSound != null) AudioSource.PlayClipAtPoint(teddyPlaceSound, teddyTransform.position);
+        teddyState = TeddyFlowState.Sending;
+        currentPhase = "SendingTeddy";
+        Vector3 origin = assembledRaftVisuals.position;
+        Quaternion rotation = assembledRaftVisuals.rotation;
+        float travel = 0f;
+        while (travel < teddyDriftDistance)
+        {
+            travel += Mathf.Max(0.01f, raftDriftSpeed) * Time.deltaTime;
+            assembledRaftVisuals.position = origin + driftDirection.normalized * Mathf.Min(travel, teddyDriftDistance) + Vector3.up * (Mathf.Sin(Time.time * waveFrequency) * waveAmplitude);
+            assembledRaftVisuals.rotation = rotation * Quaternion.Euler(Mathf.Sin(Time.time * waveFrequency) * 0.8f, 0f, Mathf.Cos(Time.time * waveFrequency) * 1.2f);
+            var camera = teddyInteraction.playerCamera;
+            Vector3 direction = teddyTransform.position - camera.transform.position;
+            if (direction.sqrMagnitude > 0.001f)
+            {
+                Quaternion look = Quaternion.LookRotation(direction);
+                playerController.SnapViewRotation(Quaternion.Slerp(camera.transform.rotation, look, Time.deltaTime));
+            }
+            yield return null;
+        }
+        var diag = NpcDialogueManager.Instance;
+        if (diag != null)
+        {
+            while (diag.IsDialogueRunning) yield return null;
+            yield return diag.ShowDialogue(new[] { LocalizationManager.Instance.Get(teddyFarewellKey) }, false, dialogueColor, dialogueFont);
+        }
+        teddyState = TeddyFlowState.Done;
+        ChosenEnding = EndingVariant.SendTeddy;
+        ClassroomEndingController.IsEndingActive = true;
+        ScreenFader.TransitionToScene(targetSceneName, fadeToBlackDuration);
     }
 
     private IEnumerator EndingSequenceRoutine()
