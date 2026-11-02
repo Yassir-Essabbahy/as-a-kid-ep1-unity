@@ -119,82 +119,6 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &1595907
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1595908}
-  - component: {fileID: 1595910}
-  - component: {fileID: 1595909}
-  m_Layer: 0
-  m_Name: TeddyHoldProgressBox
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!224 &1595908
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1595907}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 1782330005}
-  m_Father: {fileID: 127446891}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.22}
-  m_AnchorMax: {x: 0.5, y: 0.22}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 160, y: 12}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1595909
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1595907}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0, b: 0, a: 1}
-  m_RaycastTarget: 0
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
---- !u!222 &1595910
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1595907}
-  m_CullTransparentMesh: 1
 --- !u!64 &11754269
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -490,9 +414,6 @@ PrefabInstance:
       addedObject: {fileID: 543168234}
     - targetCorrespondingSourceObject: {fileID: 4459864851551516607, guid: 6bacecc4f3df9584198879c73a6b6c36, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1595908}
-    - targetCorrespondingSourceObject: {fileID: 4459864851551516607, guid: 6bacecc4f3df9584198879c73a6b6c36, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 1307467876}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 4459864850019384750, guid: 6bacecc4f3df9584198879c73a6b6c36, type: 3}
@@ -501,6 +422,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 4459864850019384750, guid: 6bacecc4f3df9584198879c73a6b6c36, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1352609647}
+    - targetCorrespondingSourceObject: {fileID: 4459864850019384750, guid: 6bacecc4f3df9584198879c73a6b6c36, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1352609648}
     - targetCorrespondingSourceObject: {fileID: 4459864851310106424, guid: 6bacecc4f3df9584198879c73a6b6c36, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2048609226}
@@ -748,7 +672,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Hold to place Teddy
+  m_text: Press E to take Teddy
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 9760074bf33164947ad4a08727dee0a4, type: 2}
   m_sharedMaterial: {fileID: 6179473881242153786, guid: 9760074bf33164947ad4a08727dee0a4, type: 2}
@@ -1589,8 +1513,6 @@ MonoBehaviour:
   oceanAudioSource: {fileID: 1885311567}
   raftTrackerPanel: {fileID: 746078415}
   promptBox: {fileID: 543168233}
-  holdProgressContainer: {fileID: 1595907}
-  holdProgressImage: {fileID: 1782330007}
   mobileInteractButton: {fileID: 1307467872}
   boardRaftDialogueKey: beach_ending_ready
   dialogueColor: {r: 1, g: 1, b: 1, a: 1}
@@ -1600,14 +1522,15 @@ MonoBehaviour:
   sendChoiceKey: beach_choice_send
   teddyPickupDistance: 3
   teddyPlaceDistance: 4.5
-  teddyPlaceDuration: 1.5
   teddyPlacementLerpDuration: 0.8
   teddyDriftDistance: 12
   teddyBoatOffset: {x: 0, y: 1, z: 0}
   teddyBoatRotationEuler: {x: 0, y: 0, z: 0}
   teddyPlaceSound: {fileID: 0}
-  teddyPickupKey: beach_teddy_pickup
-  teddyPlaceKey: beach_teddy_place
+  takeTeddyPromptKey: beach_teddy_take
+  takeTeddyPromptFallback: Press E to take Teddy
+  putTeddyPromptKey: beach_teddy_put
+  putTeddyPromptFallback: Press E to put Teddy on the boat
   teddyFarewellKey: beach_teddy_farewell
   raftDriftSpeed: 1.7
   raftDriftDuration: 7
@@ -4345,7 +4268,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: '[E] INTERACT'
+  m_text: Press E to take Teddy
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 9760074bf33164947ad4a08727dee0a4, type: 2}
   m_sharedMaterial: {fileID: 6179473881242153786, guid: 9760074bf33164947ad4a08727dee0a4, type: 2}
@@ -4372,8 +4295,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 20
-  m_fontSizeBase: 20
+  m_fontSize: 18
+  m_fontSizeBase: 18
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -5184,6 +5107,7 @@ GameObject:
   - component: {fileID: 1307467875}
   - component: {fileID: 1307467874}
   - component: {fileID: 1307467873}
+  - component: {fileID: 1307467877}
   m_Layer: 0
   m_Name: MobileInteractButton
   m_TagString: Untagged
@@ -5260,8 +5184,21 @@ RectTransform:
   m_AnchorMin: {x: 0.84, y: 0.18}
   m_AnchorMax: {x: 0.84, y: 0.18}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 130, y: 60}
+  m_SizeDelta: {x: 140, y: 52}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1307467877
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1307467872}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 2083388510}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MobileInteractButtonForwarder
+  targetInput: {fileID: 1352609648}
 --- !u!1 &1328967196
 GameObject:
   m_ObjectHideFlags: 0
@@ -5379,7 +5316,7 @@ MonoBehaviour:
   grabRadius: 0.5
   interactKey: 101
   dropKey: 113
-  interactInput: {fileID: 1352609647}
+  interactInput: {fileID: 1352609648}
   currentHeldPiece: {fileID: 0}
 --- !u!114 &1352609647
 MonoBehaviour:
@@ -5396,6 +5333,28 @@ MonoBehaviour:
   interactKey: 101
   holdDuration: 1.5
   mobileButton: {fileID: 1307467872}
+  forceShowInEditor: 0
+  <HoldProgress>k__BackingField: 0
+  pointerHeld: 0
+  wasHeld: 0
+  completed: 0
+  isInteractionAvailable: 0
+  pointerPressedFrame: -1
+--- !u!114 &1352609648
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 134882218}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e5149437c2c187041849cbc1f63e2dd8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InteractInput
+  interactKey: 101
+  mobileButton: {fileID: 1307467872}
+  mobileButtonLabel: {fileID: 1045156044}
   forceShowInEditor: 0
 --- !u!1 &1359874531
 GameObject:
@@ -7136,81 +7095,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1737604252}
   m_CullTransparentMesh: 1
---- !u!1 &1782330004
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1782330005}
-  - component: {fileID: 1782330006}
-  - component: {fileID: 1782330007}
-  m_Layer: 0
-  m_Name: Fill
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &1782330005
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1782330004}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1595908}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: -4, y: -4}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!222 &1782330006
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1782330004}
-  m_CullTransparentMesh: 1
---- !u!114 &1782330007
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1782330004}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 0
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 3
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 0
-  m_FillAmount: 0
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
 --- !u!1 &1789270669
 GameObject:
   m_ObjectHideFlags: 0
@@ -8348,6 +8232,21 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2079012782}
   m_CullTransparentMesh: 1
+--- !u!115 &2083388510
+MonoScript:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: 
+  serializedVersion: 7
+  m_DefaultReferences: {}
+  m_Icon: {fileID: 0}
+  m_Type: 0
+  m_ExecutionOrder: 0
+  m_ClassName: MobileInteractButtonForwarder
+  m_Namespace: 
+  m_AssemblyName: Assembly-CSharp
 --- !u!1 &2083682517
 GameObject:
   m_ObjectHideFlags: 0

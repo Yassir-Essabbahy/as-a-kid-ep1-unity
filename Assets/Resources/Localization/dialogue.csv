@@ -125,3 +125,5 @@ beach_choice_send,"Put Teddy on the boat and send him away","Mettre Teddy sur le
 beach_teddy_pickup,"Pick up Teddy","Prends Teddy","احمل تيدي"
 beach_teddy_place,"Hold to place Teddy","Maintiens pour poser Teddy","اضغط مطولاً لوضع تيدي"
 beach_teddy_farewell,"Child: Goodbye, Teddy.","Enfant : Au revoir, Teddy.","الطفل: وداعاً يا تيدي."
+beach_teddy_take,"Press E to take Teddy","Appuie sur E pour prendre Teddy","اضغط E لأخذ تيدي"
+beach_teddy_put,"Press E to put Teddy on the boat","Appuie sur E pour poser Teddy sur le bateau","اضغط E لوضع تيدي على القارب"

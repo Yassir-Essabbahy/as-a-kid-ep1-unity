@@ -40,7 +40,7 @@ public class RaftPlayerInteraction : MonoBehaviour
     public KeyCode dropKey = KeyCode.Q;
 
     [Tooltip("Shared interaction input; assign the mobile button component when available")]
-    public InteractHoldInput interactInput;
+    public InteractInput interactInput;
 
     [Header("Current State")]
     [SerializeField] private RaftPiece currentHeldPiece = null;
@@ -51,8 +51,8 @@ public class RaftPlayerInteraction : MonoBehaviour
     private void Awake()
     {
         ResolveReferences();
-        if (interactInput == null) interactInput = GetComponent<InteractHoldInput>();
-        if (interactInput == null) interactInput = gameObject.AddComponent<InteractHoldInput>();
+        if (interactInput == null) interactInput = GetComponent<InteractInput>();
+        if (interactInput == null) interactInput = gameObject.AddComponent<InteractInput>();
         interactInput.SetKey(interactKey);
     }
 
@@ -208,6 +208,7 @@ public class RaftPlayerInteraction : MonoBehaviour
 
                 if (interactInput != null && interactInput.WasPressed)
                 {
+                    interactInput.ConsumePress();
                     PickUpPiece(hitPiece);
                 }
             }
@@ -229,6 +230,7 @@ public class RaftPlayerInteraction : MonoBehaviour
 
                     if (interactInput != null && interactInput.WasPressed)
                     {
+                        interactInput.ConsumePress();
                         ClearPrompt();
                         BeachEndingController.Instance.StartRaftDeparture();
                     }
@@ -247,6 +249,7 @@ public class RaftPlayerInteraction : MonoBehaviour
 
                     if (interactInput != null && interactInput.WasPressed)
                     {
+                        interactInput.ConsumePress();
                         PlacePieceAtRaft(hitBuildArea);
                     }
                 }
@@ -349,7 +352,7 @@ public class RaftPlayerInteraction : MonoBehaviour
 
         if (interactInput != null)
         {
-            interactInput.SetInteractionAvailable(true);
+            interactInput.SetInteractionAvailable(true, text);
         }
     }
 

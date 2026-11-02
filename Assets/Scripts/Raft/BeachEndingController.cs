@@ -5,15 +5,20 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public enum EndingVariant { LeaveTeddy, SendTeddy }
-public enum TeddyEndingState { Idle, Carrying, Placing, Sending, Done }
+public enum TeddyEndingState { Idle, WaitingForPickup, Carrying, Sending, Done }
 
 /// <summary>
 /// Coordinates the ending cutscenes in Moroccan Beach:
 /// 1. Raft Ready: When the final piece (cloth) is placed, Teddy calls out to the child.
-/// 2. Interaction: The player walks up to the raft and presses interact, presenting a choice:
-///    Option A: "Leave him and go" -> Existing ending where player departs on the raft.
-///    Option B: "Put Teddy on the boat and send him away" -> Player picks up Teddy, carries him,
-///              holds interact to place him on the boat, and watches the raft drift away.
+/// 2. Choice: The player walks up to the raft and interacts, presenting a choice:
+///    Option 1: "Leave him and go" -> Existing ending where player boards and departs.
+///    Option 2: "Put Teddy on the boat and send him away" -> New flow:
+///      a. Choice closes, player is free to move. Teddy stays on table.
+///      b. Player walks up to Teddy; in range shows "Press E to take Teddy".
+///      c. Player presses E: picks up Teddy (carried).
+///      d. Place spot on boat active only while Teddy is carried: "Press E to put Teddy on the boat".
+///      e. Player presses E: Teddy lerps smoothly onto boat, boat drifts away with gentle wave bob,
+///         camera lingers, farewell dialogue line plays, fade out, loads ending scene.
 /// </summary>
 public class BeachEndingController : MonoBehaviour
 {
@@ -32,8 +37,6 @@ public class BeachEndingController : MonoBehaviour
     [Header("UI Elements")]
     public GameObject raftTrackerPanel;
     public GameObject promptBox;
-    public GameObject holdProgressContainer;
-    public Image holdProgressImage;
     public GameObject mobileInteractButton;
 
     [Header("Raft Ready & Dialogue")]
@@ -50,16 +53,17 @@ public class BeachEndingController : MonoBehaviour
     [Header("Teddy Boat Ending Settings")]
     [SerializeField] private float teddyPickupDistance = 3.5f;
     [SerializeField] private float teddyPlaceDistance = 4.5f;
-    [SerializeField] private float teddyPlaceDuration = 1.5f;
     [SerializeField] private float teddyPlacementLerpDuration = 0.8f;
     [SerializeField] private float teddyDriftDistance = 14f;
     [SerializeField] private Vector3 teddyBoatOffset = new Vector3(0f, 0f, 0.25f);
     [SerializeField] private Vector3 teddyBoatRotationEuler = new Vector3(0f, 0f, 0f);
     [SerializeField] private AudioClip teddyPlaceSound;
 
-    [Header("Teddy Localization")]
-    [SerializeField] private string teddyPickupKey = "beach_teddy_pickup";
-    [SerializeField] private string teddyPlaceKey = "beach_teddy_place";
+    [Header("Teddy Prompts & Localization")]
+    [SerializeField] private string takeTeddyPromptKey = "beach_teddy_take";
+    [SerializeField] private string takeTeddyPromptFallback = "Press E to take Teddy";
+    [SerializeField] private string putTeddyPromptKey = "beach_teddy_put";
+    [SerializeField] private string putTeddyPromptFallback = "Press E to put Teddy on the boat";
     [SerializeField] private string teddyFarewellKey = "beach_teddy_farewell";
 
     [Header("Raft Departure Settings")]
@@ -96,8 +100,6 @@ public class BeachEndingController : MonoBehaviour
     private TeddyEndingState teddyState = TeddyEndingState.Idle;
     private RaftPlayerInteraction playerInteraction;
     private CarryableItem teddyCarry;
-    private float teddyHoldTime;
-    private bool teddyNeedsRelease;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetStatics()
@@ -114,15 +116,6 @@ public class BeachEndingController : MonoBehaviour
         if (stationaryToyCamera != null)
         {
             stationaryToyCamera.gameObject.SetActive(false);
-        }
-
-        if (holdProgressContainer != null)
-        {
-            holdProgressContainer.SetActive(false);
-        }
-        if (holdProgressImage != null)
-        {
-            holdProgressImage.fillAmount = 0f;
         }
     }
 
@@ -191,17 +184,6 @@ public class BeachEndingController : MonoBehaviour
         {
             var tc = GameObject.Find("ToyShotCamera");
             if (tc != null) stationaryToyCamera = tc.GetComponent<Camera>();
-        }
-
-        if (holdProgressContainer == null)
-        {
-            var hpc = GameObject.Find("TeddyHoldProgressBox");
-            if (hpc != null) holdProgressContainer = hpc;
-        }
-
-        if (holdProgressImage == null && holdProgressContainer != null)
-        {
-            holdProgressImage = holdProgressContainer.GetComponentInChildren<Image>();
         }
 
         if (mobileInteractButton == null)
@@ -308,7 +290,7 @@ public class BeachEndingController : MonoBehaviour
         if (choice == 1)
         {
             ChosenEnding = EndingVariant.SendTeddy;
-            StartTeddyBoatEnding();
+            StartWaitingForTeddyPickup();
         }
         else
         {
@@ -324,59 +306,107 @@ public class BeachEndingController : MonoBehaviour
         StartCoroutine(EndingSequenceRoutine());
     }
 
-    public void StartTeddyBoatEnding()
+    public void StartWaitingForTeddyPickup()
     {
         if (teddyState != TeddyEndingState.Idle) return;
         ResolveReferences();
 
-        if (teddyTransform == null || assembledRaftVisuals == null || playerController == null || playerInteraction == null)
-        {
-            Debug.LogError("[BeachEndingController] Teddy ending missing references; falling back.");
-            BeginLeaveEnding();
-            return;
-        }
-
         CanBoardRaft = false;
-        playerInteraction.enabled = false;
 
         if (playerController != null)
         {
             playerController.SetControlLocked(false);
         }
 
-        teddyCarry = teddyTransform.GetComponent<CarryableItem>();
-        if (teddyCarry == null)
+        if (playerInteraction != null)
+        {
+            playerInteraction.enabled = false;
+        }
+
+        teddyCarry = teddyTransform != null ? teddyTransform.GetComponent<CarryableItem>() : null;
+        if (teddyCarry == null && teddyTransform != null)
         {
             teddyCarry = teddyTransform.gameObject.AddComponent<CarryableItem>();
         }
-        teddyCarry.SetSafeResetPosition(teddyTransform.position);
-
-        Transform carryHoldPoint = playerInteraction.carryPoint;
-        if (carryHoldPoint == null && playerController.playerCamera != null)
+        if (teddyCarry != null && teddyTransform != null)
         {
-            carryHoldPoint = playerController.playerCamera.transform;
+            teddyCarry.SetSafeResetPosition(teddyTransform.position);
         }
 
-        teddyCarry.StartCarrying(carryHoldPoint);
-
-        teddyNeedsRelease = true;
-        teddyState = TeddyEndingState.Carrying;
-        currentPhase = "TeddyCarrying";
+        teddyState = TeddyEndingState.WaitingForPickup;
+        currentPhase = "WaitingForPickup";
 
         if (raftTrackerPanel != null)
         {
             var tmp = raftTrackerPanel.GetComponentInChildren<TextMeshProUGUI>();
             if (tmp != null)
             {
-                tmp.text = "Objective:\nBring Teddy to the raft";
+                tmp.text = "Objective:\nTake Teddy from the table";
             }
         }
     }
 
     private void Update()
     {
-        if (teddyState != TeddyEndingState.Carrying) return;
-        HandleCarryingState();
+        if (teddyState == TeddyEndingState.WaitingForPickup)
+        {
+            HandleWaitingForPickupState();
+        }
+        else if (teddyState == TeddyEndingState.Carrying)
+        {
+            HandleCarryingState();
+        }
+    }
+
+    private void HandleWaitingForPickupState()
+    {
+        if (playerController == null || teddyTransform == null || playerInteraction == null) return;
+        var input = playerInteraction.interactInput;
+        if (input == null) return;
+
+        float distToTeddy = Vector3.Distance(playerController.transform.position, teddyTransform.position);
+        if (distToTeddy <= teddyPickupDistance)
+        {
+            string promptText = GetTakeTeddyPrompt();
+            SetPrompt(promptText);
+            input.SetInteractionAvailable(true, promptText);
+
+            if (input.WasPressed)
+            {
+                input.ConsumePress();
+
+                Transform holdPoint = playerInteraction.carryPoint;
+                if (holdPoint == null && playerController.playerCamera != null)
+                {
+                    holdPoint = playerController.playerCamera.transform;
+                }
+
+                if (teddyCarry != null)
+                {
+                    teddyCarry.StartCarrying(holdPoint);
+                }
+
+                teddyState = TeddyEndingState.Carrying;
+                currentPhase = "CarryingTeddy";
+
+                ClearPrompt();
+                input.SetInteractionAvailable(false);
+
+                if (raftTrackerPanel != null)
+                {
+                    var tmp = raftTrackerPanel.GetComponentInChildren<TextMeshProUGUI>();
+                    if (tmp != null)
+                    {
+                        tmp.text = "Objective:\nBring Teddy to the raft";
+                    }
+                }
+            }
+        }
+        else
+        {
+            ClearPrompt();
+            input.SetInteractionAvailable(false);
+        }
     }
 
     private void HandleCarryingState()
@@ -385,31 +415,21 @@ public class BeachEndingController : MonoBehaviour
         var input = playerInteraction.interactInput;
         if (input == null) return;
 
-        // Ensure player released interact from the choice selection
-        if (teddyNeedsRelease)
+        // If player dropped Teddy (e.g. Q key), allow picking him back up
+        if (teddyCarry != null && !teddyCarry.IsBeingCarried)
         {
-            if (!input.IsHeld)
-            {
-                teddyNeedsRelease = false;
-            }
-            return;
-        }
-
-        // 1. Check if Teddy is being carried
-        if (!teddyCarry.IsBeingCarried)
-        {
-            // Teddy is dropped on the beach: allow picking him back up
             float distToTeddy = Vector3.Distance(playerController.transform.position, teddyTransform.position);
             if (distToTeddy <= teddyPickupDistance)
             {
-                string pickupStr = LocalizationManager.Instance != null ? LocalizationManager.Instance.Get(teddyPickupKey) : "Pick up Teddy";
-                SetPromptText(pickupStr);
-                input.SetInteractionAvailable(true);
+                string promptText = GetTakeTeddyPrompt();
+                SetPrompt(promptText);
+                input.SetInteractionAvailable(true, promptText);
 
                 if (input.WasPressed)
                 {
-                    Transform carryPoint = playerInteraction.carryPoint ?? playerController.playerCamera?.transform;
-                    teddyCarry.StartCarrying(carryPoint);
+                    input.ConsumePress();
+                    Transform holdPoint = playerInteraction.carryPoint ?? playerController.playerCamera?.transform;
+                    teddyCarry.StartCarrying(holdPoint);
                     ClearPrompt();
                     input.SetInteractionAvailable(false);
                 }
@@ -419,90 +439,82 @@ public class BeachEndingController : MonoBehaviour
                 ClearPrompt();
                 input.SetInteractionAvailable(false);
             }
-
-            // Reset boat hold progress while Teddy is not held
-            ResetHoldProgress();
             return;
         }
 
-        // 2. Teddy is in hand: allow dropping with Q
+        // Teddy is carried: allow dropping with Q key
         if (Input.GetKeyDown(playerInteraction.dropKey))
         {
             Vector3 dropPos = playerController.transform.position + playerController.transform.forward * 0.8f;
             teddyCarry.Drop(dropPos, playerController.transform.forward);
-            ResetHoldProgress();
             ClearPrompt();
             input.SetInteractionAvailable(false);
             return;
         }
 
-        // 3. Teddy is in hand: check proximity to boat place spot
+        // Check range to boat place spot
         Vector3 boatCenter = raftBuildArea != null ? raftBuildArea.transform.position : assembledRaftVisuals.position;
         float distToBoat = Vector3.Distance(playerController.transform.position, boatCenter);
 
         if (distToBoat <= teddyPlaceDistance)
         {
-            string placeStr = LocalizationManager.Instance != null ? LocalizationManager.Instance.Get(teddyPlaceKey) : "Hold to place Teddy";
-            SetPromptText(placeStr);
-            input.SetInteractionAvailable(true);
+            string promptText = GetPutTeddyPrompt();
+            SetPrompt(promptText);
+            input.SetInteractionAvailable(true, promptText);
 
-            if (holdProgressContainer != null && !holdProgressContainer.activeSelf)
+            if (input.WasPressed)
             {
-                holdProgressContainer.SetActive(true);
-            }
+                input.ConsumePress();
+                ClearPrompt();
+                input.SetInteractionAvailable(false);
 
-            // Holding interact fills progress
-            if (input.IsHeld)
-            {
-                teddyHoldTime += Time.deltaTime;
-                float progress = Mathf.Clamp01(teddyHoldTime / Mathf.Max(0.01f, teddyPlaceDuration));
-                if (holdProgressImage != null)
-                {
-                    holdProgressImage.fillAmount = progress;
-                }
-
-                if (teddyHoldTime >= teddyPlaceDuration)
-                {
-                    // Hold complete: trigger placing!
-                    teddyState = TeddyEndingState.Placing;
-                    currentPhase = "PlacingTeddy";
-                    ResetHoldProgress();
-                    ClearPrompt();
-                    input.SetInteractionAvailable(false);
-                    StartCoroutine(PlaceAndSendTeddyRoutine());
-                }
-            }
-            else
-            {
-                teddyHoldTime = 0f;
-                if (holdProgressImage != null)
-                {
-                    holdProgressImage.fillAmount = 0f;
-                }
+                teddyState = TeddyEndingState.Sending;
+                currentPhase = "PlacingTeddy";
+                StartCoroutine(PlaceAndSendTeddyRoutine());
             }
         }
         else
         {
-            ResetHoldProgress();
+            // Away from boat: pressing E does nothing (Teddy stays in hand)
+            if (input.WasPressed)
+            {
+                input.ConsumePress();
+            }
+
             ClearPrompt();
             input.SetInteractionAvailable(false);
         }
     }
 
-    private void ResetHoldProgress()
+    private string GetTakeTeddyPrompt()
     {
-        teddyHoldTime = 0f;
-        if (holdProgressImage != null)
+        string text = null;
+        if (LocalizationManager.Instance != null)
         {
-            holdProgressImage.fillAmount = 0f;
+            text = LocalizationManager.Instance.Get(takeTeddyPromptKey);
         }
-        if (holdProgressContainer != null && holdProgressContainer.activeSelf)
+        if (string.IsNullOrEmpty(text) || text == takeTeddyPromptKey)
         {
-            holdProgressContainer.SetActive(false);
+            text = takeTeddyPromptFallback;
         }
+        return text;
     }
 
-    private void SetPromptText(string text)
+    private string GetPutTeddyPrompt()
+    {
+        string text = null;
+        if (LocalizationManager.Instance != null)
+        {
+            text = LocalizationManager.Instance.Get(putTeddyPromptKey);
+        }
+        if (string.IsNullOrEmpty(text) || text == putTeddyPromptKey)
+        {
+            text = putTeddyPromptFallback;
+        }
+        return text;
+    }
+
+    private void SetPrompt(string text)
     {
         if (playerInteraction != null && playerInteraction.promptText != null)
         {
@@ -532,7 +544,6 @@ public class BeachEndingController : MonoBehaviour
 
         if (raftTrackerPanel != null) raftTrackerPanel.SetActive(false);
         if (promptBox != null) promptBox.SetActive(false);
-        if (holdProgressContainer != null) holdProgressContainer.SetActive(false);
 
         if (playerController != null)
         {
@@ -560,7 +571,7 @@ public class BeachEndingController : MonoBehaviour
             if (col != null) col.enabled = false;
         }
 
-        // Lerp Teddy onto boat deck
+        // Lerp Teddy smoothly onto boat deck
         Vector3 startPos = teddyTransform.position;
         Quaternion startRot = teddyTransform.rotation;
         Vector3 targetPos = assembledRaftVisuals.TransformPoint(teddyBoatOffset);
