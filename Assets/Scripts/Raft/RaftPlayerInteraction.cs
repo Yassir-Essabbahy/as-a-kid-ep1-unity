@@ -73,7 +73,6 @@ public class RaftPlayerInteraction : MonoBehaviour
 
         if (playerCamera != null && carryPoint == null)
         {
-            // Look for existing CarryPoint or create one automatically
             var existingPoint = playerCamera.transform.Find("CarryPoint");
             if (existingPoint != null)
             {
@@ -101,7 +100,7 @@ public class RaftPlayerInteraction : MonoBehaviour
 
         if (promptText == null || objectiveTrackerText == null)
         {
-            var allTMPs = FindObjectsByType<TextMeshProUGUI>(FindObjectsSortMode.None);
+            var allTMPs = FindObjectsByType<TextMeshProUGUI>();
             foreach (var tmp in allTMPs)
             {
                 string n = tmp.gameObject.name.ToLower();
@@ -166,7 +165,7 @@ public class RaftPlayerInteraction : MonoBehaviour
         // Direct proximity fallback: look around within interaction range for any unplaced piece
         if (hitPiece == null && currentHeldPiece == null)
         {
-            var allPieces = FindObjectsByType<RaftPiece>(FindObjectsSortMode.None);
+            var allPieces = FindObjectsByType<RaftPiece>();
             float closestDist = float.MaxValue;
             foreach (var p in allPieces)
             {
@@ -176,7 +175,6 @@ public class RaftPlayerInteraction : MonoBehaviour
                     if (d <= interactionDistance)
                     {
                         Vector3 toPiece = (p.transform.position - playerCamera.transform.position).normalized;
-                        // Facing generally toward the piece
                         if (Vector3.Dot(playerCamera.transform.forward, toPiece) > 0.55f && d < closestDist)
                         {
                             closestDist = d;
@@ -208,7 +206,7 @@ public class RaftPlayerInteraction : MonoBehaviour
             {
                 SetPrompt($"{interactKey} to pick up");
 
-                if (interactInput.WasPressed)
+                if (interactInput != null && interactInput.WasPressed)
                 {
                     PickUpPiece(hitPiece);
                 }
@@ -229,7 +227,7 @@ public class RaftPlayerInteraction : MonoBehaviour
                 {
                     SetPrompt($"{interactKey} to get on");
 
-                    if (interactInput.WasPressed)
+                    if (interactInput != null && interactInput.WasPressed)
                     {
                         ClearPrompt();
                         BeachEndingController.Instance.StartRaftDeparture();
@@ -247,7 +245,7 @@ public class RaftPlayerInteraction : MonoBehaviour
                 {
                     SetPrompt($"{interactKey} to place / {dropKey} to drop");
 
-                    if (interactInput.WasPressed)
+                    if (interactInput != null && interactInput.WasPressed)
                     {
                         PlacePieceAtRaft(hitBuildArea);
                     }
@@ -348,6 +346,11 @@ public class RaftPlayerInteraction : MonoBehaviour
                 promptBoxRect.sizeDelta = new Vector2(width, 36f);
             }
         }
+
+        if (interactInput != null)
+        {
+            interactInput.SetInteractionAvailable(true);
+        }
     }
 
     private void ClearPrompt()
@@ -359,6 +362,10 @@ public class RaftPlayerInteraction : MonoBehaviour
         if (promptBox != null)
         {
             promptBox.SetActive(false);
+        }
+        if (interactInput != null)
+        {
+            interactInput.SetInteractionAvailable(false);
         }
     }
 }

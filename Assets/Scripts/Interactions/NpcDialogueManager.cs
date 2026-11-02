@@ -677,8 +677,8 @@ public class NpcDialogueManager : MonoBehaviour
         var yesBtnTransform = choicePack.transform.Find("YesButton");
         var noBtnTransform = choicePack.transform.Find("NoButton");
 
-        StyleChoiceButton(yesBtnTransform, -135f);
-        StyleChoiceButton(noBtnTransform, 135f);
+        StyleChoiceButton(yesBtnTransform, -140f);
+        StyleChoiceButton(noBtnTransform, 140f);
     }
 
     private void StyleChoiceButton(Transform btnTransform, float posX)
@@ -692,7 +692,7 @@ public class NpcDialogueManager : MonoBehaviour
             btnRect.anchorMax = new Vector2(0.5f, 0.5f);
             btnRect.pivot = new Vector2(0.5f, 0.5f);
             btnRect.anchoredPosition = new Vector2(posX, 0f);
-            btnRect.sizeDelta = new Vector2(220f, 38f);
+            btnRect.sizeDelta = new Vector2(240f, 48f);
         }
 
         var img = btnTransform.GetComponent<UnityEngine.UI.Image>();
