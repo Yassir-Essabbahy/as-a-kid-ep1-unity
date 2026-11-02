@@ -1524,7 +1524,7 @@ MonoBehaviour:
   teddyPlaceDistance: 4.5
   teddyPlacementLerpDuration: 0.8
   teddyDriftDistance: 12
-  teddyBoatOffset: {x: 0, y: 1, z: 0}
+  teddyBoatOffset: {x: 0, y: 0.38, z: 0.13}
   teddyBoatRotationEuler: {x: 0, y: 0, z: 0}
   teddyPlaceSound: {fileID: 0}
   takeTeddyPromptKey: beach_teddy_take
@@ -2249,8 +2249,8 @@ Transform:
   m_GameObject: {fileID: 538750939}
   serializedVersion: 2
   m_LocalRotation: {x: -0.17184293, y: -0.6859082, z: -0.6859082, w: 0.17184293}
-  m_LocalPosition: {x: 8.573, y: 1.590658, z: 19.845}
-  m_LocalScale: {x: 5, y: 5, z: 5}
+  m_LocalPosition: {x: 8.572999, y: 1.590658, z: 19.845}
+  m_LocalScale: {x: 4.9999995, y: 5.0000005, z: 5}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 145998954}
@@ -5127,7 +5127,6 @@ MonoBehaviour:
   m_Script: {fileID: 1867322857}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MobileHoldButtonForwarder
-  targetInput: {fileID: 1352609647}
 --- !u!114 &1307467874
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5330,16 +5329,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9040a2054a8b3634f868170c2f8baaaf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InteractHoldInput
-  interactKey: 101
-  holdDuration: 1.5
-  mobileButton: {fileID: 1307467872}
-  forceShowInEditor: 0
-  <HoldProgress>k__BackingField: 0
-  pointerHeld: 0
-  wasHeld: 0
-  completed: 0
-  isInteractionAvailable: 0
-  pointerPressedFrame: -1
 --- !u!114 &1352609648
 MonoBehaviour:
   m_ObjectHideFlags: 0

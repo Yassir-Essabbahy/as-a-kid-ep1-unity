@@ -55,7 +55,7 @@ public class BeachEndingController : MonoBehaviour
     [SerializeField] private float teddyPlaceDistance = 4.5f;
     [SerializeField] private float teddyPlacementLerpDuration = 0.8f;
     [SerializeField] private float teddyDriftDistance = 14f;
-    [SerializeField] private Vector3 teddyBoatOffset = new Vector3(0f, 0f, 0.25f);
+    [SerializeField] private Vector3 teddyBoatOffset = new Vector3(0f, 0.38f, 0.13f);
     [SerializeField] private Vector3 teddyBoatRotationEuler = new Vector3(0f, 0f, 0f);
     [SerializeField] private AudioClip teddyPlaceSound;
 
@@ -550,33 +550,54 @@ public class BeachEndingController : MonoBehaviour
             playerController.SetControlLocked(true);
         }
 
-        // Release Teddy from carrying
+        // Release Teddy from carrying and remove physics/colliders so he does not detach or interfere
         if (teddyCarry != null)
         {
             teddyCarry.StopCarrying();
+            teddyCarry.enabled = false;
+            Destroy(teddyCarry);
         }
 
         var rb = teddyTransform.GetComponent<Rigidbody>();
         if (rb != null)
         {
-            rb.isKinematic = true;
-            rb.useGravity = false;
-            rb.linearVelocity = Vector3.zero;
-            rb.angularVelocity = Vector3.zero;
+            Destroy(rb);
         }
 
         var colliders = teddyTransform.GetComponentsInChildren<Collider>();
         foreach (var col in colliders)
         {
-            if (col != null) col.enabled = false;
+            if (col != null) Destroy(col);
         }
 
-        // Lerp Teddy smoothly onto boat deck
+        // Determine seat position on raft deck (surface of logs at Y ≈ 0.33)
+        Vector3 effectiveOffset = teddyBoatOffset;
+        if (effectiveOffset == new Vector3(0f, 1f, 0f) || effectiveOffset == new Vector3(0f, 0f, 0.25f) || effectiveOffset == Vector3.zero)
+        {
+            effectiveOffset = new Vector3(0f, 0.38f, 0.13f);
+        }
+
         Vector3 startPos = teddyTransform.position;
         Quaternion startRot = teddyTransform.rotation;
-        Vector3 targetPos = assembledRaftVisuals.TransformPoint(teddyBoatOffset);
-        Quaternion targetRot = assembledRaftVisuals.rotation * Quaternion.Euler(teddyBoatRotationEuler);
+        Vector3 targetPos = assembledRaftVisuals.TransformPoint(effectiveOffset);
 
+        // Calculate rotation so Teddy sits upright facing the player on the shore
+        Vector3 playerPos = playerController != null ? playerController.transform.position : Vector3.zero;
+        Vector3 toPlayer = playerPos - targetPos;
+        toPlayer.y = 0f;
+        if (toPlayer.sqrMagnitude < 0.001f)
+        {
+            toPlayer = Vector3.right;
+        }
+        else
+        {
+            toPlayer.Normalize();
+        }
+
+        // Teddy model is Blender Z-up: local +Z is head (up), local +Y is front (facing player)
+        Quaternion targetRot = Quaternion.LookRotation(toPlayer, Vector3.up) * Quaternion.Euler(-90f, 0f, 0f);
+
+        // Lerp Teddy smoothly onto boat deck
         float lerpElapsed = 0f;
         while (lerpElapsed < teddyPlacementLerpDuration)
         {
@@ -590,6 +611,10 @@ public class BeachEndingController : MonoBehaviour
         teddyTransform.position = targetPos;
         teddyTransform.rotation = targetRot;
         teddyTransform.SetParent(assembledRaftVisuals, true);
+
+        // Record Teddy's local transform relative to assembledRaftVisuals to lock him firmly onto the boat
+        Vector3 localPosOnBoat = teddyTransform.localPosition;
+        Quaternion localRotOnBoat = teddyTransform.localRotation;
 
         if (teddyPlaceSound != null)
         {
@@ -630,6 +655,13 @@ public class BeachEndingController : MonoBehaviour
 
             assembledRaftVisuals.position = raftBasePos + driftDirection.normalized * Mathf.Min(travel, teddyDriftDistance) + new Vector3(0f, waveY, 0f);
             assembledRaftVisuals.rotation = raftBaseRot * Quaternion.Euler(pitchX, 0f, rollZ);
+
+            // Keep Teddy firmly seated and moving with the boat
+            if (teddyTransform != null)
+            {
+                teddyTransform.localPosition = localPosOnBoat;
+                teddyTransform.localRotation = localRotOnBoat;
+            }
 
             // Camera smoothly tracks the drifting raft and Teddy
             if (playerController != null && playerController.playerCamera != null && teddyTransform != null)
