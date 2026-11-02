@@ -67,6 +67,8 @@ public class InteractInput : MonoBehaviour
 
     private void Update()
     {
+        wasPressedThisFrame = false;
+
         bool keyPress = Input.GetKeyDown(interactKey);
         bool mouseClick = (Cursor.lockState == CursorLockMode.Locked && Input.GetMouseButtonDown(0));
 
@@ -76,11 +78,6 @@ public class InteractInput : MonoBehaviour
         }
 
         UpdateMobileButtonVisibility();
-    }
-
-    private void LateUpdate()
-    {
-        wasPressedThisFrame = false;
     }
 
     private void UpdateMobileButtonVisibility()

@@ -51,7 +51,7 @@ public class BeachEndingController : MonoBehaviour
     [SerializeField] private string sendChoiceKey = "beach_choice_send";
 
     [Header("Teddy Boat Ending Settings")]
-    [SerializeField] private float teddyPickupDistance = 3.5f;
+    [SerializeField] private float teddyPickupDistance = 4.5f;
     [SerializeField] private float teddyPlaceDistance = 4.5f;
     [SerializeField] private float teddyPlacementLerpDuration = 0.8f;
     [SerializeField] private float teddyDriftDistance = 14f;
@@ -100,6 +100,7 @@ public class BeachEndingController : MonoBehaviour
     private TeddyEndingState teddyState = TeddyEndingState.Idle;
     private RaftPlayerInteraction playerInteraction;
     private CarryableItem teddyCarry;
+    private bool pendingInteract;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetStatics()
@@ -117,6 +118,39 @@ public class BeachEndingController : MonoBehaviour
         {
             stationaryToyCamera.gameObject.SetActive(false);
         }
+    }
+
+    private void OnEnable()
+    {
+        HookInteractInput();
+    }
+
+    private void OnDisable()
+    {
+        UnhookInteractInput();
+    }
+
+    private void HookInteractInput()
+    {
+        if (playerInteraction == null) ResolveReferences();
+        if (playerInteraction != null && playerInteraction.interactInput != null)
+        {
+            playerInteraction.interactInput.OnInteracted -= OnInteractTriggered;
+            playerInteraction.interactInput.OnInteracted += OnInteractTriggered;
+        }
+    }
+
+    private void UnhookInteractInput()
+    {
+        if (playerInteraction != null && playerInteraction.interactInput != null)
+        {
+            playerInteraction.interactInput.OnInteracted -= OnInteractTriggered;
+        }
+    }
+
+    private void OnInteractTriggered()
+    {
+        pendingInteract = true;
     }
 
     private void Start()
@@ -310,6 +344,7 @@ public class BeachEndingController : MonoBehaviour
     {
         if (teddyState != TeddyEndingState.Idle) return;
         ResolveReferences();
+        HookInteractInput();
 
         CanBoardRaft = false;
 
@@ -330,9 +365,11 @@ public class BeachEndingController : MonoBehaviour
         }
         if (teddyCarry != null && teddyTransform != null)
         {
+            teddyCarry.enabled = true;
             teddyCarry.SetSafeResetPosition(teddyTransform.position);
         }
 
+        pendingInteract = false;
         teddyState = TeddyEndingState.WaitingForPickup;
         currentPhase = "WaitingForPickup";
 
@@ -344,6 +381,55 @@ public class BeachEndingController : MonoBehaviour
                 tmp.text = "Objective:\nTake Teddy from the table";
             }
         }
+    }
+
+    private float GetEffectiveDistanceToTeddy()
+    {
+        if (playerController == null || teddyTransform == null) return float.MaxValue;
+
+        Vector3 playerPos = playerController.transform.position;
+        Vector3 camPos = playerController.playerCamera != null
+            ? playerController.playerCamera.transform.position
+            : playerPos + Vector3.up * 1.5f;
+
+        float dist3D = Vector3.Distance(playerPos, teddyTransform.position);
+        float distCam = Vector3.Distance(camPos, teddyTransform.position);
+
+        // Horizontal 2D distance so table height doesn't reduce pickup range
+        Vector3 flatPlayer = new Vector3(playerPos.x, 0f, playerPos.z);
+        Vector3 flatTeddy = new Vector3(teddyTransform.position.x, 0f, teddyTransform.position.z);
+        float distFlat = Vector3.Distance(flatPlayer, flatTeddy);
+
+        return Mathf.Min(dist3D, Mathf.Min(distCam, distFlat));
+    }
+
+    private bool CheckInteractPressed(InteractInput input)
+    {
+        bool pressed = pendingInteract;
+        pendingInteract = false;
+
+        if (input != null && input.WasPressed)
+        {
+            pressed = true;
+            input.ConsumePress();
+        }
+
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            pressed = true;
+        }
+
+        if (playerInteraction != null && Input.GetKeyDown(playerInteraction.interactKey))
+        {
+            pressed = true;
+        }
+
+        if (Cursor.lockState == CursorLockMode.Locked && Input.GetMouseButtonDown(0))
+        {
+            pressed = true;
+        }
+
+        return pressed;
     }
 
     private void Update()
@@ -362,27 +448,39 @@ public class BeachEndingController : MonoBehaviour
     {
         if (playerController == null || teddyTransform == null || playerInteraction == null) return;
         var input = playerInteraction.interactInput;
-        if (input == null) return;
 
-        float distToTeddy = Vector3.Distance(playerController.transform.position, teddyTransform.position);
+        float distToTeddy = GetEffectiveDistanceToTeddy();
         if (distToTeddy <= teddyPickupDistance)
         {
             string promptText = GetTakeTeddyPrompt();
             SetPrompt(promptText);
-            input.SetInteractionAvailable(true, promptText);
+            if (input != null) input.SetInteractionAvailable(true, promptText);
 
-            if (input.WasPressed)
+            if (CheckInteractPressed(input))
             {
-                input.ConsumePress();
-
-                Transform holdPoint = playerInteraction.carryPoint;
-                if (holdPoint == null && playerController.playerCamera != null)
+                Transform holdPoint = null;
+                if (playerInteraction != null && playerInteraction.carryPoint != null)
+                {
+                    holdPoint = playerInteraction.carryPoint;
+                }
+                else if (playerController != null && playerController.playerCamera != null)
                 {
                     holdPoint = playerController.playerCamera.transform;
+                }
+                else if (Camera.main != null)
+                {
+                    holdPoint = Camera.main.transform;
+                }
+
+                if (teddyCarry == null && teddyTransform != null)
+                {
+                    teddyCarry = teddyTransform.GetComponent<CarryableItem>();
+                    if (teddyCarry == null) teddyCarry = teddyTransform.gameObject.AddComponent<CarryableItem>();
                 }
 
                 if (teddyCarry != null)
                 {
+                    teddyCarry.enabled = true;
                     teddyCarry.StartCarrying(holdPoint);
                 }
 
@@ -390,7 +488,7 @@ public class BeachEndingController : MonoBehaviour
                 currentPhase = "CarryingTeddy";
 
                 ClearPrompt();
-                input.SetInteractionAvailable(false);
+                if (input != null) input.SetInteractionAvailable(false);
 
                 if (raftTrackerPanel != null)
                 {
@@ -405,7 +503,7 @@ public class BeachEndingController : MonoBehaviour
         else
         {
             ClearPrompt();
-            input.SetInteractionAvailable(false);
+            if (input != null) input.SetInteractionAvailable(false);
         }
     }
 
@@ -413,31 +511,29 @@ public class BeachEndingController : MonoBehaviour
     {
         if (playerInteraction == null || playerController == null || teddyTransform == null) return;
         var input = playerInteraction.interactInput;
-        if (input == null) return;
 
         // If player dropped Teddy (e.g. Q key), allow picking him back up
         if (teddyCarry != null && !teddyCarry.IsBeingCarried)
         {
-            float distToTeddy = Vector3.Distance(playerController.transform.position, teddyTransform.position);
+            float distToTeddy = GetEffectiveDistanceToTeddy();
             if (distToTeddy <= teddyPickupDistance)
             {
                 string promptText = GetTakeTeddyPrompt();
                 SetPrompt(promptText);
-                input.SetInteractionAvailable(true, promptText);
+                if (input != null) input.SetInteractionAvailable(true, promptText);
 
-                if (input.WasPressed)
+                if (CheckInteractPressed(input))
                 {
-                    input.ConsumePress();
                     Transform holdPoint = playerInteraction.carryPoint ?? playerController.playerCamera?.transform;
                     teddyCarry.StartCarrying(holdPoint);
                     ClearPrompt();
-                    input.SetInteractionAvailable(false);
+                    if (input != null) input.SetInteractionAvailable(false);
                 }
             }
             else
             {
                 ClearPrompt();
-                input.SetInteractionAvailable(false);
+                if (input != null) input.SetInteractionAvailable(false);
             }
             return;
         }
@@ -448,7 +544,7 @@ public class BeachEndingController : MonoBehaviour
             Vector3 dropPos = playerController.transform.position + playerController.transform.forward * 0.8f;
             teddyCarry.Drop(dropPos, playerController.transform.forward);
             ClearPrompt();
-            input.SetInteractionAvailable(false);
+            if (input != null) input.SetInteractionAvailable(false);
             return;
         }
 
@@ -460,13 +556,12 @@ public class BeachEndingController : MonoBehaviour
         {
             string promptText = GetPutTeddyPrompt();
             SetPrompt(promptText);
-            input.SetInteractionAvailable(true, promptText);
+            if (input != null) input.SetInteractionAvailable(true, promptText);
 
-            if (input.WasPressed)
+            if (CheckInteractPressed(input))
             {
-                input.ConsumePress();
                 ClearPrompt();
-                input.SetInteractionAvailable(false);
+                if (input != null) input.SetInteractionAvailable(false);
 
                 teddyState = TeddyEndingState.Sending;
                 currentPhase = "PlacingTeddy";
@@ -476,17 +571,14 @@ public class BeachEndingController : MonoBehaviour
         else
         {
             // Away from boat: pressing E does nothing (Teddy stays in hand)
-            if (input.WasPressed)
-            {
-                input.ConsumePress();
-            }
+            CheckInteractPressed(input);
 
             ClearPrompt();
-            input.SetInteractionAvailable(false);
+            if (input != null) input.SetInteractionAvailable(false);
         }
     }
 
-    private string GetTakeTeddyPrompt()
+        private string GetTakeTeddyPrompt()
     {
         string text = null;
         if (LocalizationManager.Instance != null)

@@ -421,9 +421,6 @@ PrefabInstance:
       addedObject: {fileID: 1352609642}
     - targetCorrespondingSourceObject: {fileID: 4459864850019384750, guid: 6bacecc4f3df9584198879c73a6b6c36, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1352609647}
-    - targetCorrespondingSourceObject: {fileID: 4459864850019384750, guid: 6bacecc4f3df9584198879c73a6b6c36, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 1352609648}
     - targetCorrespondingSourceObject: {fileID: 4459864851310106424, guid: 6bacecc4f3df9584198879c73a6b6c36, type: 3}
       insertIndex: -1
@@ -1520,7 +1517,7 @@ MonoBehaviour:
   choicePromptKey: beach_choice_prompt
   leaveChoiceKey: beach_choice_leave
   sendChoiceKey: beach_choice_send
-  teddyPickupDistance: 3
+  teddyPickupDistance: 4.5
   teddyPlaceDistance: 4.5
   teddyPlacementLerpDuration: 0.8
   teddyDriftDistance: 12
@@ -5317,18 +5314,6 @@ MonoBehaviour:
   dropKey: 113
   interactInput: {fileID: 1352609648}
   currentHeldPiece: {fileID: 0}
---- !u!114 &1352609647
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 134882218}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9040a2054a8b3634f868170c2f8baaaf, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::InteractHoldInput
 --- !u!114 &1352609648
 MonoBehaviour:
   m_ObjectHideFlags: 0
