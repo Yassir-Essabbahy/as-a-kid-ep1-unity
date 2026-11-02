@@ -39,6 +39,9 @@ public class RaftPlayerInteraction : MonoBehaviour
     [Tooltip("Key to drop the currently held piece")]
     public KeyCode dropKey = KeyCode.Q;
 
+    [Tooltip("Shared interaction input; assign the mobile button component when available")]
+    public InteractHoldInput interactInput;
+
     [Header("Current State")]
     [SerializeField] private RaftPiece currentHeldPiece = null;
 
@@ -48,6 +51,9 @@ public class RaftPlayerInteraction : MonoBehaviour
     private void Awake()
     {
         ResolveReferences();
+        if (interactInput == null) interactInput = GetComponent<InteractHoldInput>();
+        if (interactInput == null) interactInput = gameObject.AddComponent<InteractHoldInput>();
+        interactInput.SetKey(interactKey);
     }
 
     private void Start()
@@ -200,16 +206,16 @@ public class RaftPlayerInteraction : MonoBehaviour
         {
             if (currentHeldPiece == null)
             {
-                SetPrompt("E to pick up");
+                SetPrompt($"{interactKey} to pick up");
 
-                if (Input.GetKeyDown(interactKey))
+                if (interactInput.WasPressed)
                 {
                     PickUpPiece(hitPiece);
                 }
             }
             else if (hitPiece != currentHeldPiece)
             {
-                SetPrompt("Drop item first");
+                SetPrompt($"{dropKey} to drop held item");
             }
             return;
         }
@@ -221,9 +227,9 @@ public class RaftPlayerInteraction : MonoBehaviour
             {
                 if (BeachEndingController.Instance != null && BeachEndingController.Instance.CanBoardRaft)
                 {
-                    SetPrompt("E to get on");
+                    SetPrompt($"{interactKey} to get on");
 
-                    if (Input.GetKeyDown(interactKey))
+                    if (interactInput.WasPressed)
                     {
                         ClearPrompt();
                         BeachEndingController.Instance.StartRaftDeparture();
@@ -239,9 +245,9 @@ public class RaftPlayerInteraction : MonoBehaviour
             {
                 if (hitBuildArea.CanPlacePiece(currentHeldPiece))
                 {
-                    SetPrompt("E to place");
+                    SetPrompt($"{interactKey} to place / {dropKey} to drop");
 
-                    if (Input.GetKeyDown(interactKey))
+                    if (interactInput.WasPressed)
                     {
                         PlacePieceAtRaft(hitBuildArea);
                     }
@@ -250,11 +256,11 @@ public class RaftPlayerInteraction : MonoBehaviour
                 {
                     if (currentHeldPiece.pieceId.ToLower().Contains("mat"))
                     {
-                        SetPrompt("Need wood first");
+                        SetPrompt($"Need wood first / {dropKey} to drop");
                     }
                     else
                     {
-                        SetPrompt("Need cloth");
+                        SetPrompt($"Need cloth / {dropKey} to drop");
                     }
                 }
             }
@@ -268,7 +274,7 @@ public class RaftPlayerInteraction : MonoBehaviour
         // Case C: No interactive target in view
         if (currentHeldPiece != null)
         {
-            SetPrompt("Q to drop");
+            SetPrompt($"{dropKey} to drop");
         }
         else
         {
@@ -282,7 +288,7 @@ public class RaftPlayerInteraction : MonoBehaviour
 
         currentHeldPiece = piece;
         currentHeldPiece.StartCarrying(carryPoint);
-        SetPrompt("Q to drop");
+        SetPrompt($"{dropKey} to drop");
     }
 
     private void DropCurrentPiece()
@@ -338,9 +344,7 @@ public class RaftPlayerInteraction : MonoBehaviour
             promptBox.SetActive(true);
             if (promptBoxRect != null)
             {
-                float width = 160f;
-                if (text.Length > 12) width = 190f;
-                else if (text.Length < 10) width = 130f;
+                float width = Mathf.Max(130f, promptText != null ? promptText.GetPreferredValues(text).x + 32f : 190f);
                 promptBoxRect.sizeDelta = new Vector2(width, 36f);
             }
         }

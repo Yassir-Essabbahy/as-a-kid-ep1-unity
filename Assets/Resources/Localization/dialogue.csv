@@ -117,3 +117,7 @@ desk_pen_01,"My favorite pen. Barely holding together, but it gets me through th
 desk_doodle_01,"A little sketch of a boat lost in the waves. I wasn't really paying attention.","Un petit dessin d'un bateau perdu dans les vagues. Je n'étais pas vraiment attentif.","رسمة صغيرة لقارب ضائع وسط الأمواج. لم أكن منتبهاً حقاً للدرس."
 desk_carving_01,"Someone carved 'WAKE UP' into the wood here. It looks really old.","Quelqu'un a gravé 'RÉVEILLE-TOI' dans le bois ici. Ça a l'air très ancien.","شخص ما حفر 'استيقظ' على الخشب هنا. يبدو الحفر قديماً جداً."
 desk_book_locked_01,"I should listen to what the teacher is saying first.","Je devrais d'abord écouter ce que dit le professeur.","يجب أن أستمع إلى ما يقوله المعلم أولاً."
+
+beach_choice_prompt,"What should I do?","Que dois-je faire ?","ماذا علي أن أفعل؟"
+beach_choice_leave,"Leave him and go","Le laisser et partir","اتركه وارحل"
+beach_choice_send,"Put Teddy on the boat and send him away","Mettre Teddy sur le bateau et le laisser partir","ضع تيدي على القارب ودعه يرحل"

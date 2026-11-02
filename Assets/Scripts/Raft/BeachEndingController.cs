@@ -17,9 +17,16 @@ using UnityEngine;
 ///    and fades to silence. Screen fades smoothly to black during deep-sea drift, activates
 ///    ClassroomEndingController.IsEndingActive, and transitions to scene S1.
 /// </summary>
+public enum EndingVariant { LeaveTeddy, SendTeddy }
+
 public class BeachEndingController : MonoBehaviour
 {
     public static BeachEndingController Instance { get; private set; }
+    public static EndingVariant ChosenEnding { get; private set; } = EndingVariant.LeaveTeddy;
+    [SerializeField] private string choicePromptKey = "beach_choice_prompt";
+    [SerializeField] private string leaveChoiceKey = "beach_choice_leave";
+    [SerializeField] private string sendChoiceKey = "beach_choice_send";
+    private bool choosingEnding;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetStatics()
@@ -217,11 +224,50 @@ public class BeachEndingController : MonoBehaviour
     /// </summary>
     public void StartRaftDeparture()
     {
-        if (isEndingActive) return;
+        if (isEndingActive || choosingEnding || !CanBoardRaft) return;
+        StartCoroutine(ChooseEndingRoutine());
+    }
+
+    private IEnumerator ChooseEndingRoutine()
+    {
+        choosingEnding = true;
+        CanBoardRaft = false;
+        var diag = NpcDialogueManager.Instance ?? FindAnyObjectByType<NpcDialogueManager>();
+        if (diag == null || diag.choicePack == null || diag.dialogueText == null)
+        {
+            Debug.LogWarning("[BeachEndingController] Choice UI unavailable; boarding normally.");
+            choosingEnding = false;
+            BeginLeaveEnding();
+            yield break;
+        }
+        while (diag.IsDialogueRunning) yield return null;
+        if (playerController != null) playerController.SetControlLocked(true);
+        var loc = LocalizationManager.Instance;
+        diag.SetChoiceLabels(loc.Get(leaveChoiceKey), loc.Get(sendChoiceKey));
+        yield return diag.ShowDialogue(new[] { loc.Get(choicePromptKey) }, true, dialogueColor, dialogueFont);
+        int choice = diag.lastChoiceIndex;
+        choosingEnding = false;
+        if (choice == 1)
+        {
+            ChosenEnding = EndingVariant.SendTeddy;
+            if (playerController != null) playerController.SetControlLocked(false);
+            CanBoardRaft = true;
+            StartTeddyBoatEnding();
+        }
+        else BeginLeaveEnding();
+    }
+
+    private void BeginLeaveEnding()
+    {
+        ChosenEnding = EndingVariant.LeaveTeddy;
         CanBoardRaft = false;
         isEndingActive = true;
-        Debug.Log("[BeachEndingController] Player pressed E to board raft! Commencing departure cutscene.");
         StartCoroutine(EndingSequenceRoutine());
+    }
+
+    public void StartTeddyBoatEnding()
+    {
+        Debug.Log("[BeachEndingController] Teddy boat ending selected; not implemented yet.");
     }
 
     private IEnumerator EndingSequenceRoutine()
