@@ -176,10 +176,11 @@ public class DialogueManager : MonoBehaviour
             }
         }
 
-        if (line.voiceClip != null)
+        if (voiceSource != null)
         {
+            voiceSource.Stop();
             voiceSource.clip = line.voiceClip;
-            voiceSource.Play();
+            if (line.voiceClip != null) voiceSource.Play();
         }
 
         // This is the whole trick: broadcast the id, don't know or care who's listening.
@@ -192,6 +193,7 @@ public class DialogueManager : MonoBehaviour
     private void EndSequence()
     {
         isPlaying = false;
+        if (voiceSource != null) voiceSource.Stop();
         if (continueButton != null) continueButton.gameObject.SetActive(false);
         if (slideCoroutine != null) StopCoroutine(slideCoroutine);
         if (topBand != null && bottomBand != null)

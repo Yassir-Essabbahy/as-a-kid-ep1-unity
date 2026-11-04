@@ -8,18 +8,20 @@ public class PlayerFootsteps : MonoBehaviour
 {
     public enum SurfaceType
     {
-        Concrete,
-        Sand,
-        Auto
+        Concrete = 0,
+        Sand = 1,
+        Auto = 2,
+        Metro = 3
     }
 
     [Header("Surface Settings")]
-    [Tooltip("Surface mode: Auto detects based on ground/scene, or force Concrete / Sand.")]
+    [Tooltip("Surface mode: Auto detects based on ground/scene, or force Concrete / Sand / Metro.")]
     public SurfaceType surfaceType = SurfaceType.Auto;
     public LayerMask groundCheckLayers = ~0;
     public float groundRaycastDistance = 2.0f;
 
     [Header("Audio Clips")]
+    public AudioClip[] metroClips;
     public AudioClip[] concreteClips;
     public AudioClip[] sandClips;
 
@@ -159,10 +161,20 @@ public class PlayerFootsteps : MonoBehaviour
                 return SurfaceType.Sand;
             }
 
+            if (colName.Contains("metro") || colName.Contains("train") || colName.Contains("station") || tagName.Contains("metro"))
+            {
+                return SurfaceType.Metro;
+            }
+
             if (colName.Contains("concrete") || colName.Contains("cement") || colName.Contains("tile") ||
-                colName.Contains("metro") || colName.Contains("floor") || colName.Contains("ground") ||
+                colName.Contains("floor") || colName.Contains("ground") ||
                 colName.Contains("packinterior") || colName.Contains("column") || colName.Contains("border"))
             {
+                string scName = SceneManager.GetActiveScene().name.ToLowerInvariant();
+                if (scName.Contains("gameplay") || scName.Contains("metro"))
+                {
+                    return SurfaceType.Metro;
+                }
                 return SurfaceType.Concrete;
             }
         }
@@ -172,6 +184,11 @@ public class PlayerFootsteps : MonoBehaviour
         if (sceneName.Contains("beach") || sceneName.Contains("sand"))
         {
             return SurfaceType.Sand;
+        }
+
+        if (sceneName.Contains("gameplay") || sceneName.Contains("metro"))
+        {
+            return SurfaceType.Metro;
         }
 
         return SurfaceType.Concrete;
@@ -205,11 +222,21 @@ public class PlayerFootsteps : MonoBehaviour
     {
         switch (surface)
         {
+            case SurfaceType.Metro:
+                if (metroClips != null && metroClips.Length > 0) return metroClips;
+                if (concreteClips != null && concreteClips.Length > 0) return concreteClips;
+                return sandClips;
+
             case SurfaceType.Sand:
-                return (sandClips != null && sandClips.Length > 0) ? sandClips : concreteClips;
+                if (sandClips != null && sandClips.Length > 0) return sandClips;
+                if (concreteClips != null && concreteClips.Length > 0) return concreteClips;
+                return metroClips;
+
             case SurfaceType.Concrete:
             default:
-                return (concreteClips != null && concreteClips.Length > 0) ? concreteClips : sandClips;
+                if (concreteClips != null && concreteClips.Length > 0) return concreteClips;
+                if (metroClips != null && metroClips.Length > 0) return metroClips;
+                return sandClips;
         }
     }
 
@@ -236,6 +263,18 @@ public class PlayerFootsteps : MonoBehaviour
     [ContextMenu("Reload Footstep Clips")]
     public void LoadClipsFromAssets()
     {
+        var foundMetro = UnityEditor.AssetDatabase.FindAssets("t:AudioClip", new[] { "Assets/Assets/Episode 1/Sounds/Footsteps/Metro" });
+        if (foundMetro != null && foundMetro.Length > 0)
+        {
+            var list = new List<AudioClip>();
+            foreach (var guid in foundMetro)
+            {
+                var clip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(UnityEditor.AssetDatabase.GUIDToAssetPath(guid));
+                if (clip != null) list.Add(clip);
+            }
+            metroClips = list.ToArray();
+        }
+
         var foundConcrete = UnityEditor.AssetDatabase.FindAssets("t:AudioClip", new[] { "Assets/Assets/Episode 1/Sounds/Footsteps/Concrete" });
         if (foundConcrete != null && foundConcrete.Length > 0)
         {

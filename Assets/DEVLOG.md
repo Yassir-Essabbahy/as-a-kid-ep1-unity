@@ -224,3 +224,90 @@ All cameras are Cinemachine VCams managed by `ClassroomGazeScene.cs`.
 - Prompted Bezi to add `YesButton`/`NoButton` under the existing `choicePack` container, styled to match `talkPanel`, wired to `NpcDialogueManager.MakeChoice(0)` and `MakeChoice(1)` respectively.
 - `needsChoiceAtEnd` to be set `true` on the beggar's `NpcConversation` so `HandleChoices()` runs after its lines finish.
 - Not yet implemented: nothing currently reads `lastChoiceIndex` after `HandleChoices()` completes, so the Yes/No choice is captured but does not yet branch dialogue or gameplay outcome.
+
+---
+
+### 2026-11-03 — Metro Trash Timing Minigame & Resident Evil Item Pickup Toast
+
+- **World Pickup Ticket Gating**:
+  - Gated the old world pickup ticket spawning behind `useTrashMinigame = true` in `TeddyFindQuest.cs`, `DialogueTriggerZone.cs`, and `FindableItem.cs`. The old spawn logic remains intact for trivial rollback.
+- **Trash Can Ticket Source (`TrashTicketSource.cs`)**:
+  - Attached to the metro trash bin as the new ticket source.
+  - Proximity detection and HUD prompt integration via `NpcInteractionText.Instance`. Supports keyboard (`E`), gamepad, and mobile on-screen interact button.
+  - On minigame success, sets `MetroStorySequenceController.Instance.transitPassCollected = true`, triggers `CheckFloor1Progress()`, completes `TeddyFindQuest` if wired, and persists found state in `PlayerPrefs` (`"Metro_TicketFound"`).
+- **Timing Minigame UI (`TimingMinigameUI.cs`)**:
+  - Overlay with horizontal ping-pong marker, randomized green success zone, and inspector-configurable speed, zone width, fail speed increase, and max speed.
+  - Locks and safely restores `FirstPersonController` movement and camera look, including fallback handling if destroyed or disabled abnormally.
+  - Fail feedback: short container shake, red flash overlay, fail buzzer SFX, and retries with new randomized zone.
+  - Optional SFX hooks (rummaging loop, tick, success, fail) with procedural PSX synthesis fallbacks if audio clips are unassigned.
+  - Mobile-friendly fullscreen tap capture target.
+- **Resident Evil-Style Item Pickup Toast (`ItemPickupToast.cs`)**:
+  - Reusable singleton with `Show(Sprite icon, string localizedLabel, int amount)`.
+  - Slides in from top-right, holds for 2.5s, and slides back out using unscaled time (`Time.unscaledDeltaTime`) so it functions even during pauses.
+  - Smooth cubic ease-out in and ease-in out.
+  - Back-to-back notifications queue sequentially.
+  - Harmonized with project UI: pure black background (`RGBA(0, 0, 0, 0.92)`), crisp thin white outline (`RGBA(1, 1, 1, 0.45)`, dist `1.2, -1.2`), and `GeistPixel-Regular-VariableFont_ELSH SDF` font matching `PromptBox` and `TalkPanel`.
+  - Ticket graphic upgrade: dedicated recessed icon frame (`58x38` with inner outline), `Train_Ticket.png` reimported uncompressed with Bilinear filtering + mipmaps to remove nearest-neighbor downsampling noise and DXT1 block artifacts.
+- **Timing Minigame UI Theme Refresh & SFX Integration**:
+  - Minigame frame restyled with deep black background, matching `PromptBox` border, `GeistPixel` font headers/hints, dark recessed bar track with border, and vibrant green timing zone.
+  - Wired `SearchingSoundeffect.mp3` (`Assets/Assets/Episode 1/Sounds/SearchingSoundeffect.mp3`) directly into `TimingMinigameUI.rummagingLoopClip` across all metro scenes (`Gameplay3`, `Gameplay1`, `Gameplay3 1`).
+  - Automated scene baker (`MetroTrashMinigameSetup.cs`) updated to build the black-and-white theme, wire audio, and maintain clean scene serialization.
+
+- **Localization**:
+  - Added new English, French, and Arabic translations to `Assets/Resources/Localization/dialogue.csv` for item labels, interaction prompts, and minigame instructions.
+
+
+---
+
+### 2026-11-03 — Metro Fuse Box Audio Pack & Android Mobile Audio Optimization
+
+- **Audio Pack Integration (`MetroFuseBoxPuzzle.cs`)**:
+  - Added serialized `AudioClip` fields for the complete fuse box audio set with configurable volume sliders and procedural audio fallbacks:
+    - `electricityHumClip` (`ElectricityHum.mp3`): ambient/restored power electrical hum loop.
+    - `fuseUpClip` (`FuseUp.wav`): snappy breaker switch flip-up sound (OFF).
+    - `fuseDownClip` (`FuseDown.wav`): weighty breaker switch flip-down sound (ON).
+    - `doorOpenClip` (`FuseBox_Open_Trimmed.wav`): cabinet door creak on open.
+    - `doorCloseClip` (`Fusebox_Close.mp3`): solid latch slam on inspection exit.
+    - `powerSurgeClip`: power restoration surge fanfare.
+  - Directional Breaker Sound: Flipping a switch ON (downward) triggers `fuseDownClip`; flipping OFF (upward) triggers `fuseUpClip`.
+  - State Persistence: If `isPowerRestored` is already true when re-entering the scene, `StartElectricalHum()` automatically spins up the hum loop with solved switch rotations.
+
+- **Audio Latency Optimization**:
+  - Discovered `FuseBox_Open.mp3` had 1.682s of initial dead silence, causing the door opening sound to play 1.2s after the door animation finished.
+  - Exported `FuseBox_Open_Trimmed.wav` (starts immediately at 0.0s with 15ms anti-click fade) to sync open audio with visual door movement, leaving the original source intact.
+
+- **Android Mobile Audio Optimizations (Unity `AudioImporter`)**:
+  - **Force to Mono (`forceToMono = true`)**: Applied across all fusebox clips to ensure proper 3D spatial panning via `AudioSource.spatialBlend = 0.85f` while halving uncompressed RAM usage.
+  - **Load Types & Compression**:
+    - `ElectricityHum.mp3` (18.89s loop): Set to `CompressedInMemory` + `Vorbis` (Quality 65%, `OptimizeSampleRate`). Avoids loading 3.6 MB of uncompressed audio into mobile RAM while streaming loop playback with near-zero overhead.
+    - `FuseUp.wav` (0.43s) & `FuseDown.wav` (0.32s): Set to `DecompressOnLoad` + `ADPCM` (`OptimizeSampleRate`). Zero-latency tactile feedback on mobile touch/tap with negligible RAM (<35 KB) and zero CPU decoding cost.
+    - `FuseBox_Open_Trimmed.wav` (1.45s) & `Fusebox_Close.mp3` (1.54s): Set to `DecompressOnLoad` + `Vorbis` (Quality 70%). Immediate door audio playback without run-time hitching.
+  - Applied both Default and platform-specific `Android` override sample settings (`SetOverrideSampleSettings("Android", ...)`).
+
+- **Automated Editor Setup (`MetroFuseBoxAudioSetup.cs`)**:
+  - Added `Tools/Setup Fuse Box Audio Pack` menu command to auto-wire the clips, tune `AudioSource` 3D falloff parameters, and save scenes cleanly.
+
+
+---
+
+### 2026-11-04 — Metro Footsteps Audio Integration & Multi-Surface Audio System
+
+- **Metro Footstep Audio Integration (PlayerFootsteps.cs)**:
+  - Added native SurfaceType.Metro support alongside Concrete, Sand, and Auto modes.
+  - Added serialized metroClips array loaded from Assets/Assets/Episode 1/Sounds/Footsteps/Metro/:
+    - Footstep01.wav
+    - Footstep02.wav
+    - Footstep03.wav
+    - Footstep04.wav
+  - Intelligent auto-detection in GetCurrentSurface():
+    - Raycasts ground colliders for metro/train tags and names.
+    - Resolves gameplay scene contexts (Gameplay*, Metro) to dynamically use metro footstep sounds on station platforms, tiles, and interior floors.
+    - Gracefully falls back to concrete/sand if any clip array is empty.
+
+- **Scene & Prefab Synchronization**:
+  - Updated FirstPersonController.prefab with metroClips populated and surfaceType = Auto.
+  - Updated all Metro gameplay scenes (Gameplay3, Gameplay1, Gameplay2, Gameplay3 1) with surfaceType = Metro and metroClips assigned.
+  - Preserved MoroccanBeach.unity sand footstep overrides without regression.
+
+- **Automated Editor Setup (MetroFootstepsAudioSetup.cs)**:
+  - Added Tools/Setup Metro Footstep Audio menu command to batch-wire the 4 metro clips, concrete clips, and sand clips into the prefab and all metro scenes with clean scene serialization.

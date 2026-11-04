@@ -15,6 +15,8 @@ public class DialogueTriggerZone : MonoBehaviour
 
     [Header("Requirements & Spawning")]
     public bool requirePowerRestored = false;
+    [Tooltip("If true, the world pickup is suppressed in favor of the trash can minigame.")]
+    public bool useTrashMinigame = true;
     public GameObject itemToSpawn;
 
     private bool hasTriggered = false;
@@ -80,7 +82,7 @@ public class DialogueTriggerZone : MonoBehaviour
         isExecuting = true;
         hasTriggered = true;
 
-        if (itemToSpawn != null)
+        if (!useTrashMinigame && itemToSpawn != null)
         {
             itemToSpawn.SetActive(true);
             Debug.Log($"[DialogueTriggerZone] Spawned item: {itemToSpawn.name}");

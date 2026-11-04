@@ -70,10 +70,30 @@ public class MetroFuseBoxPuzzle : MonoBehaviour
     private Coroutine activeTransitionCoroutine;
     private Coroutine activeDoorCoroutine;
 
-    // Procedural Audio Clips
+    [Header("Audio SFX (Audio Pack)")]
+    [Tooltip("Ambient / restored electricity hum loop (ElectricityHum.mp3)")]
+    public AudioClip electricityHumClip;
+    [Tooltip("Sound played when flipping breaker UP (FuseUp.wav)")]
+    public AudioClip fuseUpClip;
+    [Tooltip("Sound played when flipping breaker DOWN (FuseDown.wav)")]
+    public AudioClip fuseDownClip;
+    [Tooltip("Sound played when opening cabinet door (FuseBox_Open.mp3 or FuseBox_Open_Trimmed.wav)")]
+    public AudioClip doorOpenClip;
+    [Tooltip("Sound played when closing cabinet door (Fusebox_Close.mp3)")]
+    public AudioClip doorCloseClip;
+    [Tooltip("Power surge fanfare / sound played when puzzle is solved")]
+    public AudioClip powerSurgeClip;
+
+    [Header("Audio Volumes")]
+    [Range(0f, 1f)] public float electricityHumVolume = 0.55f;
+    [Range(0f, 1f)] public float switchVolume = 1.0f;
+    [Range(0f, 1f)] public float doorOpenVolume = 0.85f;
+    [Range(0f, 1f)] public float doorCloseVolume = 0.85f;
+
+    // Procedural Audio Clips (Fallback)
     private AudioClip switchSnapClip;
     private AudioClip doorCreakClip;
-    private AudioClip powerSurgeClip;
+    private AudioClip procPowerSurgeClip;
     private AudioClip humLoopClip;
 
     [System.Serializable]
@@ -107,6 +127,21 @@ public class MetroFuseBoxPuzzle : MonoBehaviour
 
         if (mobileOpenButton != null) mobileOpenButton.gameObject.SetActive(false);
         if (mobileCloseButton != null) mobileCloseButton.gameObject.SetActive(false);
+
+        // Resume state & hum if power was already restored in this session
+        if (MetroStorySequenceController.Instance != null && MetroStorySequenceController.Instance.isPowerRestored)
+        {
+            isPowerRestored = true;
+            for (int i = 0; i < switchTriggers.Length; i++)
+            {
+                if (switchTriggers[i] != null)
+                {
+                    switchTriggers[i].isOn = (targetPattern != null && i < targetPattern.Length) ? targetPattern[i] : true;
+                    ApplySwitchRotation(switchTriggers[i], switchTriggers[i].isOn, instant: true);
+                }
+            }
+            StartElectricalHum();
+        }
     }
 
     public void ResetPuzzle()
@@ -115,6 +150,12 @@ public class MetroFuseBoxPuzzle : MonoBehaviour
         isInspecting = false;
         isTransitioning = false;
         isCompleting = false;
+
+        AudioClip humClip = electricityHumClip != null ? electricityHumClip : humLoopClip;
+        if (audioSource != null && audioSource.isPlaying && audioSource.clip == humClip)
+        {
+            audioSource.Stop();
+        }
 
         InitializeSwitches();
         InitializeDoor();
@@ -390,7 +431,11 @@ public class MetroFuseBoxPuzzle : MonoBehaviour
         sw.isOn = !sw.isOn;
         ApplySwitchRotation(sw, sw.isOn, instant: false);
 
-        PlayClip(switchSnapClip, 1.0f);
+        AudioClip clipToPlay = sw.isOn
+            ? (fuseDownClip != null ? fuseDownClip : (switchSnapClip != null ? switchSnapClip : fuseUpClip))
+            : (fuseUpClip != null ? fuseUpClip : (switchSnapClip != null ? switchSnapClip : fuseDownClip));
+
+        PlayClip(clipToPlay, switchVolume);
 
         CheckPuzzleSolved();
     }
@@ -483,7 +528,8 @@ public class MetroFuseBoxPuzzle : MonoBehaviour
             MetroStorySequenceController.Instance.OnPowerRestored();
         }
 
-        PlayClip(powerSurgeClip, 1.0f);
+        AudioClip surge = powerSurgeClip != null ? powerSurgeClip : procPowerSurgeClip;
+        PlayClip(surge, 1.0f);
 
         // Flash cabinet light to simulate power surge
         if (cabinetLight != null && Application.isPlaying)
@@ -531,7 +577,8 @@ public class MetroFuseBoxPuzzle : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
-        PlayClip(doorCreakClip, 0.75f);
+        AudioClip openSound = doorOpenClip != null ? doorOpenClip : doorCreakClip;
+        PlayClip(openSound, doorOpenVolume);
 
         // Animate door open
         if (activeDoorCoroutine != null) StopCoroutine(activeDoorCoroutine);
@@ -597,7 +644,8 @@ public class MetroFuseBoxPuzzle : MonoBehaviour
 
         if (mobileCloseButton != null) mobileCloseButton.gameObject.SetActive(false);
 
-        PlayClip(doorCreakClip, 0.65f);
+        AudioClip closeSound = doorCloseClip != null ? doorCloseClip : doorCreakClip;
+        PlayClip(closeSound, doorCloseVolume);
 
         // Animate door close
         if (activeDoorCoroutine != null) StopCoroutine(activeDoorCoroutine);
@@ -716,11 +764,12 @@ public class MetroFuseBoxPuzzle : MonoBehaviour
 
     private void StartElectricalHum()
     {
-        if (audioSource != null && humLoopClip != null)
+        AudioClip humClip = electricityHumClip != null ? electricityHumClip : humLoopClip;
+        if (audioSource != null && humClip != null)
         {
-            audioSource.clip = humLoopClip;
+            audioSource.clip = humClip;
             audioSource.loop = true;
-            audioSource.volume = 0.35f;
+            audioSource.volume = electricityHumVolume;
             audioSource.Play();
         }
     }
@@ -743,7 +792,7 @@ public class MetroFuseBoxPuzzle : MonoBehaviour
     {
         switchSnapClip = CreateClickClip();
         doorCreakClip = CreateDoorCreakClip();
-        powerSurgeClip = CreatePowerUpClip();
+        procPowerSurgeClip = CreatePowerUpClip();
         humLoopClip = CreateHumLoopClip();
     }
 

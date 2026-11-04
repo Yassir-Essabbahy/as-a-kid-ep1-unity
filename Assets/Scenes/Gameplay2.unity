@@ -7789,11 +7789,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ead6e1f66338285479692afe1c463ee2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerFootsteps
-  surfaceType: 0
+  surfaceType: 3
   groundCheckLayers:
     serializedVersion: 2
     m_Bits: 4294967295
   groundRaycastDistance: 2
+  metroClips:
+  - {fileID: 8300000, guid: 046ec6ab54d3db44d92949800bf57683, type: 3}
+  - {fileID: 8300000, guid: 1e4da05ec9f52274ea0aebe6e295c124, type: 3}
+  - {fileID: 8300000, guid: 3a845418ab47a3f4e99ba9a6c8c28196, type: 3}
+  - {fileID: 8300000, guid: c464e6926ed9e4247a06bf762692f21f, type: 3}
   concreteClips:
   - {fileID: 8300000, guid: 7b0176fb70fc48d4db5f7013fa2fedf5, type: 3}
   - {fileID: 8300000, guid: 4f7a67380315de84688d6c0fee706eeb, type: 3}

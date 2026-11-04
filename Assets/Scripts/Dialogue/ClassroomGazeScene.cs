@@ -357,7 +357,7 @@ public class ClassroomGazeScene : MonoBehaviour
                     string loc = LocalizationManager.Instance != null
                         ? LocalizationManager.Instance.Get("desk_book_locked_01")
                         : "I should listen to what the teacher is saying first.";
-                    ClassroomLifeIsStrangeUI.Instance?.ShowDialogueLine("Child", loc, 2.5f);
+                    ClassroomLifeIsStrangeUI.Instance?.ShowThought(loc, 2.5f);
                 }
             }
             else if (_currentHoverItem.isInteractable)
@@ -368,7 +368,7 @@ public class ClassroomGazeScene : MonoBehaviour
                 string thought = _currentHoverItem.GetNextThought();
                 if (!string.IsNullOrEmpty(thought))
                 {
-                    ClassroomLifeIsStrangeUI.Instance?.ShowDialogueLine("Child", thought, 3.8f);
+                    ClassroomLifeIsStrangeUI.Instance?.ShowThought(thought, 3.8f);
                 }
 
                 CheckDeskProgression();

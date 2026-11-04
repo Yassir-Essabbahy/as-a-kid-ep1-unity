@@ -2,11 +2,18 @@ using UnityEngine;
 
 public class TeddyFindQuest : MonoBehaviour
 {
+    [Header("Quest Conversations")]
     public NpcConversation askConversation;   // the existing "go find X" NpcConversation
     public NpcConversation foundConversation; // the existing "you found it" NpcConversation
+
+    [Header("Quest Item")]
     public GameObject itemToFind;             // Item to spawn/activate when quest starts
     public bool questActive = false;
     public bool questCompleted = false;
+
+    [Header("Trash Minigame Transition")]
+    [Tooltip("If true, the world pickup is suppressed in favor of the trash can minigame.")]
+    public bool useTrashMinigame = true;
 
     void Awake()
     {
@@ -31,7 +38,7 @@ public class TeddyFindQuest : MonoBehaviour
     void HandleAskFinished()
     {
         questActive = true;
-        if (itemToFind != null)
+        if (!useTrashMinigame && itemToFind != null)
         {
             itemToFind.SetActive(true);
         }

@@ -34,6 +34,8 @@ public class ClassroomLifeIsStrangeUI : MonoBehaviour
     [Header("Dialogue Text (Inside Bottom Band)")]
     [SerializeField] private TextMeshProUGUI dialogueText;
 
+    private TextMeshProUGUI _thoughtText;
+    private Coroutine _thoughtRoutine;
     private Coroutine _dialogueRoutine;
     private TMP_FontAsset _pixelFont;
 
@@ -96,6 +98,38 @@ public class ClassroomLifeIsStrangeUI : MonoBehaviour
 
         if (_dialogueRoutine != null) StopCoroutine(_dialogueRoutine);
         _dialogueRoutine = StartCoroutine(DialogueRoutine(speaker, line, duration));
+    }
+
+    public void ShowThought(string line, float duration = 3.5f)
+    {
+        if (string.IsNullOrWhiteSpace(line) || canvas == null) return;
+        if (_thoughtText == null)
+        {
+            var go = new GameObject("Classroom_ThoughtText", typeof(RectTransform), typeof(TextMeshProUGUI));
+            go.transform.SetParent(canvas.transform, false);
+            var rt = go.GetComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0.1f, 0.25f);
+            rt.anchorMax = new Vector2(0.9f, 0.38f);
+            rt.offsetMin = rt.offsetMax = Vector2.zero;
+            _thoughtText = go.GetComponent<TextMeshProUGUI>();
+            _thoughtText.fontSize = NpcDialogueManager.STANDARD_FONT_SIZE;
+            _thoughtText.alignment = TextAlignmentOptions.Center;
+            _thoughtText.color = Color.white;
+            _thoughtText.raycastTarget = false;
+            if (_pixelFont != null) _thoughtText.font = _pixelFont;
+        }
+        if (_thoughtRoutine != null) StopCoroutine(_thoughtRoutine);
+        _thoughtRoutine = StartCoroutine(ThoughtRoutine(line, duration));
+    }
+
+    private IEnumerator ThoughtRoutine(string line, float duration)
+    {
+        string thought = line.Trim();
+        if (!(thought.StartsWith("(") && thought.EndsWith(")"))) thought = "(" + thought + ")";
+        _thoughtText.text = thought;
+        yield return new WaitForSeconds(duration);
+        _thoughtText.text = "";
+        _thoughtRoutine = null;
     }
 
     private IEnumerator DialogueRoutine(string speaker, string line, float duration)

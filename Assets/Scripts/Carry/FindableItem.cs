@@ -7,6 +7,11 @@ public class FindableItem : MonoBehaviour
     public string promptText = "Press 'E' to Take Train Ticket";
     public bool isTrainTicket = true;
     public AudioClip pickupSound;
+
+    [Header("Trash Minigame Transition")]
+    [Tooltip("If true and isTrainTicket is true, this pickup will remain disabled in favor of the trash minigame.")]
+    public bool useTrashMinigame = true;
+
     private bool collected = false;
 
     public bool IsCollected => collected;
@@ -15,6 +20,12 @@ public class FindableItem : MonoBehaviour
 
     void Start()
     {
+        if (useTrashMinigame && isTrainTicket)
+        {
+            gameObject.SetActive(false);
+            return;
+        }
+
         var player = GameObject.FindWithTag("Player");
         if (player != null) playerTransform = player.transform;
     }
