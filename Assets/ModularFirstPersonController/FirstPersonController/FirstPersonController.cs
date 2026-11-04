@@ -1,4 +1,4 @@
-// CHANGE LOG
+﻿// CHANGE LOG
 // 
 // CHANGES || version VERSION
 //
@@ -40,6 +40,11 @@ public class FirstPersonController : MonoBehaviour
     private float pitch = 0.0f;
     public float Yaw => yaw;
     public float Pitch => pitch;
+    public bool IsWalking => isWalking;
+    public bool IsSprinting => isSprinting;
+    public bool IsGrounded => isGrounded;
+    public bool IsCrouched => isCrouched;
+    public Rigidbody ControllerRigidbody => rb;
 
     public void SetViewAngles(float newYaw, float newPitch)
     {
