@@ -333,3 +333,35 @@ All cameras are Cinemachine VCams managed by `ClassroomGazeScene.cs`.
   - Added `MobileControlsCanvas` with `CanvasScaler` (1080p reference, `MatchWidthOrHeight: 0.5`) to `FirstPersonController.prefab`.
   - Updated metro scenes (`Gameplay3`, `Gameplay1`, `Gameplay2`, `Gameplay3 1`) with the mobile controls canvas.
   - Created `Tools/Setup Mobile Touch Controls` editor menu tool (`MobileControlsSetup.cs`) for repeatable batch setup and serialization.
+
+
+---
+
+### 2026-11-04 - Train Arrival Hitch Fix, Recurring Train Passes & Metro Sound System
+
+- **Root Cause Analysis of Train Arrival Lag Spike**:
+  - Discovered `Railway.mp3` (44.5s long) was imported with `loadType: DecompressOnLoad`, `preloadAudioData: false`, and `compressionFormat: PCM`.
+  - When `BeginMove()` was called at `delayBeforeMove = 3s`, Unity synchronously blocked the main render thread to allocate and decode 8.5 MB of uncompressed audio on the fly, creating a ~1-second freeze.
+  - `OncfAmbiance.MP3` (593.4s / 10 minutes) was similarly configured with `DecompressOnLoad` and was not looping properly in existing scenes (`loop = false`, volume 0.081).
+  - Moving the 47-renderer Train hierarchy without a Kinematic Rigidbody caused PhysX to recalculate static hierarchy state.
+
+- **Zero-Latency Audio Optimization (AudioImporter)**:
+  - **`Railway.mp3`**: Changed to `AudioClipLoadType.Streaming` + `Vorbis` (Quality 70%) with `loadInBackground = true` and `preloadAudioData = true`. Streams directly from disk with zero main-thread decompression overhead.
+  - **`OncfAmbiance.MP3`**: Changed to `AudioClipLoadType.Streaming` + `Vorbis` (Quality 65%) with `loadInBackground = true` and `preloadAudioData = true`. Eliminates ~105 MB of uncompressed memory usage.
+  - **`Oncf1.MP3` & `Oncf2.MP3`**: Set to `CompressedInMemory` + `Vorbis` (Quality 70%) for instant station announcement playback.
+  - **`TrainHorns.wav`**: Set to `DecompressOnLoad` + `ADPCM` (mono) for instantaneous tactile 3D spatial horn playback.
+
+- **Recurring Train Passes (`TrainArrivalSequence.cs`)**:
+  - Added pre-warming in `Awake()` via `clip.LoadAudioData()` to ensure all buffers are warm.
+  - Added kinematic `Rigidbody` to root Train object for smooth physics interpolation without static-collider tree rebuilds.
+  - **First Pass & Periodic Looping**: Performs the first pass after `delayBeforeMove` (3.5s), then resets off-screen in the tunnel and repeats periodically ("from while to while", configurable min: 45s, max: 75s).
+  - **Audio Fading & Horn Cue**: Smooth audio volume fade-in when departing, automatic horn blast (`TrainHorns.wav`) via dedicated secondary `AudioSource` as the train approaches the platform, and smooth fade-out as it enters the exit tunnel.
+  - Added `[ContextMenu("Trigger Train Pass Now")]` for live in-editor testing.
+
+- **Metro Sound System (`MetroSoundSystem.cs`)**:
+  - **Station Atmosphere**: Continuous looping Moroccan ONCF station ambience (`OncfAmbiance.MP3`) at balanced volume (0.35).
+  - **Platform PA Announcements**: Automated announcements using authentic ONCF Moroccan train station chimes (`Oncf1`, `Oncf2`).
+  - **Train Arrival Coordination**: Station PA plays an announcement 7-8 seconds before an incoming train passes the platform, warning passengers.
+
+- **Automated Editor Setup (`MetroAudioAndTrainSetup.cs`)**:
+  - Added `Tools/Setup Metro Train & Sound System` menu tool to configure all audio sources, clips, and scene components cleanly across `Gameplay3`, `Gameplay1`, `Gameplay2`, and `Gameplay3 1`.

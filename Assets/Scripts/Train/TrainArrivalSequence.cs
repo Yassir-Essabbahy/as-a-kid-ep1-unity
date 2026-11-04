@@ -1,5 +1,13 @@
+using System.Collections;
 using UnityEngine;
 
+/// <summary>
+/// Controls the train movement through the metro station:
+/// - Preloads and streams audio on background threads with zero hitching.
+/// - Performs the initial pass after an inspector-configured delay.
+/// - Resets off-screen and triggers recurring passes periodically ("from while to while").
+/// - Integrates directional 3D audio, fading, horn cues, and station PA announcements.
+/// </summary>
 public class TrainArrivalSequence : MonoBehaviour
 {
     [Header("Points")]
@@ -7,21 +15,62 @@ public class TrainArrivalSequence : MonoBehaviour
     public Transform pointB;
 
     [Header("Timing")]
+    [Tooltip("Delay in seconds before the first pass begins.")]
     public float delayBeforeMove = 3f;
-    public float speed = 5f; // adjustable live in Inspector
+    [Tooltip("Speed of train movement along the tracks.")]
+    public float speed = 20f;
+
+    [Header("Recurring Passes")]
+    [Tooltip("If true, the train resets to Point A after exiting and passes again periodically.")]
+    public bool loopPasses = true;
+    [Tooltip("Minimum wait in seconds between train passes.")]
+    public float minIntervalBetweenPasses = 45f;
+    [Tooltip("Maximum wait in seconds between train passes.")]
+    public float maxIntervalBetweenPasses = 75f;
 
     [Header("Audio")]
     public AudioSource audioSource;
-    public AudioClip arrivalSound;   // plays immediately at t=0
-    public AudioClip moveSound;      // plays once movement starts, loops
+    public AudioSource hornAudioSource;
+    public AudioClip arrivalSound;   // plays at initial start (optional)
+    public AudioClip moveSound;      // continuous rail loop (Railway.mp3)
+    public AudioClip hornSound;      // train horn cue (TrainHorns.wav)
+    [Range(0f, 1f)] public float moveVolume = 0.85f;
+    [Range(0f, 1f)] public float hornVolume = 0.90f;
+    [Tooltip("Distance threshold along path to trigger train horn.")]
+    public float hornTriggerDistance = 80f;
 
-    private bool isMoving = false;
-    private bool hasArrived = false;
+    [Header("Diagnostics")]
+    [SerializeField] private bool isMoving = false;
+    [SerializeField] private bool hasArrived = false;
+    [SerializeField] private float timeUntilNextPass = 0f;
+    [SerializeField] private int passCount = 0;
 
-    void Start()
+    private bool hasBlownHorn = false;
+    private Coroutine passLoopCoroutine;
+    private Coroutine audioFadeCoroutine;
+
+    public bool IsMoving => isMoving;
+    public int PassCount => passCount;
+    public float TimeUntilNextPass => timeUntilNextPass;
+
+    private void Awake()
+    {
+        // 1. Preload audio clips to guarantee zero main-thread decompression stalls
+        PrewarmAudioClips();
+
+        // 2. Add kinematic Rigidbody if missing to eliminate static-collider physics hierarchy recalculation stalls
+        EnsureKinematicRigidbody();
+
+        // 3. Ensure AudioSources are properly set up for 3D spatialized railway sound
+        SetupAudioSources();
+    }
+
+    private void Start()
     {
         if (pointA != null)
+        {
             transform.position = pointA.position;
+        }
 
         if (audioSource != null && arrivalSound != null)
         {
@@ -30,34 +79,256 @@ public class TrainArrivalSequence : MonoBehaviour
             audioSource.Play();
         }
 
-        Invoke(nameof(BeginMove), delayBeforeMove);
+        // Start pass loop
+        passLoopCoroutine = StartCoroutine(PassSequenceRoutine());
     }
 
-    void BeginMove()
+    private void PrewarmAudioClips()
     {
-        isMoving = true;
+        if (moveSound != null && moveSound.loadState == AudioDataLoadState.Unloaded)
+        {
+            moveSound.LoadAudioData();
+        }
+        if (hornSound != null && hornSound.loadState == AudioDataLoadState.Unloaded)
+        {
+            hornSound.LoadAudioData();
+        }
+        if (arrivalSound != null && arrivalSound.loadState == AudioDataLoadState.Unloaded)
+        {
+            arrivalSound.LoadAudioData();
+        }
+    }
 
+    private void EnsureKinematicRigidbody()
+    {
+        var rb = GetComponent<Rigidbody>();
+        if (rb == null)
+        {
+            rb = gameObject.AddComponent<Rigidbody>();
+        }
+        rb.isKinematic = true;
+        rb.useGravity = false;
+        rb.interpolation = RigidbodyInterpolation.Interpolate;
+    }
+
+    private void SetupAudioSources()
+    {
+        if (audioSource == null)
+        {
+            audioSource = GetComponent<AudioSource>();
+            if (audioSource == null)
+            {
+                audioSource = gameObject.AddComponent<AudioSource>();
+            }
+        }
+
+        audioSource.playOnAwake = false;
+        audioSource.loop = true;
+        audioSource.spatialBlend = 1.0f; // Full 3D audio for realistic track sound
+        audioSource.rolloffMode = AudioRolloffMode.Logarithmic;
+        audioSource.minDistance = 15f;
+        audioSource.maxDistance = 150f;
+        audioSource.dopplerLevel = 0.8f;
+
+        if (hornAudioSource == null)
+        {
+            var sources = GetComponents<AudioSource>();
+            if (sources.Length > 1)
+            {
+                hornAudioSource = sources[1];
+            }
+            else
+            {
+                hornAudioSource = gameObject.AddComponent<AudioSource>();
+            }
+        }
+
+        hornAudioSource.playOnAwake = false;
+        hornAudioSource.loop = false;
+        hornAudioSource.spatialBlend = 1.0f;
+        hornAudioSource.rolloffMode = AudioRolloffMode.Logarithmic;
+        hornAudioSource.minDistance = 25f;
+        hornAudioSource.maxDistance = 200f;
+        hornAudioSource.dopplerLevel = 1.0f;
+    }
+
+    private IEnumerator PassSequenceRoutine()
+    {
+        // First Pass Initial Delay
+        timeUntilNextPass = delayBeforeMove;
+        while (timeUntilNextPass > 0f)
+        {
+            // Give pre-arrival announcement warning 7 seconds before departure
+            if (timeUntilNextPass <= 7f && timeUntilNextPass + Time.deltaTime > 7f)
+            {
+                NotifyPreArrival();
+            }
+
+            yield return null;
+            timeUntilNextPass -= Time.deltaTime;
+        }
+
+        // Execute first pass
+        yield return StartCoroutine(ExecuteSinglePass());
+
+        // Recurring passes ("from while to while")
+        while (loopPasses)
+        {
+            float interval = Random.Range(minIntervalBetweenPasses, maxIntervalBetweenPasses);
+            timeUntilNextPass = interval;
+
+            bool preArrivalFired = false;
+            while (timeUntilNextPass > 0f)
+            {
+                if (!preArrivalFired && timeUntilNextPass <= 8f)
+                {
+                    preArrivalFired = true;
+                    NotifyPreArrival();
+                }
+
+                yield return null;
+                timeUntilNextPass -= Time.deltaTime;
+            }
+
+            yield return StartCoroutine(ExecuteSinglePass());
+        }
+    }
+
+    private IEnumerator ExecuteSinglePass()
+    {
+        if (pointA == null || pointB == null) yield break;
+
+        // Snap to start point offscreen
+        transform.position = pointA.position;
+        hasArrived = false;
+        hasBlownHorn = false;
+        isMoving = true;
+        passCount++;
+
+        // Start movement sound with smooth fade-in
+        StartMoveAudio();
+
+        float totalDistance = Vector3.Distance(pointA.position, pointB.position);
+        float midDistance = totalDistance * 0.45f;
+
+        while (isMoving && !hasArrived)
+        {
+            transform.position = Vector3.MoveTowards(transform.position, pointB.position, speed * Time.deltaTime);
+
+            float currentDistFromStart = Vector3.Distance(transform.position, pointA.position);
+
+            // Trigger horn as train approaches the platform
+            if (!hasBlownHorn && currentDistFromStart >= midDistance)
+            {
+                hasBlownHorn = true;
+                PlayHorn();
+            }
+
+            // Check if arrived at end tunnel point
+            if (Vector3.Distance(transform.position, pointB.position) < 0.2f)
+            {
+                hasArrived = true;
+                isMoving = false;
+            }
+
+            yield return null;
+        }
+
+        // Stop audio with smooth fade-out
+        StopMoveAudio();
+
+        // Snap back to Point A deep in tunnel so train is hidden during the wait
+        transform.position = pointA.position;
+    }
+
+    private void StartMoveAudio()
+    {
         if (audioSource != null && moveSound != null)
         {
-            audioSource.clip = moveSound;
-            audioSource.loop = true;
-            audioSource.Play();
+            if (audioFadeCoroutine != null) StopCoroutine(audioFadeCoroutine);
+            audioFadeCoroutine = StartCoroutine(FadeAudio(audioSource, moveSound, 0f, moveVolume, 1.2f));
         }
     }
 
-    void Update()
+    private void StopMoveAudio()
     {
-        if (!isMoving || hasArrived || pointA == null || pointB == null) return;
-
-        transform.position = Vector3.MoveTowards(transform.position, pointB.position, speed * Time.deltaTime);
-
-        if (Vector3.Distance(transform.position, pointB.position) < 0.01f)
+        if (audioSource != null && audioSource.isPlaying)
         {
-            hasArrived = true;
-            isMoving = false;
-
-            if (audioSource != null)
-                audioSource.Stop();
+            if (audioFadeCoroutine != null) StopCoroutine(audioFadeCoroutine);
+            audioFadeCoroutine = StartCoroutine(FadeAudio(audioSource, null, audioSource.volume, 0f, 1.5f));
         }
+    }
+
+    private IEnumerator FadeAudio(AudioSource src, AudioClip clip, float startVol, float targetVol, float duration)
+    {
+        if (clip != null)
+        {
+            src.clip = clip;
+            src.volume = startVol;
+            if (!src.isPlaying) src.Play();
+        }
+
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            src.volume = Mathf.Lerp(startVol, targetVol, elapsed / duration);
+            yield return null;
+        }
+
+        src.volume = targetVol;
+        if (targetVol <= 0.001f)
+        {
+            src.Stop();
+        }
+    }
+
+    private void PlayHorn()
+    {
+        if (hornSound == null) return;
+
+        if (hornAudioSource != null)
+        {
+            hornAudioSource.pitch = Random.Range(0.96f, 1.04f);
+            hornAudioSource.PlayOneShot(hornSound, hornVolume);
+        }
+        else if (audioSource != null)
+        {
+            audioSource.PlayOneShot(hornSound, hornVolume);
+        }
+    }
+
+    private void NotifyPreArrival()
+    {
+        var metroAudio = MetroSoundSystem.Instance;
+        if (metroAudio != null)
+        {
+            metroAudio.OnTrainApproaching();
+        }
+    }
+
+    [ContextMenu("Trigger Train Pass Now")]
+    public void TriggerPassNow()
+    {
+        if (isMoving) return;
+
+        if (passLoopCoroutine != null) StopCoroutine(passLoopCoroutine);
+        timeUntilNextPass = 0f;
+        passLoopCoroutine = StartCoroutine(TriggerImmediatePassRoutine());
+    }
+
+    private IEnumerator TriggerImmediatePassRoutine()
+    {
+        yield return StartCoroutine(ExecuteSinglePass());
+        if (loopPasses)
+        {
+            passLoopCoroutine = StartCoroutine(PassSequenceRoutine());
+        }
+    }
+
+    // Kept for backward compatibility with external calls / invokes
+    public void BeginMove()
+    {
+        TriggerPassNow();
     }
 }
