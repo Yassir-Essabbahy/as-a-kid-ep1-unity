@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using TMPro;
 using Unity.Cinemachine;
@@ -129,6 +129,7 @@ public class MetroStorySequenceController : MonoBehaviour
     public bool transitPassCollected = false;
     public bool vendingMachineInspected = false;
     public bool intercomInspected = false;
+    public bool ticketBoothInspected = false;
     public bool isPowerRestored = false;
     public bool fuseBoxInspected = false;
     public bool neighborGaveAdvice = false;
@@ -488,6 +489,10 @@ public class MetroStorySequenceController : MonoBehaviour
                 intercomInspected = true;
                 Debug.Log("[MetroStory] Intercom inspected.");
                 CheckFloor1Progress();
+                break;
+            case InteractivePlaceholderItem.PlaceholderType.Floor1_TicketBooth:
+                ticketBoothInspected = true;
+                Debug.Log("[MetroStory] Ticket booth inspected.");
                 break;
             case InteractivePlaceholderItem.PlaceholderType.Floor3_DepartureBoard:
                 departureBoardInspected = true;

@@ -12,12 +12,14 @@ public class InteractivePlaceholderItem : MonoBehaviour
         Floor1_Intercom,
         Floor3_DepartureBoard,
         Floor3_LostTeddyPiece,
-        Generic
+        Generic,
+        Floor1_TicketBooth
     }
 
     [Header("Identity & Type")]
     public PlaceholderType itemType = PlaceholderType.Generic;
     public string promptText = "Press 'E' to Inspect";
+    public string promptLocalizationKey = "";
 
     [Header("Dialogue Keys")]
     public string[] dialogueKeys;
@@ -49,6 +51,15 @@ public class InteractivePlaceholderItem : MonoBehaviour
 
         if (audioSource == null)
             audioSource = GetComponent<AudioSource>();
+
+        if (!string.IsNullOrEmpty(promptLocalizationKey))
+        {
+            string loc = MetroStorySequenceController.GetLoc(promptLocalizationKey);
+            if (!string.IsNullOrEmpty(loc) && loc != promptLocalizationKey)
+            {
+                promptText = loc;
+            }
+        }
     }
 
     private void Update()
@@ -91,6 +102,7 @@ public class InteractivePlaceholderItem : MonoBehaviour
 
     public void TriggerInteraction()
     {
+        if (NpcDialogueManager.Instance != null && NpcDialogueManager.Instance.IsDialogueRunning) return;
         if (oneTimeOnly && hasBeenInteracted) return;
         hasBeenInteracted = true;
 
