@@ -1,4 +1,4 @@
-﻿// CHANGE LOG
+// CHANGE LOG
 // 
 // CHANGES || version VERSION
 //
@@ -45,6 +45,17 @@ public class FirstPersonController : MonoBehaviour
     public bool IsGrounded => isGrounded;
     public bool IsCrouched => isCrouched;
     public Rigidbody ControllerRigidbody => rb;
+
+    public static FirstPersonController ActiveInstance { get; private set; }
+
+    // Mobile Touch Input
+    [HideInInspector] public Vector2 mobileMoveInput = Vector2.zero;
+    [HideInInspector] public Vector2 mobileLookDelta = Vector2.zero;
+    [HideInInspector] public bool mobileSprintActive = false;
+
+    public void SetMobileMovement(Vector2 move) => mobileMoveInput = move;
+    public void AddMobileLook(Vector2 delta) => mobileLookDelta += delta;
+    public void SetMobileSprint(bool sprint) => mobileSprintActive = sprint;
 
     public void SetViewAngles(float newYaw, float newPitch)
     {
@@ -207,6 +218,7 @@ public class FirstPersonController : MonoBehaviour
 
     private void Awake()
     {
+        ActiveInstance = this;
         rb = GetComponent<Rigidbody>();
 
         crosshairObject = GetComponentInChildren<Image>();
@@ -232,12 +244,20 @@ public class FirstPersonController : MonoBehaviour
         }
     }
 
+    private void OnDestroy()
+    {
+        if (ActiveInstance == this) ActiveInstance = null;
+    }
+
     void Start()
     {
         if(lockCursor)
         {
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
+            if (!Application.isMobilePlatform)
+            {
+                Cursor.lockState = CursorLockMode.Locked;
+                Cursor.visible = false;
+            }
         }
 
         if(crosshair)
@@ -455,7 +475,12 @@ public class FirstPersonController : MonoBehaviour
         if (playerCanMove)
         {
             // Calculate how fast we should be moving
-            Vector3 targetVelocity = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
+            float h = Input.GetAxis("Horizontal") + mobileMoveInput.x;
+            float v = Input.GetAxis("Vertical") + mobileMoveInput.y;
+            h = Mathf.Clamp(h, -1f, 1f);
+            v = Mathf.Clamp(v, -1f, 1f);
+
+            Vector3 targetVelocity = new Vector3(h, 0, v);
 
             // Checks if player is walking and isGrounded
             // Will allow head bob
@@ -469,7 +494,7 @@ public class FirstPersonController : MonoBehaviour
             }
 
             // All movement calculations shile sprint is active
-            if (enableSprint && Input.GetKey(sprintKey) && sprintRemaining > 0f && !isSprintCooldown)
+            if (enableSprint && (Input.GetKey(sprintKey) || mobileSprintActive) && sprintRemaining > 0f && !isSprintCooldown)
             {
                 targetVelocity = transform.TransformDirection(targetVelocity) * sprintSpeed;
 

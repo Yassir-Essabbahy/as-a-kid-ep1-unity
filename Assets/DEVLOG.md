@@ -311,3 +311,25 @@ All cameras are Cinemachine VCams managed by `ClassroomGazeScene.cs`.
 
 - **Automated Editor Setup (MetroFootstepsAudioSetup.cs)**:
   - Added Tools/Setup Metro Footstep Audio menu command to batch-wire the 4 metro clips, concrete clips, and sand clips into the prefab and all metro scenes with clean scene serialization.
+
+
+---
+
+### 2026-11-04 - Mobile Touch Controls: Transparent Analog Stick & Hidden Look Drag Zone
+
+- **Mobile Touch Controls Architecture (`MobileTouchControls.cs`)**:
+  - Implemented dual-zone mobile touch control layout mapped to `FirstPersonController`:
+    - **Left Screen Half (Analog Stick)**: Semi-transparent virtual joystick for movement (strafe + forward/back).
+      - Dynamic floating joystick behavior: centers directly under player thumb on initial touch on the left screen half.
+      - Procedurally generated smooth circular sprites (`JoystickBase.png` and `JoystickKnob.png`) with translucent styling (idle alpha 0.28, active alpha 0.70).
+      - Clamps movement vector within `maxJoystickRadius` (75px) and feeds normalized `Vector2` into player movement.
+    - **Right Screen Half (Hidden Camera Look)**: Completely invisible touch drag zone (`Color.clear`, `raycastTarget = true`).
+      - Tracks touch deltas on drag with dedicated horizontal (`0.18`) and vertical (`0.14`) sensitivities.
+      - Multi-touch isolated via `PointerEventData.pointerId` to guarantee simultaneous movement and look without finger conflicts.
+  - Integrated cleanly with `FirstPersonController.cs` without interfering with desktop/keyboard inputs or cursor locks.
+  - Added `forceShowInEditor` toggle so developers can test mobile drag interactions directly with the mouse in the Unity Editor.
+
+- **Prefab & Scene Integration**:
+  - Added `MobileControlsCanvas` with `CanvasScaler` (1080p reference, `MatchWidthOrHeight: 0.5`) to `FirstPersonController.prefab`.
+  - Updated metro scenes (`Gameplay3`, `Gameplay1`, `Gameplay2`, `Gameplay3 1`) with the mobile controls canvas.
+  - Created `Tools/Setup Mobile Touch Controls` editor menu tool (`MobileControlsSetup.cs`) for repeatable batch setup and serialization.
