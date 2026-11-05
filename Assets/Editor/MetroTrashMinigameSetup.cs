@@ -23,6 +23,7 @@ namespace Story
         {
             string[] scenePaths = new string[]
             {
+                "Assets/Scenes/Story.unity",
                 "Assets/Scenes/Gameplay3.unity",
                 "Assets/Scenes/Gameplay1.unity",
                 "Assets/Scenes/Gameplay2.unity",
@@ -51,11 +52,41 @@ namespace Story
 
         public static int ConfigureScene(Scene scene)
         {
-            Canvas canvas = Object.FindAnyObjectByType<Canvas>();
+            // Always prefer the main UI Canvas named "Canvas"
+            Canvas canvas = GameObject.Find("Canvas")?.GetComponent<Canvas>();
+            if (canvas == null)
+            {
+                var allCanvases = Object.FindObjectsByType<Canvas>(FindObjectsSortMode.None);
+                foreach (var c in allCanvases)
+                {
+                    if (c.name == "Canvas")
+                    {
+                        canvas = c;
+                        break;
+                    }
+                }
+            }
+
+            if (canvas == null)
+            {
+                canvas = Object.FindAnyObjectByType<Canvas>();
+            }
+
             if (canvas == null)
             {
                 Debug.LogWarning($"[MetroTrashMinigameSetup] No Canvas found in {scene.name}.");
                 return 0;
+            }
+
+            // Remove unwanted duplicate copies under CrosshairAndStamina if present
+            var crosshairCanvas = GameObject.Find("CrosshairAndStamina");
+            if (crosshairCanvas != null)
+            {
+                var dupToast = crosshairCanvas.transform.Find("ItemPickupToast");
+                if (dupToast != null) Object.DestroyImmediate(dupToast.gameObject);
+
+                var dupMinigame = crosshairCanvas.transform.Find("TimingMinigameUI");
+                if (dupMinigame != null) Object.DestroyImmediate(dupMinigame.gameObject);
             }
 
             AudioClip searchSound = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Assets/Episode 1/Sounds/SearchingSoundeffect.mp3");
@@ -158,6 +189,8 @@ namespace Story
                     src.ticketIcon = ticketSprite;
                     src.minigameUI = minigameComp;
                     src.interactDistance = 2.8f;
+                    src.hasTicket = false;
+                    src.isSearched = false;
                     EditorUtility.SetDirty(src);
                     EditorUtility.SetDirty(can);
                     count++;

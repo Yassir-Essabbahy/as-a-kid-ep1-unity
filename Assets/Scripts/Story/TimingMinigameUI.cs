@@ -151,6 +151,12 @@ public class TimingMinigameUI : MonoBehaviour
     /// </summary>
     public void StartMinigame(TrashTicketSource source)
     {
+        if (!TrashTicketSource.IsFuseboxSolved)
+        {
+            Debug.LogWarning("[TimingMinigameUI] Attempted to start minigame before fusebox puzzle is solved. Aborted.");
+            return;
+        }
+
         _activeSource = source;
         _isMinigameActive = true;
         _isHandlingFeedback = false;
@@ -274,22 +280,51 @@ public class TimingMinigameUI : MonoBehaviour
 
     private IEnumerator HandleSuccessRoutine()
     {
-        PlaySFX(successClip != null ? successClip : _procSuccess, 0.9f);
+        bool hasTicket = _activeSource != null && _activeSource.hasTicket;
 
-        if (hintText != null)
+        if (hasTicket)
         {
-            string s = LocalizationManager.Instance != null ? LocalizationManager.Instance.Get("trash_searching_success") : "Found a train ticket!";
-            hintText.text = s;
+            PlaySFX(successClip != null ? successClip : _procSuccess, 0.9f);
+
+            if (hintText != null)
+            {
+                string s = LocalizationManager.Instance != null ? LocalizationManager.Instance.Get("trash_searching_success") : "Found a train ticket!";
+                hintText.text = s;
+            }
+
+            // Brief freeze to show successful timing
+            yield return new WaitForSecondsRealtime(0.6f);
+
+            CloseMinigame();
+
+            if (_activeSource != null)
+            {
+                _activeSource.OnMinigameSuccessTicket();
+            }
         }
-
-        // Brief freeze to show successful timing
-        yield return new WaitForSecondsRealtime(0.4f);
-
-        CloseMinigame();
-
-        if (_activeSource != null)
+        else
         {
-            _activeSource.OnMinigameSuccess();
+            // Empty trash can: play tick / rummage feedback
+            PlaySFX(tickClip != null ? tickClip : _procTick, 0.8f);
+
+            if (hintText != null)
+            {
+                string emptyStr = LocalizationManager.Instance != null ? LocalizationManager.Instance.Get("trash_searching_empty") : null;
+                if (string.IsNullOrEmpty(emptyStr) || emptyStr.StartsWith("["))
+                {
+                    emptyStr = "Nothing here but old trash... Try another trash can!";
+                }
+                hintText.text = emptyStr;
+            }
+
+            yield return new WaitForSecondsRealtime(0.85f);
+
+            CloseMinigame();
+
+            if (_activeSource != null)
+            {
+                _activeSource.OnMinigameSuccessEmpty();
+            }
         }
     }
 

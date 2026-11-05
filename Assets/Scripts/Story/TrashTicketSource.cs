@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
@@ -5,8 +7,11 @@ using UnityEngine;
 /// Interactable trash bin / can in the metro station.
 /// Acts as the ticket source: player walks up and interacts (keyboard, gamepad, or mobile button)
 /// to start the timing search minigame.
-/// On success: grants the transit pass, persists to PlayerPrefs, triggers ItemPickupToast,
-/// and disables further searching.
+/// 
+/// Requirements:
+/// 1. Only interactable and only shows search prompt / minigame AFTER the Fusebox puzzle is finished.
+/// 2. Only ONE randomly chosen trash can in the scene contains the train ticket.
+/// 3. Searching other trash cans gives empty trash feedback.
 /// </summary>
 [DisallowMultipleComponent]
 public class TrashTicketSource : MonoBehaviour
@@ -23,6 +28,7 @@ public class TrashTicketSource : MonoBehaviour
     public bool requireQuestActive = false;
 
     [Header("State & Persistence")]
+    public bool hasTicket = false;
     public bool isSearched = false;
     [Tooltip("PlayerPrefs key to persist ticket collected state.")]
     public string playerPrefsKey = "Metro_TicketFound";
@@ -46,6 +52,21 @@ public class TrashTicketSource : MonoBehaviour
     private bool _playerInRange = false;
     private bool _isPromptButtonHooked = false;
 
+    /// <summary>
+    /// Checks whether the fusebox puzzle has been solved and elevator power is restored.
+    /// </summary>
+    public static bool IsFuseboxSolved
+    {
+        get
+        {
+            if (MetroStorySequenceController.Instance != null && MetroStorySequenceController.Instance.isPowerRestored)
+                return true;
+            if (MetroFuseBoxPuzzle.Instance != null && MetroFuseBoxPuzzle.Instance.isPowerRestored)
+                return true;
+            return false;
+        }
+    }
+
     private void Start()
     {
         ResolvePlayer();
@@ -60,6 +81,13 @@ public class TrashTicketSource : MonoBehaviour
         if (ticketIcon == null)
         {
             ticketIcon = Resources.Load<Sprite>("Textures/Train_Ticket");
+        }
+
+        // If fusebox is already solved on startup (e.g. loaded/resumed state),
+        // ensure a random trash can holds the ticket.
+        if (IsFuseboxSolved && !isSearched)
+        {
+            SetupRandomTicketLocation();
         }
     }
 
@@ -111,6 +139,18 @@ public class TrashTicketSource : MonoBehaviour
             return;
         }
 
+        // REQUIREMENT 1: Neither the search prompt nor minigame canvas appear before the fusebox puzzle is completed
+        if (!IsFuseboxSolved)
+        {
+            if (_playerInRange)
+            {
+                _playerInRange = false;
+                UnhookPromptButton();
+                ClearPromptIfOurs();
+            }
+            return;
+        }
+
         if (_playerTransform == null)
         {
             ResolvePlayer();
@@ -142,12 +182,21 @@ public class TrashTicketSource : MonoBehaviour
             _playerInRange = true;
             string promptText = GetPromptString();
             SetPrompt(promptText);
-            HookPromptButton();
 
-            // Handle Input (PC / Gamepad / Mobile)
-            if (CheckInteractInput())
+            bool alreadyDone = isSearched || (MetroStorySequenceController.Instance != null && MetroStorySequenceController.Instance.transitPassCollected);
+            if (!alreadyDone)
             {
-                Interact();
+                HookPromptButton();
+
+                // Handle Input (PC / Gamepad / Mobile)
+                if (CheckInteractInput())
+                {
+                    Interact();
+                }
+            }
+            else
+            {
+                UnhookPromptButton();
             }
         }
         else
@@ -197,8 +246,19 @@ public class TrashTicketSource : MonoBehaviour
     /// </summary>
     public void Interact()
     {
+        if (!IsFuseboxSolved)
+        {
+            return;
+        }
+
         if (isSearched)
         {
+            return;
+        }
+
+        if (MetroStorySequenceController.Instance != null && MetroStorySequenceController.Instance.transitPassCollected)
+        {
+            isSearched = true;
             return;
         }
 
@@ -216,11 +276,12 @@ public class TrashTicketSource : MonoBehaviour
     }
 
     /// <summary>
-    /// Invoked by TimingMinigameUI when the player successfully stops the marker in the green zone.
+    /// Invoked when the player successfully completes the minigame on the winning trash can.
     /// </summary>
-    public void OnMinigameSuccess()
+    public void OnMinigameSuccessTicket()
     {
         isSearched = true;
+        hasTicket = true;
         UnhookPromptButton();
 
         // 1. Persist to PlayerPrefs
@@ -240,6 +301,10 @@ public class TrashTicketSource : MonoBehaviour
         if (questGiver != null)
         {
             questGiver.CompleteQuest();
+        }
+        else
+        {
+            StartCoroutine(PlayTicketFoundDialogue());
         }
 
         // 4. Play Audio SFX
@@ -264,12 +329,147 @@ public class TrashTicketSource : MonoBehaviour
             ItemPickupToast.Instance.Show(ticketIcon, label, ticketAmount);
         }
 
+        // 6. Mark all other trash cans as searched so player does not need to search them
+        var allCans = FindObjectsByType<TrashTicketSource>(FindObjectsSortMode.None);
+        foreach (var can in allCans)
+        {
+            can.isSearched = true;
+        }
+
         ClearPromptIfOurs();
+    }
+
+    /// <summary>
+    /// Invoked when the player completes the minigame on an empty trash can.
+    /// </summary>
+    public void OnMinigameSuccessEmpty()
+    {
+        isSearched = true;
+        hasTicket = false;
+        UnhookPromptButton();
+        ClearPromptIfOurs();
+
+        Debug.Log($"[TrashTicketSource] Trash can at {transform.position} searched: Empty.");
+        StartCoroutine(PlayEmptyCanTeddyComment());
+    }
+
+    /// <summary>
+    /// Legacy entrypoint dispatched by TimingMinigameUI.
+    /// </summary>
+    public void OnMinigameSuccess()
+    {
+        if (hasTicket)
+        {
+            OnMinigameSuccessTicket();
+        }
+        else
+        {
+            OnMinigameSuccessEmpty();
+        }
+    }
+
+    private IEnumerator PlayTicketFoundDialogue()
+    {
+        yield return new WaitForSeconds(0.35f);
+
+        if (NpcDialogueManager.Instance != null)
+        {
+            string line1 = LocalizationManager.Instance != null ? LocalizationManager.Instance.Get("teddy_metro_05") : null;
+            string line2 = LocalizationManager.Instance != null ? LocalizationManager.Instance.Get("teddy_metro_06") : null;
+
+            if (string.IsNullOrEmpty(line1) || line1.StartsWith("["))
+                line1 = $"{MetroStorySequenceController.TeddyName}: You found the ticket!";
+            if (string.IsNullOrEmpty(line2) || line2.StartsWith("["))
+                line2 = $"{MetroStorySequenceController.TeddyName}: Let's go, the elevator is ready for us!";
+
+            yield return StartCoroutine(NpcDialogueManager.Instance.ShowDialogue(
+                new string[] { line1, line2 },
+                hasChoice: false,
+                dialogueColor: NpcDialogueManager.GetSpeakerColor("teddy"),
+                dialogueFont: NpcDialogueManager.DefaultDialogueFont
+            ));
+        }
+    }
+
+    private IEnumerator PlayEmptyCanTeddyComment()
+    {
+        yield return new WaitForSeconds(0.25f);
+
+        if (NpcDialogueManager.Instance != null && !NpcDialogueManager.Instance.IsDialogueRunning)
+        {
+            string line = LocalizationManager.Instance != null ? LocalizationManager.Instance.Get("teddy_trash_empty_01") : null;
+            if (string.IsNullOrEmpty(line) || line.StartsWith("["))
+            {
+                line = $"{MetroStorySequenceController.TeddyName}: Nothing in this one... let's check another trash can!";
+            }
+
+            yield return StartCoroutine(NpcDialogueManager.Instance.ShowDialogue(
+                new string[] { line },
+                hasChoice: false,
+                dialogueColor: NpcDialogueManager.GetSpeakerColor("teddy"),
+                dialogueFont: NpcDialogueManager.DefaultDialogueFont
+            ));
+        }
+    }
+
+    /// <summary>
+    /// Places the train ticket randomly in exactly one unsearched trash can in the scene.
+    /// </summary>
+    public static void SetupRandomTicketLocation()
+    {
+        // Don't re-roll if ticket already found
+        if (MetroStorySequenceController.Instance != null && MetroStorySequenceController.Instance.transitPassCollected)
+            return;
+        if (PlayerPrefs.GetInt("Metro_TicketFound", 0) == 1)
+            return;
+
+        var allCans = FindObjectsByType<TrashTicketSource>(FindObjectsSortMode.None);
+        if (allCans == null || allCans.Length == 0)
+        {
+            Debug.LogWarning("[TrashTicketSource] No trash cans found in scene to place ticket.");
+            return;
+        }
+
+        // Check if one can already has hasTicket == true and is unsearched
+        int existingCount = 0;
+        foreach (var c in allCans)
+        {
+            if (c.hasTicket && !c.isSearched) existingCount++;
+        }
+        if (existingCount == 1)
+        {
+            // Already set up and valid
+            return;
+        }
+
+        // Reset all
+        foreach (var c in allCans)
+        {
+            c.hasTicket = false;
+        }
+
+        // Filter to unsearched candidate cans
+        var candidates = new List<TrashTicketSource>();
+        foreach (var c in allCans)
+        {
+            if (!c.isSearched) candidates.Add(c);
+        }
+
+        if (candidates.Count == 0)
+        {
+            candidates.AddRange(allCans);
+            foreach (var c in allCans) c.isSearched = false;
+        }
+
+        int chosenIndex = Random.Range(0, candidates.Count);
+        candidates[chosenIndex].hasTicket = true;
+
+        Debug.Log($"[TrashTicketSource] Ticket placed randomly in trash can '{candidates[chosenIndex].gameObject.name}' at {candidates[chosenIndex].transform.position} (1 of {candidates.Count} unsearched cans).");
     }
 
     private string GetPromptString()
     {
-        if (isSearched)
+        if (isSearched || (MetroStorySequenceController.Instance != null && MetroStorySequenceController.Instance.transitPassCollected))
         {
             if (LocalizationManager.Instance != null)
             {
@@ -311,7 +511,7 @@ public class TrashTicketSource : MonoBehaviour
 
     private void OnDrawGizmosSelected()
     {
-        Gizmos.color = Color.yellow;
+        Gizmos.color = hasTicket ? Color.green : Color.yellow;
         Gizmos.DrawWireSphere(transform.position, interactDistance);
     }
 }

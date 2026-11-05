@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using TMPro;
 using Unity.Cinemachine;
@@ -512,6 +512,16 @@ public class MetroStorySequenceController : MonoBehaviour
         isPowerRestored = true;
         Debug.Log("[MetroStory] Elevator power restored via fuse box puzzle!");
 
+        // 1. Randomly place ticket in one trash can
+        TrashTicketSource.SetupRandomTicketLocation();
+
+        // 2. Activate TeddyFindQuest if present
+        var tfq = FindAnyObjectByType<TeddyFindQuest>();
+        if (tfq != null)
+        {
+            tfq.questActive = true;
+        }
+
         if (IsElevatorUnlocked)
         {
             currentPhase = StoryPhase.Floor1_ElevatorReady;
@@ -523,12 +533,47 @@ public class MetroStorySequenceController : MonoBehaviour
         }
         else
         {
-            if (objectiveText != null)
-            {
-                objectiveText.gameObject.SetActive(true);
-                objectiveText.text = "Check the elevator...";
-            }
+            StartCoroutine(PowerRestoredTeddyRoutine());
         }
+    }
+
+    private IEnumerator PowerRestoredTeddyRoutine()
+    {
+        // Wait for fusebox surge & camera to finish closing inspection back to player
+        yield return new WaitForSeconds(1.8f);
+
+        while (MetroFuseBoxPuzzle.Instance != null && (MetroFuseBoxPuzzle.Instance.isInspecting || (MetroFuseBoxPuzzle.Instance.IsPlayerNear && Input.GetKey(KeyCode.E))))
+        {
+            yield return null;
+        }
+
+        while (NpcDialogueManager.Instance != null && NpcDialogueManager.Instance.IsDialogueRunning)
+        {
+            yield return null;
+        }
+
+        // Set objective
+        if (objectiveText != null)
+        {
+            objectiveText.gameObject.SetActive(true);
+            string obj = GetLoc("objective_search_trash");
+            if (string.IsNullOrEmpty(obj) || obj.StartsWith("["))
+            {
+                obj = "Search the trash cans for a train ticket...";
+            }
+            objectiveText.text = obj;
+        }
+
+        // Companion Bear speaks to the player!
+        string line1 = GetLoc("teddy_metro_03");
+        string line2 = GetLoc("teddy_metro_04");
+
+        yield return StartCoroutine(SafeShowDialogue(
+            new string[] { line1, line2 },
+            hasChoice: false,
+            dialogueColor: NpcDialogueManager.GetSpeakerColor("teddy"),
+            dialogueFont: NpcDialogueManager.DefaultDialogueFont
+        ));
     }
 
     public void OnElevatorTicketTriggered()
@@ -743,17 +788,26 @@ public class MetroStorySequenceController : MonoBehaviour
         {
             if (!IsElevatorUnlocked)
             {
-                StartCoroutine(PlaySimpleTeddyLines(new string[] {
-                    "Teddy: This place feels strange.",
-                    "Teddy: Search the platform and see what those people waiting want."
-                }));
+                if (isPowerRestored)
+                {
+                    StartCoroutine(PlaySimpleTeddyLines(new string[] {
+                        GetLoc("teddy_metro_03"),
+                        GetLoc("teddy_metro_04")
+                    }));
+                }
+                else
+                {
+                    StartCoroutine(PlaySimpleTeddyLines(new string[] {
+                        GetLoc("teddy_greet_01"),
+                        GetLoc("teddy_metro_01")
+                    }));
+                }
                 return true;
             }
             else
             {
                 StartCoroutine(PlaySimpleTeddyLines(new string[] {
-                    "Teddy: Look! The elevator stairs are open.",
-                    "Teddy: Let's go up before another train comes."
+                    GetLoc("teddy_metro_06")
                 }));
                 return true;
             }
