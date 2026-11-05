@@ -246,11 +246,25 @@ public class FirstPersonController : MonoBehaviour
 
     private void OnDestroy()
     {
+        GameSettingsManager.OnSensitivityChanged -= HandleSensitivityChanged;
         if (ActiveInstance == this) ActiveInstance = null;
+    }
+
+    private void HandleSensitivityChanged(float newSens)
+    {
+        if (GameSettingsManager.Instance != null)
+        {
+            mouseSensitivity = GameSettingsManager.Instance.MouseSensitivity;
+        }
     }
 
     void Start()
     {
+        if (GameSettingsManager.Instance != null)
+        {
+            mouseSensitivity = GameSettingsManager.Instance.MouseSensitivity;
+        }
+        GameSettingsManager.OnSensitivityChanged += HandleSensitivityChanged;
         if(lockCursor)
         {
             if (!Application.isMobilePlatform)

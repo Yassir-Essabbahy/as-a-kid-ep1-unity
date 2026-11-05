@@ -57,7 +57,7 @@ public class ScreenFader : MonoBehaviour
                 overlay.alpha = 0f;
                 overlay.blocksRaycasts = false;
             }
-            if (fadeAudio) AudioListener.volume = 1f;
+            if (fadeAudio) AudioListener.volume = GameSettingsManager.Instance != null ? GameSettingsManager.Instance.SoundVolume / 100f : 1f;
         }
     }
 
@@ -124,7 +124,7 @@ public class ScreenFader : MonoBehaviour
         }
 
         float startAudio = AudioListener.volume;
-        float targetAudio = fadingToBlack ? 0f : 1f;
+        float targetAudio = fadingToBlack ? 0f : (GameSettingsManager.Instance != null ? GameSettingsManager.Instance.SoundVolume / 100f : 1f);
 
         while (elapsed < duration)
         {

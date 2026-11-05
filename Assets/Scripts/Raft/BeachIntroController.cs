@@ -315,16 +315,16 @@ public class BeachIntroController : MonoBehaviour
                 elapsed += Time.deltaTime;
                 float t = Mathf.Clamp01(elapsed / fadeDuration);
                 faderOverlay.alpha = 1f - t;
-                AudioListener.volume = Mathf.Lerp(0f, 1f, t);
+                AudioListener.volume = Mathf.Lerp(0f, GameSettingsManager.Instance != null ? GameSettingsManager.Instance.SoundVolume / 100f : 1f, t);
                 yield return null;
             }
             faderOverlay.alpha = 0f;
             faderOverlay.blocksRaycasts = false;
-            AudioListener.volume = 1f;
+            AudioListener.volume = GameSettingsManager.Instance != null ? GameSettingsManager.Instance.SoundVolume / 100f : 1f;
         }
         else
         {
-            AudioListener.volume = 1f;
+            AudioListener.volume = GameSettingsManager.Instance != null ? GameSettingsManager.Instance.SoundVolume / 100f : 1f;
             yield return new WaitForSeconds(fadeDuration);
         }
 

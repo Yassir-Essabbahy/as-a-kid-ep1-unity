@@ -90,7 +90,27 @@ namespace ModularFirstPersonController
 
         private void Start()
         {
+            if (GameSettingsManager.Instance != null)
+            {
+                lookSensitivityX = GameSettingsManager.Instance.MobileLookSensitivityX;
+                lookSensitivityY = GameSettingsManager.Instance.MobileLookSensitivityY;
+            }
+            GameSettingsManager.OnSensitivityChanged += HandleSensitivityChanged;
             UpdateVisibility();
+        }
+
+        private void OnDestroy()
+        {
+            GameSettingsManager.OnSensitivityChanged -= HandleSensitivityChanged;
+        }
+
+        private void HandleSensitivityChanged(float newSens)
+        {
+            if (GameSettingsManager.Instance != null)
+            {
+                lookSensitivityX = GameSettingsManager.Instance.MobileLookSensitivityX;
+                lookSensitivityY = GameSettingsManager.Instance.MobileLookSensitivityY;
+            }
         }
 
         private void Update()
