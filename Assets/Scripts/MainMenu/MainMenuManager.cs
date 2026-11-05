@@ -94,6 +94,13 @@ public class MainMenuManager : MonoBehaviour
 
     #region EpisodesMenu
 
+    public void PlayButton()
+    {
+        if (CanInteract == false) return;
+        CanInteract = false;
+        ScreenFader.TransitionToScene("Gameplay3", 1.0f);
+    }
+
     public void BackButton_Episodes()
     {
         if (CanInteract == false) return;
