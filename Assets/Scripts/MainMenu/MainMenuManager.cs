@@ -98,7 +98,7 @@ public class MainMenuManager : MonoBehaviour
     {
         if (CanInteract == false) return;
         CanInteract = false;
-        ScreenFader.TransitionToScene("Gameplay3", 1.0f);
+        ScreenFader.TransitionToScene("Story", 1.0f);
     }
 
     public void BackButton_Episodes()

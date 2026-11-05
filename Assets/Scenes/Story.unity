@@ -20225,7 +20225,7 @@ GameObject:
   - component: {fileID: 732477557}
   - component: {fileID: 732477560}
   - component: {fileID: 732477559}
-  - component: {fileID: 732477558}
+  - component: {fileID: 732477561}
   m_Layer: 0
   m_Name: LeftTouchZone
   m_TagString: Untagged
@@ -20253,18 +20253,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &732477558
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 732477556}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 1382489749}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ModularFirstPersonController.MobileJoystickZone
 --- !u!114 &732477559
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -20303,6 +20291,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 732477556}
   m_CullTransparentMesh: 1
+--- !u!114 &732477561
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 732477556}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 1093309266}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ModularFirstPersonController.MobileJoystickZone
+  controls: {fileID: 1558794510}
 --- !u!1001 &733780929
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -28199,6 +28200,21 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1092296757}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!115 &1093309266
+MonoScript:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: 
+  serializedVersion: 7
+  m_DefaultReferences: {}
+  m_Icon: {fileID: 0}
+  m_Type: 0
+  m_ExecutionOrder: 0
+  m_ClassName: MobileJoystickZone
+  m_Namespace: ModularFirstPersonController
+  m_AssemblyName: Assembly-CSharp
 --- !u!4 &1096897775 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5941720711086393930, guid: aacfdf8a9704c504abae8adca18f00ff, type: 3}
