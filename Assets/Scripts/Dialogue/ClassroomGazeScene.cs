@@ -35,7 +35,7 @@ public class ClassroomGazeScene : MonoBehaviour
 
     [Header("Scene Transition")]
     [SerializeField] private bool transitionToNextScene = true;
-    [SerializeField] private string targetSceneName = "Gameplay3";
+    [SerializeField] private string targetSceneName = "Story";
     [SerializeField] private float sceneTransitionDuration = 2.2f;
 
     [Header("Player handoff (Legacy fallback)")]

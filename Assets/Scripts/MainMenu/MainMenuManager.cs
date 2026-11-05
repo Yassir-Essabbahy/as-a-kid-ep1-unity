@@ -100,7 +100,7 @@ public class MainMenuManager : MonoBehaviour
         CanInteract = false;
         PlayerPrefs.DeleteKey("Metro_TicketFound");
         PlayerPrefs.Save();
-        ScreenFader.TransitionToScene("Story", 1.0f);
+        ScreenFader.TransitionToScene("Start", 1.0f);
     }
 
     public void BackButton_Episodes()

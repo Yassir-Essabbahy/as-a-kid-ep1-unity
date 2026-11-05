@@ -510,7 +510,7 @@ MonoBehaviour:
   maxYaw: 75
   maxInteractionDistance: 2.4
   transitionToNextScene: 1
-  targetSceneName: Gameplay3
+  targetSceneName: Story
   sceneTransitionDuration: 2.2
   playerRig: {fileID: 4459864850832140142}
   playerHandoffPoint: {fileID: 1351441053}
