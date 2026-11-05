@@ -175,6 +175,8 @@ namespace Story
         {
             Time.timeScale = 1f;
             isPaused = false;
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
             SceneManager.LoadScene("MainMenu");
         }
 

@@ -3,7 +3,6 @@ using UnityEngine;
 
 public class MainMenuManager : MonoBehaviour
 {
-
     public bool CanInteract = true;
 
     [SerializeField] private Animator mainMenu_Anim;
@@ -21,8 +20,34 @@ public class MainMenuManager : MonoBehaviour
     [SerializeField] private GameObject Vcam_03;
     [SerializeField] private GameObject Vcam_04;
 
+    private void Awake()
+    {
+        UnlockCursor();
+    }
 
+    private void Start()
+    {
+        UnlockCursor();
+    }
 
+    private void OnEnable()
+    {
+        UnlockCursor();
+    }
+
+    private void Update()
+    {
+        if (Cursor.lockState != CursorLockMode.None || !Cursor.visible)
+        {
+            UnlockCursor();
+        }
+    }
+
+    public static void UnlockCursor()
+    {
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+    }
 
     #region MainMenuButtons
     public void EpisodesButton()
@@ -45,8 +70,7 @@ public class MainMenuManager : MonoBehaviour
         CanInteract = true;
     }
 
-
-        public void OptionsButton()
+    public void OptionsButton()
     {
         if (CanInteract == false) return;
         StartCoroutine(OptionsButton_CO());
@@ -65,7 +89,7 @@ public class MainMenuManager : MonoBehaviour
         CanInteract = true;
     }
 
-        public void CreditsButton()
+    public void CreditsButton()
     {
         if (CanInteract == false) return;
         StartCoroutine(CreditsButton_CO());
@@ -90,10 +114,7 @@ public class MainMenuManager : MonoBehaviour
     }
     #endregion
 
-
-
     #region EpisodesMenu
-
     public void PlayButton()
     {
         if (CanInteract == false) return;
@@ -121,13 +142,9 @@ public class MainMenuManager : MonoBehaviour
         yield return new WaitForSeconds(0.4f);
         CanInteract = true;
     }
-
     #endregion
 
-
-
     #region OptionsMenu
-
     public void BackButton_Options()
     {
         if (CanInteract == false) return;
@@ -146,13 +163,9 @@ public class MainMenuManager : MonoBehaviour
         yield return new WaitForSeconds(0.4f);
         CanInteract = true;
     }
-
     #endregion
 
-
-
     #region CreditsMenu
-
     public void BackButton_Credits()
     {
         if (CanInteract == false) return;
@@ -171,6 +184,5 @@ public class MainMenuManager : MonoBehaviour
         yield return new WaitForSeconds(0.4f);
         CanInteract = true;
     }
-
     #endregion
 }

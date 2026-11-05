@@ -366,6 +366,8 @@ namespace Credits
             yield return StartCoroutine(FadeCanvasGroup(screenFaderGroup, screenFaderGroup ? screenFaderGroup.alpha : 0f, 1f, 1.0f));
 
             Time.timeScale = 1f;
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
             SceneManager.LoadScene("MainMenu");
         }
     }
