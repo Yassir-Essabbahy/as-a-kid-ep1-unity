@@ -204,7 +204,10 @@ namespace Story
             if (canvas == null) return;
 
             var font = Resources.Load<TMP_FontAsset>("Fonts/FriendlySans-Regular SDF");
-            var buttonSprite = UnityEditor.AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UISprite.psd");
+            Sprite buttonSprite = null;
+#if UNITY_EDITOR
+            buttonSprite = UnityEditor.AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UISprite.psd");
+#endif
 
             // 1. Mobile Pause Button (Top-Right during gameplay)
             if (pauseButtonObj == null)
@@ -228,7 +231,7 @@ namespace Story
 
                     var img = pauseButtonObj.AddComponent<Image>();
                     img.sprite = buttonSprite;
-                    img.type = Image.Type.Sliced;
+                    img.type = buttonSprite != null ? Image.Type.Sliced : Image.Type.Simple;
                     img.color = new Color(0.10f, 0.10f, 0.12f, 0.72f);
                     img.raycastTarget = true;
 
