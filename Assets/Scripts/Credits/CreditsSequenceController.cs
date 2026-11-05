@@ -88,7 +88,7 @@ namespace Credits
             // Once credits end, any key or mouse click returns to Main Menu
             if (_canReturnToMenu)
             {
-                if (Input.anyKeyDown || Input.GetMouseButtonDown(0))
+                if (Input.anyKeyDown || Input.GetMouseButtonDown(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began))
                 {
                     ReturnToMainMenu();
                 }
@@ -242,7 +242,7 @@ namespace Credits
             if (returnPromptText != null)
             {
                 returnPromptText.gameObject.SetActive(true);
-                returnPromptText.text = "[ PRESS ANY KEY TO RETURN TO MAIN MENU ]";
+                returnPromptText.text = Story.MobileUIAdapter.AdaptPrompt("[ PRESS ANY KEY TO RETURN TO MAIN MENU ]");
                 StartCoroutine(PulsePromptText(returnPromptText));
             }
 

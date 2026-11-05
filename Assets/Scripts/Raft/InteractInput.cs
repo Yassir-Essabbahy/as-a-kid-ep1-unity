@@ -71,8 +71,9 @@ public class InteractInput : MonoBehaviour
 
         bool keyPress = Input.GetKeyDown(interactKey);
         bool mouseClick = (Cursor.lockState == CursorLockMode.Locked && Input.GetMouseButtonDown(0));
+        bool mobileInteract = ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame;
 
-        if (keyPress || mouseClick)
+        if (keyPress || mouseClick || mobileInteract)
         {
             TriggerInteract();
         }

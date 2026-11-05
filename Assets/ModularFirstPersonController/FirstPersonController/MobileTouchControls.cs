@@ -40,6 +40,12 @@ namespace ModularFirstPersonController
         [Tooltip("Vertical look sensitivity (degrees per pixel).")]
         public float lookSensitivityY = 0.14f;
 
+        [Header("On-Screen Interact Button (Mobile)")]
+        public RectTransform interactButtonRect;
+
+        public static event System.Action OnInteractTapped;
+        public static bool IsInteractTriggeredThisFrame { get; private set; }
+
         // Internal State
         private Vector2 defaultBaseAnchoredPos;
         private int movePointerId = -999;
@@ -106,6 +112,19 @@ namespace ModularFirstPersonController
                 }
             }
 
+            pendingLookDelta = Vector2.zero;
+        }
+
+        private void LateUpdate()
+        {
+            IsInteractTriggeredThisFrame = false;
+        }
+
+        public void ResetAllTouchPointers()
+        {
+            ResetMovementStick();
+            lookPointerId = -999;
+            lastLookScreenPos = Vector2.zero;
             pendingLookDelta = Vector2.zero;
         }
 
@@ -217,9 +236,20 @@ namespace ModularFirstPersonController
         public void OnRightPointerDown(PointerEventData eventData)
         {
             if (lookPointerId != -999) return; // Already tracking look pointer
+            if (rightLookArea != null && eventData.pointerCurrentRaycast.gameObject != null &&
+                eventData.pointerCurrentRaycast.gameObject != rightLookArea.gameObject)
+            {
+                return; // Do not steal touch from UI buttons
+            }
 
             lookPointerId = eventData.pointerId;
             lastLookScreenPos = eventData.position;
+        }
+
+        public void OnInteractPointerDown(PointerEventData eventData)
+        {
+            IsInteractTriggeredThisFrame = true;
+            OnInteractTapped?.Invoke();
         }
 
         public void OnRightDrag(PointerEventData eventData)
@@ -286,10 +316,28 @@ namespace ModularFirstPersonController
                 var existing = FindAnyObjectByType<EventSystem>();
                 if (existing == null)
                 {
-                    var esObj = new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
+                    var esObj = new GameObject("EventSystem", typeof(EventSystem), typeof(UnityEngine.InputSystem.UI.InputSystemUIInputModule));
                     DontDestroyOnLoad(esObj);
                 }
             }
+        }
+    }
+
+    /// <summary>
+    /// Forwards pointer events from the on-screen interact button to MobileTouchControls.
+    /// </summary>
+    public class MobileInteractZone : MonoBehaviour, IPointerDownHandler, IPointerClickHandler
+    {
+        public MobileTouchControls controls;
+
+        public void OnPointerDown(PointerEventData eventData)
+        {
+            if (controls != null) controls.OnInteractPointerDown(eventData);
+        }
+
+        public void OnPointerClick(PointerEventData eventData)
+        {
+            if (controls != null) controls.OnInteractPointerDown(eventData);
         }
     }
 

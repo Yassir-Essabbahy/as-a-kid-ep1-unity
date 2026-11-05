@@ -444,7 +444,7 @@ public class PaperInspectController : MonoBehaviour
         if (!isInspecting) return;
 
         // Allow closing via 'E' or 'Escape'
-        if (Input.GetKeyDown(KeyCode.E) || Input.GetKeyDown(KeyCode.Escape))
+        if (Input.GetKeyDown(KeyCode.E) || Input.GetKeyDown(KeyCode.Escape) || ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame)
         {
             ClosePaper();
             return;

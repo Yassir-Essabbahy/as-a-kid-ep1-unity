@@ -68,7 +68,7 @@ public class ClassroomLifeIsStrangeUI : MonoBehaviour
         string displayAction = string.IsNullOrEmpty(action) ? "Look" : action;
 
         // Matches Image 2: Press 'E' To Talk / Press 'E' To Look
-        string promptString = $"Press '{displayKey}' To {displayAction}";
+        string promptString = Story.MobileUIAdapter.AdaptPrompt($"Press '{displayKey}' To {displayAction}");
 
         promptText.text = promptString;
         promptBox.SetActive(true);

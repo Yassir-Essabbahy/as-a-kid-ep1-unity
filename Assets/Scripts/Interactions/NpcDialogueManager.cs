@@ -745,7 +745,7 @@ public class NpcDialogueManager : MonoBehaviour
         if (yesLabel != null)
         {
             string cleanA = optionA.Replace("<size=70%><color=#8E9EAB>[1]</color></size>  ", "").Replace("[1]", "").Trim();
-            yesLabel.text = $"[1]  {cleanA.ToUpper()}";
+            yesLabel.text = Story.MobileUIAdapter.IsMobile ? cleanA.ToUpper() : $"[1]  {cleanA.ToUpper()}";
             yesLabel.color = Color.white;
         }
 
@@ -753,7 +753,7 @@ public class NpcDialogueManager : MonoBehaviour
         if (noLabel != null)
         {
             string cleanB = optionB.Replace("<size=70%><color=#8E9EAB>[2]</color></size>  ", "").Replace("[2]", "").Trim();
-            noLabel.text = $"[2]  {cleanB.ToUpper()}";
+            noLabel.text = Story.MobileUIAdapter.IsMobile ? cleanB.ToUpper() : $"[2]  {cleanB.ToUpper()}";
             noLabel.color = Color.white;
         }
     }

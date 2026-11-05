@@ -57,9 +57,9 @@ public class DoorInteractable : MonoBehaviour
             if (isLookingAtDoor)
             {
                 playerInRange = true;
-                if (interactText != null) interactText.text = "Press 'E' to open door";
+                if (interactText != null) interactText.text = Story.MobileUIAdapter.AdaptPrompt("Press 'E' to open door");
 
-                if (Input.GetKeyDown(interactKey))
+                if (Input.GetKeyDown(interactKey) || ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame)
                 {
                     if (interactText != null) interactText.text = "";
                     MetroStorySequenceController.Instance.OnDoorInteracted();
@@ -81,7 +81,7 @@ public class DoorInteractable : MonoBehaviour
         if (MetroStorySequenceController.Instance == null) return;
         if (MetroStorySequenceController.Instance.currentPhase == MetroStorySequenceController.StoryPhase.DoorWaiting)
         {
-            if (interactText != null) interactText.text = "Press 'E' to open door";
+            if (interactText != null) interactText.text = Story.MobileUIAdapter.AdaptPrompt("Press 'E' to open door");
         }
     }
 

@@ -281,8 +281,8 @@ public class ClassroomGazeScene : MonoBehaviour
     /// </summary>
     private void HandleSeatedMouseLook()
     {
-        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
-        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
+        float mouseX = (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Moved) ? (Input.GetTouch(0).deltaPosition.x * 0.15f * mouseSensitivity) : (Input.GetAxis("Mouse X") * mouseSensitivity);
+        float mouseY = (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Moved) ? (Input.GetTouch(0).deltaPosition.y * 0.15f * mouseSensitivity) : (Input.GetAxis("Mouse Y") * mouseSensitivity);
 
         _targetYaw = Mathf.Clamp(_targetYaw + mouseX, minYaw, maxYaw);
         _targetPitch = Mathf.Clamp(_targetPitch - mouseY, minPitch, maxPitch);
@@ -341,7 +341,7 @@ public class ClassroomGazeScene : MonoBehaviour
     /// </summary>
     private void HandleInteractionInput()
     {
-        bool interactPressed = Input.GetKeyDown(KeyCode.E) || Input.GetMouseButtonDown(0);
+        bool interactPressed = Input.GetKeyDown(KeyCode.E) || Input.GetMouseButtonDown(0) || ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame;
 
         if (interactPressed && _currentHoverItem != null)
         {

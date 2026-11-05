@@ -124,7 +124,8 @@ public class NpcInteractionText : MonoBehaviour
             return;
         }
 
-        currentPromptString = text ?? "";
+        string adapted = Story.MobileUIAdapter.AdaptPrompt(text);
+        currentPromptString = adapted ?? "";
 
         if (string.IsNullOrEmpty(text))
         {
@@ -134,7 +135,7 @@ public class NpcInteractionText : MonoBehaviour
 
         if (InteractText != null)
         {
-            InteractText.text = text;
+            InteractText.text = currentPromptString;
             InteractText.gameObject.SetActive(true);
         }
 
@@ -249,7 +250,7 @@ public class NpcInteractionText : MonoBehaviour
                 currentNpcConv = null;
                 SetPrompt(findable.promptText);
 
-                if (Input.GetKeyDown(KeyCode.E))
+                if (Input.GetKeyDown(KeyCode.E) || ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame)
                 {
                     TriggerCurrentInteraction();
                 }
@@ -263,7 +264,7 @@ public class NpcInteractionText : MonoBehaviour
                 currentNpcConv = null;
                 SetPrompt(placeholder.promptText);
 
-                if (Input.GetKeyDown(KeyCode.E))
+                if (Input.GetKeyDown(KeyCode.E) || ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame)
                 {
                     TriggerCurrentInteraction();
                 }
@@ -285,7 +286,7 @@ public class NpcInteractionText : MonoBehaviour
                 string prompt = (currentIsTeddy && !isCarried) ? "Press 'E' to Take Teddy" : "Press 'E' To Talk";
                 SetPrompt(prompt);
 
-                if (Input.GetKeyDown(KeyCode.E))
+                if (Input.GetKeyDown(KeyCode.E) || ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame)
                 {
                     TriggerCurrentInteraction();
                 }
@@ -303,7 +304,7 @@ public class NpcInteractionText : MonoBehaviour
                 : MetroFuseBoxPuzzle.Instance.promptOpenText;
             SetPrompt(prompt);
 
-            if (Input.GetKeyDown(KeyCode.E))
+            if (Input.GetKeyDown(KeyCode.E) || ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame)
             {
                 TriggerCurrentInteraction();
             }
@@ -412,8 +413,8 @@ public class NpcInteractionText : MonoBehaviour
         Vector3 targetLookPos = GetTargetLookPosition(conv, hitCollider, hitPoint);
 
         // Keep cursor locked and invisible throughout dialogue start
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        if (!Application.isMobilePlatform) Cursor.lockState = CursorLockMode.Locked;
+        if (!Application.isMobilePlatform) Cursor.visible = false;
 
         // 3. Direct smooth camera zoom and look rotation
         Camera cam = playerCamera != null ? playerCamera.GetComponent<Camera>() : null;
@@ -526,8 +527,8 @@ public class NpcInteractionText : MonoBehaviour
             look.IKActive = false;
 
         // 7. Ensure cursor stays locked
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        if (!Application.isMobilePlatform) Cursor.lockState = CursorLockMode.Locked;
+        if (!Application.isMobilePlatform) Cursor.visible = false;
 
         // 8. Re-enable player controls smoothly
         if (_fpsController != null && playerCamera != null)
