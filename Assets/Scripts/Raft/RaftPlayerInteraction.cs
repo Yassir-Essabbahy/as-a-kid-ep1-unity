@@ -323,7 +323,7 @@ public class RaftPlayerInteraction : MonoBehaviour
         int woodCount = buildArea != null ? buildArea.WoodPlacedCount : 0;
         int clothCount = (buildArea != null && buildArea.IsSailPlaced) ? 1 : 0;
 
-        objectiveTrackerText.text = $"Wood: {woodCount}/3\nCloth: {clothCount}/1";
+        objectiveTrackerText.text = $"<color=#FF4D4D><size=80%><b>OBJECTIVE</b></size></color>\nWood: {woodCount}/3   Cloth: {clothCount}/1";
     }
 
     private void SetPrompt(string text)

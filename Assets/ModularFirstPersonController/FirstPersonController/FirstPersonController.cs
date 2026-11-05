@@ -306,6 +306,19 @@ public class FirstPersonController : MonoBehaviour
 
     private void Update()
     {
+        // On PC, clicking in the game window re-locks and hides the cursor during active gameplay
+        if (!Application.isMobilePlatform && lockCursor && cameraCanMove && playerCanMove && Input.GetMouseButtonDown(0))
+        {
+            if (Story.MobilePauseMenu.Instance == null || !Story.MobilePauseMenu.Instance.isPaused)
+            {
+                if (Cursor.lockState != CursorLockMode.Locked)
+                {
+                    Cursor.lockState = CursorLockMode.Locked;
+                    Cursor.visible = false;
+                }
+            }
+        }
+
         #region Camera
 
         // Control camera movement

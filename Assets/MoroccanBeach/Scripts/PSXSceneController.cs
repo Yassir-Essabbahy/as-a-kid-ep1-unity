@@ -27,21 +27,6 @@ namespace MoroccanBeach
 
         private void Update()
         {
-            // Press Escape to toggle mouse cursor
-            if (Input.GetKeyDown(KeyCode.Escape))
-            {
-                if (Cursor.lockState == CursorLockMode.Locked)
-                {
-                    Cursor.lockState = CursorLockMode.None;
-                    Cursor.visible = true;
-                }
-                else
-                {
-                    Cursor.lockState = CursorLockMode.Locked;
-                    Cursor.visible = false;
-                }
-            }
-
             // Press R to reload scene (quick test reset)
             if (Input.GetKeyDown(KeyCode.R))
             {

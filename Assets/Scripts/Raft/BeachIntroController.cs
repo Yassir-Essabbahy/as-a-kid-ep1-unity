@@ -295,7 +295,17 @@ public class BeachIntroController : MonoBehaviour
         {
             bool fadeDone = false;
             screenFader.FadeFromBlack(fadeDuration, () => fadeDone = true);
-            while (!fadeDone) yield return null;
+            float maxWait = fadeDuration + 0.5f;
+            while (!fadeDone && maxWait > 0f)
+            {
+                maxWait -= Time.deltaTime;
+                if (faderOverlay != null && faderOverlay.alpha <= 0.02f)
+                {
+                    fadeDone = true;
+                    break;
+                }
+                yield return null;
+            }
         }
         else if (faderOverlay != null)
         {

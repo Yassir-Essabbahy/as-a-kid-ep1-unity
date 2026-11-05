@@ -54,6 +54,18 @@ namespace ModularFirstPersonController
         private Vector2 currentMoveInput = Vector2.zero;
         private Vector2 pendingLookDelta = Vector2.zero;
         private Canvas rootCanvas;
+        private bool wasControlBlocked = false;
+
+        public bool IsControlBlocked()
+        {
+            if (Story.MobilePauseMenu.Instance != null && Story.MobilePauseMenu.Instance.isPaused)
+                return true;
+            if (NpcDialogueManager.Instance != null && NpcDialogueManager.Instance.IsDialogueRunning)
+                return true;
+            if (DialogueManager.Instance != null && DialogueManager.Instance.IsPlaying)
+                return true;
+            return false;
+        }
 
         private void Awake()
         {
@@ -88,6 +100,29 @@ namespace ModularFirstPersonController
                 controller = FirstPersonController.ActiveInstance != null
                     ? FirstPersonController.ActiveInstance
                     : FindAnyObjectByType<FirstPersonController>();
+            }
+
+            bool blocked = IsControlBlocked();
+            if (blocked != wasControlBlocked)
+            {
+                wasControlBlocked = blocked;
+                if (blocked)
+                {
+                    ResetAllTouchPointers();
+                    currentMoveInput = Vector2.zero;
+                    pendingLookDelta = Vector2.zero;
+                }
+                UpdateVisibility();
+            }
+
+            if (blocked)
+            {
+                if (controller != null)
+                {
+                    controller.SetMobileMovement(Vector2.zero);
+                }
+                pendingLookDelta = Vector2.zero;
+                return;
             }
 
             // Verify active touches on real mobile devices to prevent stuck pointers
@@ -131,7 +166,7 @@ namespace ModularFirstPersonController
         public void UpdateVisibility()
         {
             bool isMobile = Application.isMobilePlatform;
-            bool shouldShow = isMobile || forceShowInEditor;
+            bool shouldShow = (isMobile || forceShowInEditor) && !IsControlBlocked();
 
             var cg = GetComponent<CanvasGroup>();
             if (cg != null)
@@ -158,6 +193,7 @@ namespace ModularFirstPersonController
 
         public void OnLeftPointerDown(PointerEventData eventData)
         {
+            if (IsControlBlocked()) return;
             if (movePointerId != -999) return; // Already tracking a movement pointer
 
             movePointerId = eventData.pointerId;
@@ -235,6 +271,7 @@ namespace ModularFirstPersonController
 
         public void OnRightPointerDown(PointerEventData eventData)
         {
+            if (IsControlBlocked()) return;
             if (lookPointerId != -999) return; // Already tracking look pointer
             if (rightLookArea != null && eventData.pointerCurrentRaycast.gameObject != null &&
                 eventData.pointerCurrentRaycast.gameObject != rightLookArea.gameObject)
@@ -248,6 +285,7 @@ namespace ModularFirstPersonController
 
         public void OnInteractPointerDown(PointerEventData eventData)
         {
+            if (IsControlBlocked()) return;
             IsInteractTriggeredThisFrame = true;
             OnInteractTapped?.Invoke();
         }
