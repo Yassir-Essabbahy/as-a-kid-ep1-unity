@@ -8,10 +8,12 @@ using UnityEngine;
 /// Acts as the ticket source: player walks up and interacts (keyboard, gamepad, or mobile button)
 /// to start the timing search minigame.
 /// 
-/// Requirements:
+/// Guarantees:
 /// 1. Only interactable and only shows search prompt / minigame AFTER the Fusebox puzzle is finished.
-/// 2. Only ONE randomly chosen trash can in the scene contains the train ticket.
-/// 3. Searching other trash cans gives empty trash feedback.
+/// 2. Exactly ONE random trash can contains the train ticket.
+/// 3. Guaranteed Pity System: If player searches empty decoy cans, the remaining unsearched cans retain the ticket,
+///    and if only 1 unsearched can remains, it is 100% guaranteed to contain the ticket.
+///    It is mathematically impossible for all trash cans to be empty!
 /// </summary>
 [DisallowMultipleComponent]
 public class TrashTicketSource : MonoBehaviour
@@ -87,7 +89,7 @@ public class TrashTicketSource : MonoBehaviour
         // ensure a random trash can holds the ticket.
         if (IsFuseboxSolved && !isSearched)
         {
-            SetupRandomTicketLocation();
+            EnsureTicketExists();
         }
     }
 
@@ -109,18 +111,43 @@ public class TrashTicketSource : MonoBehaviour
 
     private void CheckExistingPersistence()
     {
-        // Check PlayerPrefs
+        // 1. Check Story Controller (Single Source of Truth)
+        if (MetroStorySequenceController.Instance != null)
+        {
+            if (MetroStorySequenceController.Instance.transitPassCollected)
+            {
+                isSearched = true;
+                return;
+            }
+            else
+            {
+                // Story controller is active and transit pass is NOT collected.
+                // Reset any dirty or stale flags so old runs NEVER brick a fresh run!
+                isSearched = false;
+                hasTicket = false;
+                if (questGiver != null && questGiver.questCompleted)
+                {
+                    questGiver.questCompleted = false;
+                }
+                if (PlayerPrefs.GetInt(playerPrefsKey, 0) == 1)
+                {
+                    PlayerPrefs.DeleteKey(playerPrefsKey);
+                    PlayerPrefs.Save();
+                }
+                return;
+            }
+        }
+
+        // Standalone scene fallback (no MetroStorySequenceController)
         bool prefsFound = PlayerPrefs.GetInt(playerPrefsKey, 0) == 1;
-
-        // Check Story controller
-        bool storyFound = MetroStorySequenceController.Instance != null && MetroStorySequenceController.Instance.transitPassCollected;
-
-        // Check Quest giver
         bool questFound = questGiver != null && questGiver.questCompleted;
-
-        if (prefsFound || storyFound || questFound)
+        if (prefsFound || questFound)
         {
             isSearched = true;
+        }
+        else
+        {
+            isSearched = false;
         }
     }
 
@@ -139,7 +166,7 @@ public class TrashTicketSource : MonoBehaviour
             return;
         }
 
-        // REQUIREMENT 1: Neither the search prompt nor minigame canvas appear before the fusebox puzzle is completed
+        // Ticket Minigame ONLY available after Fusebox Puzzle is solved
         if (!IsFuseboxSolved)
         {
             if (_playerInRange)
@@ -262,6 +289,16 @@ public class TrashTicketSource : MonoBehaviour
             return;
         }
 
+        // Guarantee ticket exists among unsearched cans before launching minigame
+        EnsureTicketExists();
+
+        // Safety fallback: If no other unsearched can in the scene has the ticket, this can MUST have it!
+        if (!hasTicket && !HasOtherUnsearchedCanWithTicket(this))
+        {
+            hasTicket = true;
+            Debug.Log($"[TrashTicketSource] Guaranteed ticket on '{gameObject.name}' since no other unsearched can holds it.");
+        }
+
         if (minigameUI == null)
         {
             minigameUI = TimingMinigameUI.Instance;
@@ -350,6 +387,10 @@ public class TrashTicketSource : MonoBehaviour
         ClearPromptIfOurs();
 
         Debug.Log($"[TrashTicketSource] Trash can at {transform.position} searched: Empty.");
+
+        // Guarantee that a ticket is still placed in one of the remaining unsearched cans
+        EnsureTicketExists();
+
         StartCoroutine(PlayEmptyCanTeddyComment());
     }
 
@@ -413,14 +454,31 @@ public class TrashTicketSource : MonoBehaviour
     }
 
     /// <summary>
-    /// Places the train ticket randomly in exactly one unsearched trash can in the scene.
+    /// Checks whether any other unsearched trash can in the scene currently holds the ticket.
     /// </summary>
-    public static void SetupRandomTicketLocation()
+    public static bool HasOtherUnsearchedCanWithTicket(TrashTicketSource current)
     {
-        // Don't re-roll if ticket already found
+        var allCans = FindObjectsByType<TrashTicketSource>(FindObjectsSortMode.None);
+        if (allCans == null) return false;
+
+        foreach (var c in allCans)
+        {
+            if (c != null && c != current && !c.isSearched && c.hasTicket)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Guarantees that exactly one unsearched trash can in the scene contains the ticket.
+    /// If only one unsearched can remains, that can is 100% guaranteed to contain the ticket.
+    /// </summary>
+    public static void EnsureTicketExists()
+    {
+        // Don't place ticket if transit pass is already collected
         if (MetroStorySequenceController.Instance != null && MetroStorySequenceController.Instance.transitPassCollected)
-            return;
-        if (PlayerPrefs.GetInt("Metro_TicketFound", 0) == 1)
             return;
 
         var allCans = FindObjectsByType<TrashTicketSource>(FindObjectsSortMode.None);
@@ -430,41 +488,73 @@ public class TrashTicketSource : MonoBehaviour
             return;
         }
 
-        // Check if one can already has hasTicket == true and is unsearched
-        int existingCount = 0;
+        // Gather all unsearched cans
+        var unsearched = new List<TrashTicketSource>();
+        TrashTicketSource existingWinningCan = null;
+
         foreach (var c in allCans)
         {
-            if (c.hasTicket && !c.isSearched) existingCount++;
+            if (!c.isSearched)
+            {
+                unsearched.Add(c);
+                if (c.hasTicket)
+                {
+                    if (existingWinningCan == null)
+                    {
+                        existingWinningCan = c;
+                    }
+                    else
+                    {
+                        // Clean up multiple winning cans to keep exactly 1
+                        c.hasTicket = false;
+                    }
+                }
+            }
+            else
+            {
+                c.hasTicket = false;
+            }
         }
-        if (existingCount == 1)
+
+        // Failsafe: if all cans were searched but ticket was never collected, reset cans to prevent softlock
+        if (unsearched.Count == 0)
         {
-            // Already set up and valid
+            Debug.LogWarning("[TrashTicketSource] All cans were searched but ticket was never found! Resetting cans to prevent softlock.");
+            foreach (var c in allCans)
+            {
+                c.isSearched = false;
+                c.hasTicket = false;
+                unsearched.Add(c);
+            }
+        }
+
+        // If an unsearched can already holds the ticket, we are good!
+        if (existingWinningCan != null && unsearched.Contains(existingWinningCan))
+        {
             return;
         }
 
-        // Reset all
-        foreach (var c in allCans)
+        // If only 1 unsearched can remains, it MUST have the ticket!
+        if (unsearched.Count == 1)
         {
-            c.hasTicket = false;
+            unsearched[0].hasTicket = true;
+            Debug.Log($"[TrashTicketSource] Only 1 unsearched trash can left ('{unsearched[0].gameObject.name}'). Guaranteed ticket placed here.");
+            return;
         }
 
-        // Filter to unsearched candidate cans
-        var candidates = new List<TrashTicketSource>();
-        foreach (var c in allCans)
-        {
-            if (!c.isSearched) candidates.Add(c);
-        }
+        // Otherwise pick one randomly among the unsearched cans
+        int chosenIndex = Random.Range(0, unsearched.Count);
+        unsearched[chosenIndex].hasTicket = true;
 
-        if (candidates.Count == 0)
-        {
-            candidates.AddRange(allCans);
-            foreach (var c in allCans) c.isSearched = false;
-        }
+        Debug.Log($"[TrashTicketSource] Ticket placed randomly in trash can '{unsearched[chosenIndex].gameObject.name}' at {unsearched[chosenIndex].transform.position} (1 of {unsearched.Count} unsearched cans).");
+    }
 
-        int chosenIndex = Random.Range(0, candidates.Count);
-        candidates[chosenIndex].hasTicket = true;
-
-        Debug.Log($"[TrashTicketSource] Ticket placed randomly in trash can '{candidates[chosenIndex].gameObject.name}' at {candidates[chosenIndex].transform.position} (1 of {candidates.Count} unsearched cans).");
+    /// <summary>
+    /// Legacy wrapper for backwards compatibility.
+    /// </summary>
+    public static void SetupRandomTicketLocation()
+    {
+        EnsureTicketExists();
     }
 
     private string GetPromptString()

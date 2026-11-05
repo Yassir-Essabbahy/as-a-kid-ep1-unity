@@ -98,6 +98,8 @@ public class MainMenuManager : MonoBehaviour
     {
         if (CanInteract == false) return;
         CanInteract = false;
+        PlayerPrefs.DeleteKey("Metro_TicketFound");
+        PlayerPrefs.Save();
         ScreenFader.TransitionToScene("Story", 1.0f);
     }
 

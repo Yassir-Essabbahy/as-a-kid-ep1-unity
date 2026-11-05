@@ -280,7 +280,20 @@ public class TimingMinigameUI : MonoBehaviour
 
     private IEnumerator HandleSuccessRoutine()
     {
-        bool hasTicket = _activeSource != null && _activeSource.hasTicket;
+        if (_activeSource == null)
+        {
+            CloseMinigame();
+            yield break;
+        }
+
+        // Safety guarantee: If no other unsearched can currently holds the ticket, this can MUST hold it!
+        if (!_activeSource.hasTicket && !TrashTicketSource.HasOtherUnsearchedCanWithTicket(_activeSource))
+        {
+            _activeSource.hasTicket = true;
+            Debug.Log($"[TimingMinigameUI] Guaranteed ticket on {_activeSource.gameObject.name} as no other unsearched can holds it.");
+        }
+
+        bool hasTicket = _activeSource.hasTicket;
 
         if (hasTicket)
         {

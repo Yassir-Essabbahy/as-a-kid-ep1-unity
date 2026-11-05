@@ -209,6 +209,12 @@ public class MetroStorySequenceController : MonoBehaviour
             return;
         }
         Instance = this;
+
+        if (!transitPassCollected)
+        {
+            PlayerPrefs.DeleteKey("Metro_TicketFound");
+            PlayerPrefs.Save();
+        }
     }
 
     private void Start()
