@@ -166,18 +166,28 @@ namespace ModularFirstPersonController
         public void UpdateVisibility()
         {
             bool isMobile = Application.isMobilePlatform;
-            bool shouldShow = (isMobile || forceShowInEditor) && !IsControlBlocked();
+            bool shouldShowControls = (isMobile || forceShowInEditor) && !IsControlBlocked();
 
+            if (leftTouchArea != null)
+            {
+                leftTouchArea.gameObject.SetActive(shouldShowControls);
+            }
+            if (rightLookArea != null)
+            {
+                rightLookArea.gameObject.SetActive(shouldShowControls);
+            }
+            if (interactButtonRect != null)
+            {
+                interactButtonRect.gameObject.SetActive(shouldShowControls);
+            }
+
+            // Keep the root CanvasGroup visible and interactable for modal dialogs (PauseMenu, etc.)
             var cg = GetComponent<CanvasGroup>();
             if (cg != null)
             {
-                cg.alpha = shouldShow ? 1f : 0f;
-                cg.interactable = shouldShow;
-                cg.blocksRaycasts = shouldShow;
-            }
-            else
-            {
-                gameObject.SetActive(shouldShow);
+                cg.alpha = 1f;
+                cg.interactable = true;
+                cg.blocksRaycasts = true;
             }
         }
 
