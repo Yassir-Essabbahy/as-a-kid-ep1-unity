@@ -114,6 +114,9 @@ public class MainMenuManager : MonoBehaviour
     }
     #endregion
 
+    [Header("Episode Flow")]
+    [SerializeField] private string firstSceneName = "House_Export";
+
     #region EpisodesMenu
     public void PlayButton()
     {
@@ -121,7 +124,8 @@ public class MainMenuManager : MonoBehaviour
         CanInteract = false;
         PlayerPrefs.DeleteKey("Metro_TicketFound");
         PlayerPrefs.Save();
-        ScreenFader.TransitionToScene("Start", 1.0f);
+        string sceneToLoad = !string.IsNullOrEmpty(firstSceneName) ? firstSceneName : "Start";
+        ScreenFader.TransitionToScene(sceneToLoad, 1.0f);
     }
 
     public void BackButton_Episodes()
