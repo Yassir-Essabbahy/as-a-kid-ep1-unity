@@ -4,7 +4,7 @@ using UnityEngine.SceneManagement;
 public class HouseOutsideDoor : MonoBehaviour, IInteractable
 {
     [Header("Scene Transition")]
-    [Tooltip("Target scene to load on exit.")]
+    [Tooltip("Target scene to load on exit (School / Start scene).")]
     public string targetScene = "Start";
 
     [Header("Transition Settings")]
@@ -17,8 +17,7 @@ public class HouseOutsideDoor : MonoBehaviour, IInteractable
         get
         {
             if (HouseObjectiveController.Instance != null &&
-                HouseObjectiveController.Instance.hasTalkedToMama &&
-                HouseObjectiveController.Instance.hasMoney)
+                HouseObjectiveController.Instance.hasTalkedToMama)
             {
                 return "Leave for School";
             }
@@ -41,13 +40,7 @@ public class HouseOutsideDoor : MonoBehaviour, IInteractable
         {
             if (!HouseObjectiveController.Instance.hasTalkedToMama)
             {
-                HouseUIBridge.ShowMessage("door_cant_leave_no_papers");
-                return;
-            }
-
-            if (!HouseObjectiveController.Instance.hasMoney)
-            {
-                HouseUIBridge.ShowMessage("door_cant_leave_no_money");
+                HouseUIBridge.ShowMessage("house_need_talk_mom");
                 return;
             }
         }

@@ -9,9 +9,11 @@ public class HouseObjectiveController : MonoBehaviour
     public TextMeshProUGUI objectiveText;
 
     [Header("State")]
-    public int phase = 0;
+    public int phase = 0; // 0 = get dressed & bag, 1 = talk to mom, 2 = exit to school
+    public bool hasWornClothes = false;
+    public bool hasBackpack = false;
     public bool hasTalkedToMama = false;
-    public bool hasMoney = false;
+    public bool hasTalkedToBaba = false;
 
     private void Awake()
     {
@@ -33,31 +35,68 @@ public class HouseObjectiveController : MonoBehaviour
         UpdateObjectiveUI();
     }
 
+    public void OnClothesWorn()
+    {
+        hasWornClothes = true;
+        CheckRoomPrepared();
+    }
+
+    public void OnBackpackTaken()
+    {
+        hasBackpack = true;
+        CheckRoomPrepared();
+    }
+
+    private void CheckRoomPrepared()
+    {
+        if (hasWornClothes && hasBackpack)
+        {
+            phase = 1;
+            UpdateObjectiveUI();
+
+            // Unlock bedroom door
+            UnlockBedroomDoor();
+        }
+    }
+
+    public void UnlockBedroomDoor()
+    {
+        var door5 = GameObject.Find("Door5");
+        if (door5 != null)
+        {
+            var dc = door5.GetComponentInChildren<DoorController>();
+            if (dc != null) dc.isLocked = false;
+        }
+    }
+
     public void OnMamaTalked()
     {
         hasTalkedToMama = true;
-        phase = 1;
+        phase = 2;
         UpdateObjectiveUI();
     }
 
     public void OnMoneyPickedUp()
     {
-        hasMoney = true;
-        phase = 2;
-        UpdateObjectiveUI();
+        // Deprecated: money objective removed per story flow
     }
 
-    private void UpdateObjectiveUI()
+    public void OnBabaTalked()
+    {
+        hasTalkedToBaba = true;
+    }
+
+    public void UpdateObjectiveUI()
     {
         if (objectiveText == null) return;
 
-        string key = "house_objective_talk_parents";
-        string fallback = "Talk to your parents";
+        string key = "house_objective_get_dressed";
+        string fallback = "Put on clothes and take your backpack";
 
         if (phase == 1)
         {
-            key = "house_objective_get_money";
-            fallback = "Find money in the kitchen drawer";
+            key = "house_objective_talk_mom";
+            fallback = "Talk to your mom in the kitchen";
         }
         else if (phase >= 2)
         {
@@ -69,7 +108,7 @@ public class HouseObjectiveController : MonoBehaviour
         if (LocalizationManager.Instance != null)
         {
             string loc = LocalizationManager.Instance.Get(key);
-            if (!string.IsNullOrEmpty(loc)) text = loc;
+            if (!string.IsNullOrEmpty(loc) && !loc.StartsWith("[")) text = loc;
         }
 
         objectiveText.text = text;
