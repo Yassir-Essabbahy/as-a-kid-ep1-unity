@@ -25,6 +25,7 @@ public class NpcInteractionText : MonoBehaviour
     private Collider currentHitCol;
     private Vector3 currentHitPoint;
     private string currentPromptString = "";
+    private IInteractable currentInteractable;
 
     [Header("Cameras & Cinemachine")]
     public Transform playerCamera;
@@ -156,6 +157,7 @@ public class NpcInteractionText : MonoBehaviour
         currentFindable = null;
         currentPlaceholder = null;
         currentNpcConv = null;
+ currentInteractable = null;
 
         if (InteractText != null)
         {
@@ -171,6 +173,13 @@ public class NpcInteractionText : MonoBehaviour
 
     public void TriggerCurrentInteraction()
     {
+        if (currentInteractable != null)
+        {
+            var target = currentInteractable;
+            currentInteractable = null;
+            target.Interact();
+            return;
+        }
         if (NpcDialogueManager.Instance != null && NpcDialogueManager.Instance.IsDialogueRunning)
             return;
 
@@ -248,6 +257,7 @@ public class NpcInteractionText : MonoBehaviour
                 currentFindable = findable;
                 currentPlaceholder = null;
                 currentNpcConv = null;
+ currentInteractable = null;
                 SetPrompt(findable.promptText);
 
                 if (Input.GetKeyDown(KeyCode.E) || ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame)
@@ -262,6 +272,7 @@ public class NpcInteractionText : MonoBehaviour
             {
                 currentPlaceholder = placeholder;
                 currentNpcConv = null;
+ currentInteractable = null;
                 SetPrompt(placeholder.promptText);
 
                 if (Input.GetKeyDown(KeyCode.E) || ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame)
@@ -270,6 +281,23 @@ public class NpcInteractionText : MonoBehaviour
                 }
                 return;
             }
+
+            var interactable = hit.collider.GetComponent<IInteractable>() ?? hit.collider.GetComponentInParent<IInteractable>();
+            if (interactable != null)
+            {
+                currentInteractable = interactable;
+                currentPlaceholder = null;
+                currentFindable = null;
+                currentNpcConv = null;
+                string prompt = string.IsNullOrEmpty(interactable.PromptMessage) ? "Press 'E' to Interact" : interactable.PromptMessage;
+ SetPrompt(prompt);
+
+ if (Input.GetKeyDown(KeyCode.E) || ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame)
+ {
+ TriggerCurrentInteraction();
+ }
+ return;
+ }
 
             if (hit.collider.CompareTag("InteractNPC"))
             {
@@ -299,6 +327,7 @@ public class NpcInteractionText : MonoBehaviour
         {
             currentPlaceholder = null;
             currentNpcConv = null;
+ currentInteractable = null;
             string prompt = MetroFuseBoxPuzzle.Instance.isPowerRestored
                 ? MetroFuseBoxPuzzle.Instance.promptPoweredText
                 : MetroFuseBoxPuzzle.Instance.promptOpenText;
@@ -313,6 +342,7 @@ public class NpcInteractionText : MonoBehaviour
 
         currentPlaceholder = null;
         currentNpcConv = null;
+ currentInteractable = null;
         ClearPrompt();
     }
 
