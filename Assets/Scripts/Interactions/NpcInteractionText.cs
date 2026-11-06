@@ -9,6 +9,7 @@ public class NpcInteractionText : MonoBehaviour
     public TextMeshProUGUI InteractText;
     public GameObject promptBox;
     public RectTransform promptBoxRect;
+    public TextMeshProUGUI promptBoxText;
     public UnityEngine.UI.Button promptButton;
     public float InteractionDistance = 5f;
     private bool CanInteract = true;
@@ -108,6 +109,16 @@ public class NpcInteractionText : MonoBehaviour
             }
         }
 
+        if (promptBoxText == null && promptBox != null)
+        {
+            promptBoxText = promptBox.GetComponentInChildren<TextMeshProUGUI>(true);
+        }
+
+        if (InteractText != null)
+        {
+            InteractText.gameObject.SetActive(false);
+        }
+
         if (promptButton != null)
         {
             promptButton.onClick.RemoveListener(TriggerCurrentInteraction);
@@ -134,19 +145,28 @@ public class NpcInteractionText : MonoBehaviour
             return;
         }
 
+        // Remove all white text press e when interact
         if (InteractText != null)
         {
-            InteractText.text = currentPromptString;
-            InteractText.gameObject.SetActive(true);
+            InteractText.text = "";
+            InteractText.gameObject.SetActive(false);
         }
 
         if (promptBox != null)
         {
             promptBox.SetActive(true);
+            if (promptBoxText == null)
+            {
+                promptBoxText = promptBox.GetComponentInChildren<TextMeshProUGUI>(true);
+            }
+            if (promptBoxText != null)
+            {
+                promptBoxText.text = currentPromptString;
+            }
             if (promptBoxRect != null)
             {
-                float targetWidth = Mathf.Max(160f, text.Length * 9.5f + 36f);
-                promptBoxRect.sizeDelta = new Vector2(targetWidth, 38f);
+                float targetWidth = Mathf.Max(160f, currentPromptString.Length * 9.5f + 36f);
+                promptBoxRect.sizeDelta = new Vector2(targetWidth, 44f);
             }
         }
     }
@@ -258,7 +278,7 @@ public class NpcInteractionText : MonoBehaviour
                 currentPlaceholder = null;
                 currentNpcConv = null;
  currentInteractable = null;
-                SetPrompt(findable.promptText);
+                SetPrompt("tap to interact");
 
                 if (Input.GetKeyDown(KeyCode.E) || ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame)
                 {
@@ -273,7 +293,7 @@ public class NpcInteractionText : MonoBehaviour
                 currentPlaceholder = placeholder;
                 currentNpcConv = null;
  currentInteractable = null;
-                SetPrompt(placeholder.promptText);
+                SetPrompt("tap to interact");
 
                 if (Input.GetKeyDown(KeyCode.E) || ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame)
                 {
@@ -289,8 +309,9 @@ public class NpcInteractionText : MonoBehaviour
                 currentPlaceholder = null;
                 currentFindable = null;
                 currentNpcConv = null;
-                string prompt = string.IsNullOrEmpty(interactable.PromptMessage) ? "Press 'E' to Interact" : interactable.PromptMessage;
- SetPrompt(prompt);
+                bool isNpc = interactable is DialogueTrigger || hit.collider.CompareTag("InteractNPC") || hit.collider.GetComponent<NpcConversation>() != null || hit.collider.GetComponentInParent<DialogueTrigger>() != null;
+                string prompt = isNpc ? "tap to talk" : "tap to interact";
+                SetPrompt(prompt);
 
  if (Input.GetKeyDown(KeyCode.E) || ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame)
  {
@@ -311,7 +332,7 @@ public class NpcInteractionText : MonoBehaviour
                 currentNpcConv = hit.collider.GetComponent<NpcConversation>();
                 currentNpcLook = hit.collider.GetComponent<NpcLookAt>();
 
-                string prompt = (currentIsTeddy && !isCarried) ? "Press 'E' to Take Teddy" : "Press 'E' To Talk";
+                string prompt = (currentIsTeddy && !isCarried) ? "tap to interact" : "tap to talk";
                 SetPrompt(prompt);
 
                 if (Input.GetKeyDown(KeyCode.E) || ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame)

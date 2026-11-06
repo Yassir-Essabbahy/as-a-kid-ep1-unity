@@ -6171,7 +6171,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Press 'E' To Talk
+  m_text: tap to interact
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 9760074bf33164947ad4a08727dee0a4, type: 2}
   m_sharedMaterial: {fileID: 908423079}
@@ -9799,8 +9799,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1376982333}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: -123.60341, y: -7.483, z: 103.77478}
+  m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
+  m_LocalPosition: {x: -123.60344, y: -7.483, z: 103.77481}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -11804,6 +11804,7 @@ MonoBehaviour:
   InteractText: {fileID: 1999177236}
   promptBox: {fileID: 1601436340}
   promptBoxRect: {fileID: 1601436341}
+  promptBoxText: {fileID: 961340086}
   promptButton: {fileID: 1601436342}
   InteractionDistance: 5
   playerCamera: {fileID: 1376982338}
@@ -11990,8 +11991,8 @@ Transform:
   m_GameObject: {fileID: 1597059148}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0.7071068, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 103.77475, y: 6.733, z: 123.60341}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 103.77475, y: 7.2, z: 123.60341}
+  m_LocalScale: {x: 0.6, y: 0.6, z: 0.6}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1910466637}
