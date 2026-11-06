@@ -77,31 +77,33 @@ public class HouseCinematicVerificationRunner : MonoBehaviour
         var fpc = player != null ? player.GetComponent<FirstPersonController>() : null;
         var cam = fpc != null && fpc.playerCamera != null ? fpc.playerCamera : Camera.main;
 
-        // Stage 1: Cinematic Start (Closed eyes / black)
+        // Stage 1: Cinematic Start (Closed eyes on pillow)
         while (cinematic != null && cinematic.CurrentStage < HouseWakingCinematic.CinematicStage.Black) yield return null;
-        yield return new WaitForSeconds(0.2f);
+        yield return new WaitForSeconds(0.4f);
         yield return StartCoroutine(CaptureFrame("House_Cinematic_01_Black.png"));
-        sb.AppendLine("[PASS] Stage 1 Captured: House_Cinematic_01_Black.png (Eyelids fully closed, alarm ringing muffled)");
+        sb.AppendLine("[PASS] Stage 1 Captured: House_Cinematic_01_Black.png (On pillow, eyelids fully closed, muffled alarm 550Hz, resting on bed)");
 
-        // Stage 2: Slit open (Attempt 1, ~14% open)
+        // Stage 2: Blink 1 on pillow (Slow slit open ~22%, hold, slow close)
         while (cinematic != null && cinematic.CurrentStage < HouseWakingCinematic.CinematicStage.SlitOpen) yield return null;
+        yield return new WaitForSeconds(0.3f);
         yield return StartCoroutine(CaptureFrame("House_Cinematic_02_Slit.png"));
-        sb.AppendLine("[PASS] Stage 2 Captured: House_Cinematic_02_Slit.png (Slit open ~14%, heavy-eyes wash)");
+        sb.AppendLine("[PASS] Stage 2 Captured: House_Cinematic_02_Slit.png (Blink 1 on pillow: slow slit open ~22%, warm morning sunlight)");
 
-        // Stage 3: Half open (Attempt 2, ~45% open)
+        // Stage 3: Blink 2 on pillow (Slow half open ~55%, hold, slow close)
         while (cinematic != null && cinematic.CurrentStage < HouseWakingCinematic.CinematicStage.HalfOpen) yield return null;
+        yield return new WaitForSeconds(0.3f);
         yield return StartCoroutine(CaptureFrame("House_Cinematic_03_HalfOpen.png"));
-        sb.AppendLine("[PASS] Stage 3 Captured: House_Cinematic_03_HalfOpen.png (Half open ~45%, alarm clearer)");
+        sb.AppendLine("[PASS] Stage 3 Captured: House_Cinematic_03_HalfOpen.png (Blink 2 on pillow: slow half open ~55%, alarm audio clearer 1800Hz)");
 
-        // Stage 4: Fully open & Looking at Clock (Attempt 3, 100% open)
+        // Stage 4: Blink 3 on pillow (Slow full open 100%, turn to clock, click sound, breath, ambience)
         while (cinematic != null && cinematic.CurrentStage < HouseWakingCinematic.CinematicStage.ClockReach) yield return null;
         yield return StartCoroutine(CaptureFrame("House_Cinematic_04_FullyOpen_Clock.png"));
-        sb.AppendLine("[PASS] Stage 4 Captured: House_Cinematic_04_FullyOpen_Clock.png (Fully open 100%, turning to clock, click sound)");
+        sb.AppendLine("[PASS] Stage 4 Captured: House_Cinematic_04_FullyOpen_Clock.png (Blink 3 on pillow: 100% full open, turn to clock, click sound, breath, ambience)");
 
-        // Stage 5: Sitting on Bed Edge
+        // Stage 5: Sitting on Bed Edge (Then get up)
         while (cinematic != null && cinematic.CurrentStage < HouseWakingCinematic.CinematicStage.Sitting) yield return null;
         yield return StartCoroutine(CaptureFrame("House_Cinematic_05_Sitting.png"));
-        sb.AppendLine("[PASS] Stage 5 Captured: House_Cinematic_05_Sitting.png (Sitting upright on bed edge facing door)");
+        sb.AppendLine("[PASS] Stage 5 Captured: House_Cinematic_05_Sitting.png (Then get up: sitting upright on bed edge facing door, cloth rustle SFX)");
 
         // Stage 6: Standing Up - End of Cinematic
         while (cinematic != null && cinematic.CurrentStage < HouseWakingCinematic.CinematicStage.StandingEnd) yield return null;

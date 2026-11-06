@@ -22,8 +22,11 @@ public class HouseWakingCinematic : MonoBehaviour
     {
         Init,
         Black,
-        SlitOpen,
-        HalfOpen,
+        SlitOpen,     // Blink 1 Open
+        Blink1_Close,
+        HalfOpen,     // Blink 2 Open
+        Blink2_Close,
+        Blink3_Open,  // Blink 3 Full Open
         ClockReach,
         Sitting,
         StandingEnd,
@@ -52,16 +55,26 @@ public class HouseWakingCinematic : MonoBehaviour
     public AudioClip morningAmbienceClip;
     public AudioClip clothRustleClip;
 
-    [Header("Timings (Total ~13-15s)")]
-    public float ringStartDuration = 1.2f;
-    public float attempt1OpenDuration = 1.5f;
-    public float attempt1CloseDuration = 1.0f;
-    public float attempt2OpenDuration = 1.8f;
-    public float attempt2CloseDuration = 0.9f;
-    public float attempt3OpenDuration = 2.0f;
-    public float lookClockDuration = 1.2f;
-    public float sitUpDuration = 2.0f;
-    public float standUpDuration = 1.8f;
+    [Header("Timings (Bed Awakening & 3 Slow Blinks)")]
+    public float ringStartDuration = 2.0f;
+    public float blink1OpenDuration = 1.8f;
+    public float blink1HoldDuration = 1.0f;
+    public float blink1CloseDuration = 1.3f;
+    public float blink1RestDuration = 1.0f;
+
+    public float blink2OpenDuration = 2.0f;
+    public float blink2HoldDuration = 1.2f;
+    public float blink2CloseDuration = 1.2f;
+    public float blink2RestDuration = 0.8f;
+
+    public float blink3OpenDuration = 2.2f;
+    public float blink3RestDuration = 1.5f;
+
+    public float lookClockDuration = 1.5f;
+    public float clockPauseDuration = 1.2f;
+    public float sitUpDuration = 2.5f;
+    public float sitPauseDuration = 1.0f;
+    public float standUpDuration = 2.0f;
 
     [Header("Curves & Noise")]
     public AnimationCurve motionCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
@@ -202,16 +215,16 @@ public class HouseWakingCinematic : MonoBehaviour
         if (mainCamera != null)
         {
             originalNearClip = mainCamera.nearClipPlane;
-            mainCamera.nearClipPlane = 0.05f;
+            mainCamera.nearClipPlane = 0.03f;
         }
 
         // Close eyelids to pure black
         if (EyelidBlink.Instance != null)
             EyelidBlink.Instance.SetOpenImmediate(0f);
 
-        // Snap player and camera to Lying pose
-        Vector3 lyingPos = wakePoseLying != null ? wakePoseLying.position : new Vector3(104.70f, 7.15f, 118.90f);
-        Quaternion lyingRot = wakePoseLying != null ? wakePoseLying.rotation : Quaternion.Euler(-30f, 45f, 4f);
+        // Snap player and camera to Lying pose directly on the pillow
+        Vector3 lyingPos = wakePoseLying != null ? wakePoseLying.position : new Vector3(105.65f, 7.22f, 119.25f);
+        Quaternion lyingRot = wakePoseLying != null ? wakePoseLying.rotation : Quaternion.Euler(-42f, 315f, 5f);
 
         if (player != null)
         {
@@ -228,7 +241,7 @@ public class HouseWakingCinematic : MonoBehaviour
         yield return new WaitForSeconds(0.2f);
         CurrentStage = CinematicStage.Black;
 
-        // 2. Alarm starts ringing (muffled low-pass 650 Hz)
+        // 2. Alarm starts ringing (muffled low-pass 550 Hz through sleep)
         if (alarmAudioSource != null)
         {
             if (alarmClip != null) alarmAudioSource.clip = alarmClip;
@@ -236,62 +249,71 @@ public class HouseWakingCinematic : MonoBehaviour
             if (alarmLowPass != null)
             {
                 alarmLowPass.enabled = true;
-                alarmLowPass.cutoffFrequency = 650f;
+                alarmLowPass.cutoffFrequency = 550f;
             }
             alarmAudioSource.Play();
         }
 
-        yield return new WaitForSeconds(ringStartDuration);
+        // Take time on the bed in darkness on the pillow
+        yield return StartCoroutine(RestOnBed(lyingPos, lyingRot, ringStartDuration));
 
-        // 3. Attempt 1: eyelids crack open thin slit (12-15%), blurry and bright, then close slowly
+        // 3. BLINK 1: Slow sleepy slit open (~22%), hold drowsily on pillow, slowly close
+        CurrentStage = CinematicStage.SlitOpen;
         if (EyelidBlink.Instance != null)
         {
-            yield return EyelidBlink.Instance.OpenSlow(0.14f, attempt1OpenDuration);
-            CurrentStage = CinematicStage.SlitOpen;
-            yield return new WaitForSeconds(0.4f);
-            yield return EyelidBlink.Instance.Close(attempt1CloseDuration);
+            yield return EyelidBlink.Instance.OpenSlow(0.22f, blink1OpenDuration);
+            yield return StartCoroutine(RestOnBed(lyingPos, lyingRot, blink1HoldDuration));
+            CurrentStage = CinematicStage.Blink1_Close;
+            yield return EyelidBlink.Instance.Close(blink1CloseDuration);
         }
         else
         {
-            yield return new WaitForSeconds(1.5f);
+            yield return new WaitForSeconds(blink1OpenDuration + blink1HoldDuration + blink1CloseDuration);
         }
 
-        yield return new WaitForSeconds(0.5f);
+        // Rest on pillow between blinks in darkness
+        yield return StartCoroutine(RestOnBed(lyingPos, lyingRot, blink1RestDuration));
 
-        // 4. Attempt 2: open further (~45%), alarm gets clearer (low-pass 2400 Hz), heavy blink closes
-        if (alarmLowPass != null) alarmLowPass.cutoffFrequency = 2400f;
+        // 4. BLINK 2: Slow half-open (~55%), alarm clearer (1800 Hz), hold on pillow, slowly close
+        if (alarmLowPass != null) alarmLowPass.cutoffFrequency = 1800f;
 
+        CurrentStage = CinematicStage.HalfOpen;
         if (EyelidBlink.Instance != null)
         {
-            yield return EyelidBlink.Instance.OpenSlow(0.45f, attempt2OpenDuration);
-            CurrentStage = CinematicStage.HalfOpen;
-            yield return new WaitForSeconds(0.5f);
-            yield return EyelidBlink.Instance.Blink(attempt2CloseDuration);
+            yield return EyelidBlink.Instance.OpenSlow(0.55f, blink2OpenDuration);
+            yield return StartCoroutine(RestOnBed(lyingPos, lyingRot, blink2HoldDuration));
+            CurrentStage = CinematicStage.Blink2_Close;
+            yield return EyelidBlink.Instance.Close(blink2CloseDuration);
         }
         else
         {
-            yield return new WaitForSeconds(1.5f);
+            yield return new WaitForSeconds(blink2OpenDuration + blink2HoldDuration + blink2CloseDuration);
         }
 
-        yield return new WaitForSeconds(0.3f);
+        // Rest on pillow between blinks in darkness
+        yield return StartCoroutine(RestOnBed(lyingPos, lyingRot, blink2RestDuration));
 
-        // 5. Attempt 3: open fully (100%), blur clears, low-pass disabled
+        // 5. BLINK 3: Slow full open (100%), heavy eyes clearing, alarm full audio (22000 Hz)
         if (alarmLowPass != null) alarmLowPass.cutoffFrequency = 22000f;
 
+        CurrentStage = CinematicStage.Blink3_Open;
         if (EyelidBlink.Instance != null)
         {
-            yield return EyelidBlink.Instance.OpenSlow(1.0f, attempt3OpenDuration);
+            yield return EyelidBlink.Instance.OpenSlow(1.0f, blink3OpenDuration);
         }
 
-        // Camera slowly turns toward nightstand and clock
-        Vector3 clockPos = alarmAudioSource != null ? alarmAudioSource.transform.position : (lyingPos + new Vector3(1f, 0.2f, 1f));
+        // Take a little time on the bed, looking up from the pillow as morning light fills the room
+        yield return StartCoroutine(RestOnBed(lyingPos, lyingRot, blink3RestDuration));
+
+        // 6. Camera turns toward nightstand and clock while still on the pillow
+        Vector3 clockPos = alarmAudioSource != null ? alarmAudioSource.transform.position : new Vector3(105.75f, 7.35f, 120.00f);
         Vector3 dirToClock = (clockPos - lyingPos).normalized;
         Quaternion lookClockRot = Quaternion.LookRotation(dirToClock, Vector3.up);
 
         yield return StartCoroutine(AnimateCameraPose(lyingPos, lyingRot, lyingPos, lookClockRot, lookClockDuration));
         CurrentStage = CinematicStage.ClockReach;
 
-        // 6. Player reaches clock: click sound, alarm stops, sleepy breath, morning ambience fades in
+        // Player reaches clock: mechanical click sound, alarm stops, sleepy morning breath, morning ambience fades in
         if (alarmAudioSource != null && alarmAudioSource.isPlaying)
         {
             alarmAudioSource.Stop();
@@ -312,9 +334,10 @@ public class HouseWakingCinematic : MonoBehaviour
             StartCoroutine(FadeAmbienceVolume(0.4f, 2.5f));
         }
 
-        yield return new WaitForSeconds(0.6f);
+        // Take a little time on the bed after turning off the alarm
+        yield return StartCoroutine(RestOnBed(lyingPos, lookClockRot, clockPauseDuration));
 
-        // 7. Rise to WakePose_Sitting (with cloth rustle)
+        // 7. THEN GET UP: First sit up to WakePose_Sitting on bed edge (with cloth rustle)
         if (clothRustleClip != null && alarmAudioSource != null)
         {
             alarmAudioSource.PlayOneShot(clothRustleClip, 0.7f);
@@ -326,7 +349,8 @@ public class HouseWakingCinematic : MonoBehaviour
         yield return StartCoroutine(AnimateCameraPose(lyingPos, lookClockRot, sitPos, sitRot, sitUpDuration));
         CurrentStage = CinematicStage.Sitting;
 
-        yield return new WaitForSeconds(0.5f);
+        // Pause sitting on the bed edge, gathering thoughts
+        yield return StartCoroutine(RestOnBed(sitPos, sitRot, sitPauseDuration));
 
         // 8. Rise to WakePose_Standing (standing next to bed on floor)
         Vector3 standFloor = wakePoseStanding != null ? wakePoseStanding.position : new Vector3(103.50f, 7.094f, 120.20f);
@@ -363,13 +387,13 @@ public class HouseWakingCinematic : MonoBehaviour
         if (EyelidBlink.Instance != null)
             EyelidBlink.Instance.SetOpenImmediate(0f);
 
-        Vector3 sitPos = wakePoseSitting != null ? wakePoseSitting.position : new Vector3(104.05f, 7.65f, 119.65f);
-        Quaternion sitRot = wakePoseSitting != null ? wakePoseSitting.rotation : Quaternion.Euler(0f, 323f, 0f);
+        Vector3 lyingPos = wakePoseLying != null ? wakePoseLying.position : new Vector3(105.65f, 7.22f, 119.25f);
+        Quaternion lyingRot = wakePoseLying != null ? wakePoseLying.rotation : Quaternion.Euler(-42f, 315f, 5f);
 
         if (mainCamera != null)
         {
-            mainCamera.transform.position = sitPos;
-            mainCamera.transform.rotation = sitRot;
+            mainCamera.transform.position = lyingPos;
+            mainCamera.transform.rotation = lyingRot;
         }
 
         yield return new WaitForSeconds(0.3f);
@@ -377,17 +401,22 @@ public class HouseWakingCinematic : MonoBehaviour
         if (EyelidBlink.Instance != null)
             yield return EyelidBlink.Instance.OpenSlow(1.0f, 1.2f);
 
-        Vector3 standFloor = wakePoseStanding != null ? wakePoseStanding.position : new Vector3(103.50f, 7.20f, 120.20f);
+        Vector3 sitPos = wakePoseSitting != null ? wakePoseSitting.position : new Vector3(104.05f, 7.65f, 119.65f);
+        Quaternion sitRot = wakePoseSitting != null ? wakePoseSitting.rotation : Quaternion.Euler(0f, 323f, 0f);
+
+        yield return StartCoroutine(AnimateCameraPose(lyingPos, lyingRot, sitPos, sitRot, 1.2f));
+
+        Vector3 standFloor = wakePoseStanding != null ? wakePoseStanding.position : new Vector3(103.50f, 7.094f, 120.20f);
         Quaternion standRot = wakePoseStanding != null ? wakePoseStanding.rotation : Quaternion.Euler(0f, 325f, 0f);
-        float eyeHeight = 0.75f;
+        float eyeHeight = 0.45f;
         if (player != null)
         {
             var joint = player.transform.Find("Joint");
-            if (joint != null) eyeHeight = joint.localPosition.y;
+            if (joint != null) eyeHeight = joint.position.y - player.transform.position.y;
         }
         Vector3 standCamPos = standFloor + Vector3.up * eyeHeight;
 
-        yield return StartCoroutine(AnimateCameraPose(sitPos, sitRot, standCamPos, standRot, 1.2f));
+        yield return StartCoroutine(AnimateCameraPose(sitPos, sitRot, standCamPos, standRot, 1.0f));
 
         FinishAndHandoverControl(standFloor, standRot);
     }
@@ -496,5 +525,31 @@ public class HouseWakingCinematic : MonoBehaviour
             yield return null;
         }
         ambientAudioSource.volume = targetVolume;
+    }
+
+    private IEnumerator RestOnBed(Vector3 posePos, Quaternion poseRot, float duration)
+    {
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float breath = Mathf.Sin(Time.time * 1.8f) * 0.003f;
+            float noiseX = (Mathf.PerlinNoise(Time.time * 1.2f, 0f) - 0.5f) * handheldNoisePos * 0.5f;
+            float noiseY = (Mathf.PerlinNoise(0f, Time.time * 1.2f) - 0.5f) * handheldNoisePos * 0.5f;
+            float noiseRot = (Mathf.PerlinNoise(Time.time * 1.0f, 10f) - 0.5f) * handheldNoiseRot * 0.5f;
+
+            if (mainCamera != null)
+            {
+                mainCamera.transform.position = posePos + new Vector3(noiseX, breath + noiseY, 0f);
+                mainCamera.transform.rotation = poseRot * Quaternion.Euler(0f, 0f, noiseRot);
+            }
+            yield return null;
+        }
+
+        if (mainCamera != null)
+        {
+            mainCamera.transform.position = posePos;
+            mainCamera.transform.rotation = poseRot;
+        }
     }
 }

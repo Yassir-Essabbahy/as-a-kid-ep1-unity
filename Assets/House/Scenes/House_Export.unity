@@ -10991,8 +10991,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1473161544}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.22607157, y: 0.37776375, z: 0.13012971, w: 0.8883988}
-  m_LocalPosition: {x: 104.7, y: 7.15, z: 118.9}
+  m_LocalRotation: {x: 0.3463574, y: 0.34248388, z: 0.099388555, w: -0.8676769}
+  m_LocalPosition: {x: 105.65, y: 7.22, z: 119.25}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -12679,13 +12679,20 @@ MonoBehaviour:
   morningAmbienceClip: {fileID: 8300000, guid: cc8ed577bac65454f915bc1291255593, type: 3}
   clothRustleClip: {fileID: 8300000, guid: d82eaf94b31bc914dadbab15b8856a70, type: 3}
   ringStartDuration: 1.2
-  attempt1OpenDuration: 1.5
-  attempt1CloseDuration: 1
-  attempt2OpenDuration: 1.8
-  attempt2CloseDuration: 0.9
-  attempt3OpenDuration: 2
+  blink1OpenDuration: 1.8
+  blink1HoldDuration: 1
+  blink1CloseDuration: 1.3
+  blink1RestDuration: 1
+  blink2OpenDuration: 2
+  blink2HoldDuration: 1.2
+  blink2CloseDuration: 1.2
+  blink2RestDuration: 0.8
+  blink3OpenDuration: 2.2
+  blink3RestDuration: 1.5
   lookClockDuration: 1.2
+  clockPauseDuration: 1.2
   sitUpDuration: 1.8
+  sitPauseDuration: 1
   standUpDuration: 1.6
   motionCurve:
     serializedVersion: 2
@@ -17380,6 +17387,52 @@ Light:
   m_LightUnit: 1
   m_LuxAtDistance: 1
   m_EnableSpotReflector: 1
+--- !u!1 &2102476415
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2102476417}
+  - component: {fileID: 2102476416}
+  m_Layer: 0
+  m_Name: CinematicVerificationRunner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &2102476416
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2102476415}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7cd494ba509b84c4b9f247dc92efc07f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HouseCinematicVerificationRunner
+  autoRunOnStart: 1
+  screenshotDirectory: Assets/Screenshots
+--- !u!4 &2102476417
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2102476415}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2103335181
 GameObject:
   m_ObjectHideFlags: 0
@@ -31258,3 +31311,4 @@ SceneRoots:
   - {fileID: 1156969309}
   - {fileID: 1465452338}
   - {fileID: 2034069222}
+  - {fileID: 2102476417}
