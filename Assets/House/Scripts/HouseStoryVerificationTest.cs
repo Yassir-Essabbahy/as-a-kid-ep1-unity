@@ -94,7 +94,7 @@ public static class HouseStoryVerificationTest
 
     private static void TestParentsDialogue(List<TestResult> results)
     {
-        var triggers = Object.FindObjectsByType<DialogueTrigger>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        var triggers = Object.FindObjectsByType<DialogueTrigger>(FindObjectsInactive.Include);
         bool foundMama = false;
         bool foundBaba = false;
 
@@ -114,7 +114,7 @@ public static class HouseStoryVerificationTest
 
     private static void TestMoneyPickup(List<TestResult> results)
     {
-        var pickups = Object.FindObjectsByType<PickupObject>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        var pickups = Object.FindObjectsByType<PickupObject>(FindObjectsInactive.Include);
         bool foundMoney = false;
 
         foreach (var p in pickups)
