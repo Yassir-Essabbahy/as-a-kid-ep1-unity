@@ -15870,10 +15870,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DialogueTrigger
   lines:
-  - Hadi w9ita dyal l3cha
-  - sir l7anot jib monada
-  - ghadi tl9a lfloss flmjer fl couzina
-  - ou mat3ltch....3ndak tri9
+  - mama_01
+  - mama_02
+  - mama_03
+  - mama_04
   speakerName: Mama
   isMama: 1
   hasChoice: 0
@@ -19076,9 +19076,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DialogueTrigger
   lines:
-  - 3ad f9ti................
-  - Fik Jo3 ?
-  - Sir Sir Chouf M3a Mok
+  - baba_01
+  - baba_02
+  - baba_03
   speakerName: BABAK
   isMama: 0
   hasChoice: 1
@@ -29761,8 +29761,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1c7c3f747a72a1489cf60c78b49966c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HouseOutsideDoor
-  targetScene: 
-  fadeDuration: 1
+  targetScene: Start
+  fadeDuration: 1.5
   doorSound: {fileID: 0}
   audioSource: {fileID: 0}
 --- !u!4 &8542164413737111201

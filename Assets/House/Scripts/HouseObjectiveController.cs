@@ -61,8 +61,8 @@ public class HouseObjectiveController : MonoBehaviour
         }
         else if (phase >= 2)
         {
-            key = "house_objective_go_store";
-            fallback = "Head out to the store";
+            key = "house_objective_go_school";
+            fallback = "Head out to school";
         }
 
         string text = fallback;

@@ -87,8 +87,24 @@ public class DialogueTrigger : MonoBehaviour, IInteractable
                 NpcDialogueManager.Instance.SetChoiceLabels(choiceA, choiceB);
             }
 
+            string[] resolvedLines = lines;
+            if (lines != null && LocalizationManager.Instance != null)
+            {
+                resolvedLines = new string[lines.Length];
+                for (int i = 0; i < lines.Length; i++)
+                {
+                    string l = lines[i];
+                    string loc = LocalizationManager.Instance.Get(l);
+                    if (!string.IsNullOrEmpty(loc) && !loc.StartsWith("["))
+                    {
+                        l = loc;
+                    }
+                    resolvedLines[i] = l;
+                }
+            }
+
             yield return NpcDialogueManager.Instance.ShowDialogue(
-                lines,
+                resolvedLines,
                 hasChoice,
                 speakerColor,
                 font,
