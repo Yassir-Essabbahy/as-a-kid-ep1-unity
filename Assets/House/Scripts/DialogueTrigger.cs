@@ -125,6 +125,21 @@ public class DialogueTrigger : MonoBehaviour, IInteractable
         if (isMama)
         {
             HouseObjectiveController.Instance?.OnMamaTalked();
+
+            string certName = "Medical Certificate";
+            if (LocalizationManager.Instance != null)
+            {
+                string loc = LocalizationManager.Instance.Get("item_medical_certificate");
+                if (!string.IsNullOrEmpty(loc) && !loc.StartsWith("["))
+                {
+                    certName = loc;
+                }
+            }
+
+            if (ItemPickupToast.Instance != null)
+            {
+                ItemPickupToast.Instance.Show(null, certName);
+            }
         }
 
         onDialogueCompleted?.Invoke();
