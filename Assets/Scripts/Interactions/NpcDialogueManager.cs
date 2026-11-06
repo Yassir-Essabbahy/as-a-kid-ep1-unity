@@ -299,6 +299,13 @@ public class NpcDialogueManager : MonoBehaviour
         AudioClip[] voiceClips = null,
         System.Action<int, string> onLineStarted = null)
     {
+        if (activeInteractableRoutine != null)
+        {
+            StopCoroutine(activeInteractableRoutine);
+            activeInteractableRoutine = null;
+            dialogueRunning = false;
+        }
+
         if (dialogueRunning)
         {
             Debug.LogWarning(
@@ -470,6 +477,115 @@ public class NpcDialogueManager : MonoBehaviour
                 null
             )
         );
+    }
+
+
+    // ============================================================
+    // INTERACTABLE INSPECTION MESSAGES (CINEMATIC BORDERS)
+    // ============================================================
+
+    private Coroutine activeInteractableRoutine;
+
+    /// <summary>
+    /// Displays an interactable inspection message / monologue with cinematic letterbox borders.
+    /// Dismisses automatically after autoDismissDuration seconds or immediately when the player taps / clicks / presses continue.
+    /// </summary>
+    public Coroutine ShowInteractableMessage(string message, float autoDismissDuration = 2.5f, Color? textColor = null)
+    {
+        if (string.IsNullOrEmpty(message)) return null;
+
+        if (activeInteractableRoutine != null)
+        {
+            StopCoroutine(activeInteractableRoutine);
+            activeInteractableRoutine = null;
+        }
+        else if (dialogueRunning)
+        {
+            return null;
+        }
+
+        activeInteractableRoutine = StartCoroutine(ShowInteractableMessageRoutine(message, autoDismissDuration, textColor ?? Color.white));
+        return activeInteractableRoutine;
+    }
+
+    public IEnumerator ShowInteractableMessageRoutine(string message, float autoDismissDuration, Color textColor)
+    {
+        dialogueRunning = true;
+
+        EnsureBandsBound();
+        if (talkPanel == null || !talkPanel.activeSelf)
+        {
+            ResetBandsOffscreen();
+        }
+
+        if (talkPanel != null)
+            talkPanel.SetActive(true);
+
+        if (choicePack != null)
+            choicePack.SetActive(false);
+
+        if (continueButton != null)
+            continueButton.gameObject.SetActive(true);
+
+        choiceMade = false;
+
+        if (dialogueText != null)
+        {
+            dialogueText.fontSize = STANDARD_FONT_SIZE;
+            dialogueText.color = textColor;
+            if (dialogueText.font == null || dialogueText.font.name.Contains("Liberation"))
+            {
+                var f = DefaultDialogueFont;
+                if (f != null) dialogueText.font = f;
+            }
+        }
+
+        // Slide the cinematic bands in: top slides down, bottom slides up
+        if (slideCoroutine != null) StopCoroutine(slideCoroutine);
+        yield return StartCoroutine(SlideBandsRoutine(slideIn: true));
+
+        // Type out the message line
+        yield return StartCoroutine(TypeText(message));
+
+        // Wait for player tap / click / press E / continue button, OR auto-dismiss after autoDismissDuration
+        float timer = 0f;
+        continueClicked = false;
+        while (timer < autoDismissDuration)
+        {
+            timer += Time.unscaledDeltaTime;
+
+            bool advanceInput = continueClicked ||
+                                Input.GetMouseButtonDown(0) ||
+                                Input.GetKeyDown(KeyCode.Space) ||
+                                Input.GetKeyDown(KeyCode.E) ||
+                                (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began) ||
+                                ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame;
+
+            // Give a 0.25s grace period so the triggering keypress/tap doesn't immediately dismiss
+            if (timer > 0.25f && advanceInput)
+            {
+                continueClicked = false;
+                break;
+            }
+
+            yield return null;
+        }
+
+        if (continueButton != null)
+            continueButton.gameObject.SetActive(false);
+
+        if (dialogueText != null)
+            dialogueText.text = "";
+
+        // Slide the cinematic bands out: top slides up, bottom slides down
+        if (slideCoroutine != null) StopCoroutine(slideCoroutine);
+        yield return StartCoroutine(SlideBandsRoutine(slideIn: false));
+
+        if (talkPanel != null)
+            talkPanel.SetActive(false);
+
+        dialogueRunning = false;
+        activeInteractableRoutine = null;
     }
 
 

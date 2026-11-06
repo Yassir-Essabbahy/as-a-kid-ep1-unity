@@ -3,15 +3,59 @@ using System.Collections;
 
 public static class HouseUIBridge
 {
-    public static void ShowMessage(string message, float duration = 2.5f)
+    public static void ShowMessage(string message, float duration = 3.0f)
     {
-        if (NpcInteractionText.Instance != null)
+        if (string.IsNullOrEmpty(message)) return;
+
+        string resolvedText = ResolveLocalizedMessage(message);
+
+        if (NpcDialogueManager.Instance != null)
         {
-            NpcInteractionText.Instance.SetPrompt(message);
+            NpcDialogueManager.Instance.ShowInteractableMessage(resolvedText, duration);
+        }
+        else if (NpcInteractionText.Instance != null)
+        {
+            NpcInteractionText.Instance.SetPrompt(resolvedText);
         }
         else if (UIManager.instance != null)
         {
-            UIManager.instance.ShowMessage(message, duration);
+            UIManager.instance.ShowMessage(resolvedText, duration);
         }
+    }
+
+    private static string ResolveLocalizedMessage(string message)
+    {
+        if (string.IsNullOrEmpty(message)) return message;
+
+        string key = null;
+        string lower = message.Trim().ToLowerInvariant();
+
+        if (lower == "baba makay5linich nd5l hna" || lower == "door_locked" || lower.Contains("dad doesn't let me"))
+            key = "door_locked";
+        else if (lower == "dima telaja khawya" || lower == "fridge_comment" || lower.Contains("fridge is always empty"))
+            key = "fridge_comment";
+        else if (lower == "n9dr nt5ba hna 3la mama" || lower == "cabinet_comment" || lower.Contains("hide here from mom"))
+            key = "cabinet_comment";
+        else if (lower == "الدرج مسدود" || lower == "المجر مقفول" || lower == "drawer_locked" || lower.Contains("drawer is locked"))
+            key = "drawer_locked";
+        else if (lower == "النافذة مسدودة" || lower == "النافذة مقفولة" || lower == "window_locked" || lower.Contains("window is locked"))
+            key = "window_locked";
+        else if (lower == "الخزانة مسدودة" || lower == "الخزانة مقفولة" || lower == "cupboard_locked" || lower.Contains("cabinet is locked"))
+            key = "cupboard_locked";
+
+        if (key != null && LocalizationManager.Instance != null)
+        {
+            string loc = LocalizationManager.Instance.Get(key);
+            if (!string.IsNullOrEmpty(loc) && !loc.StartsWith("[")) return loc;
+        }
+
+        if (LocalizationManager.Instance != null)
+        {
+            string directLoc = LocalizationManager.Instance.Get(message);
+            if (!string.IsNullOrEmpty(directLoc) && !directLoc.StartsWith("["))
+                return directLoc;
+        }
+
+        return message;
     }
 }
