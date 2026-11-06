@@ -42,8 +42,10 @@ public static class HouseUIBridge
             key = "window_locked";
         else if (lower == "الخزانة مسدودة" || lower == "الخزانة مقفولة" || lower == "cupboard_locked" || lower.Contains("cabinet is locked"))
             key = "cupboard_locked";
-        else if (lower == "door_cant_leave_no_papers" || lower.Contains("talk to mama") || lower.Contains("parler à maman") || lower.Contains("nhdr m3a mama"))
-            key = "door_cant_leave_no_papers";
+        else if (lower == "house_need_clothes_and_bag" || lower.Contains("need to put on my clothes") || lower.Contains("mettre mes vêtements") || lower.Contains("nlbes hwayji"))
+            key = "house_need_clothes_and_bag";
+        else if (lower == "house_need_talk_mom" || lower == "door_cant_leave_no_papers" || lower.Contains("talk to mom") || lower.Contains("talk to mama") || lower.Contains("parler à maman") || lower.Contains("nhdr m3a mama"))
+            key = "house_need_talk_mom";
         else if (lower == "door_cant_leave_no_money" || lower.Contains("money from the drawer") || lower.Contains("l'argent dans le tiroir") || lower.Contains("lflouss mn lmjer"))
             key = "door_cant_leave_no_money";
 

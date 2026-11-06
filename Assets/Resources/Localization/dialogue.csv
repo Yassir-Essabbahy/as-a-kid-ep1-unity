@@ -165,3 +165,12 @@ door_cant_leave_no_papers,"I can't leave yet. I need to talk to Mama first.","Je
 door_cant_leave_no_money,"I need to get the money from the drawer before leaving.","Je dois prendre l'argent dans le tiroir avant de partir.","Khassni nakhd lflouss mn lmjer 9bl ma nmchi."
 house_objective_go_school,"Head out to school","Va à l'école","سير للمدرسة"
 item_medical_certificate,"Medical Certificate","Certificat Médical","شهادة طبية"
+house_objective_get_dressed,Put on clothes and take your backpack,Mets tes vêtements et prends ton sac,لبس حوايجك وخد الكارطابل ديالك
+house_objective_talk_mom,Talk to your mom in the kitchen,Parle à ta mère dans la cuisine,تكلم مع ماماك ف الكوزينة
+house_need_clothes_and_bag,I need to put on my clothes and take my backpack first.,Je dois mettre mes vêtements et prendre mon sac d'abord.,خاصني نلبس حوايجي وناخد الكارطابل ديالي بعدا.
+house_need_talk_mom,I should talk to Mom before leaving.,Je devrais parler à maman avant de partir.,خاصني نهضر مع ماما قبل ما نمشي.
+house_clothes_worn,School clothes worn.,Vêtements d'école enfilés.,لبست حوايج المدرسة.
+house_backpack_taken,School backpack collected.,Sac d'école récupéré.,خديت الكارطابل.
+item_doctor_certificate,Doctor's Certificate,Certificat Médical,شهادة طبية
+mama_house_envelope,Take this. Hand it directly to the headmaster (Al-Mudir). Don't lose it... we had a hard time convincing the doctor you were ready to go back.,Prends ceci. Donne-le directement au directeur (Al-Mudir). Ne le perds pas... on a eu du mal à convaincre le médecin que tu étais prêt à y retourner.,خودي هادي. عطيها نيشان للمدير. متودريهاش... راه بصيف باش قنعنا الطبيب بلي راك واجد ترجع.
+baba_house_advice,"Watch the road. Straight to school, straight back home. No wandering off.","Fais attention à la route. Directement à l'école, directement à la maison. Pas de détours.",عندك الطريق. نيشان للمدرسة، نيشان للدار. بلا دوران.
