@@ -6,7 +6,7 @@ public class HouseMamaDialogue : MonoBehaviour, IInteractable
     public string speakerName = "Mama";
     public string dialogueKey = "mama_house_envelope";
 
-    public string PromptMessage => "Talk to Mama";
+    public string PromptMessage => "tap to talk";
 
     private bool hasSpoken = false;
 

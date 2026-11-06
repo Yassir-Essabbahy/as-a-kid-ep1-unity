@@ -6,7 +6,7 @@ public class HouseBabaDialogue : MonoBehaviour, IInteractable
     public string speakerName = "Baba";
     public string dialogueKey = "baba_house_advice";
 
-    public string PromptMessage => "Talk to Baba";
+    public string PromptMessage => "tap to talk";
 
     public void Interact()
     {

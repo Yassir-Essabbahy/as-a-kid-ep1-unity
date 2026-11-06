@@ -1,57 +1,67 @@
 using UnityEngine;
 using System.Collections;
 
+/// <summary>
+/// Controls the bedroom wardrobe interaction:
+/// 1. "Open wardrobe": Both doors swing open with smooth eased motion, playing wood creak and cloth rustle.
+/// 2. "Put on clothes": Triggers a ~0.4s dip to black with fabric rustle SFX, marks clothes worn, and displays toast notification.
+/// 3. Interaction is consumed: Doors stay open, no double-trigger.
+/// </summary>
+[DisallowMultipleComponent]
 public class HouseWardrobeInteractable : MonoBehaviour, IInteractable
 {
+    public enum WardrobeState
+    {
+        Closed,
+        OpenNotDressed,
+        ClothesWorn
+    }
+
     [Header("Door Transforms")]
     public Transform leftDoor;
     public Transform rightDoor;
 
-    [Header("Open Angles (Local Y)")]
-    public float openAngleLeft = -80f;
-    public float openAngleRight = 80f;
-    public float animationDuration = 0.8f;
+    [Header("Door Swing Angles (World Y)")]
+    public float openAngleLeft = 95f;   // swings forward into room
+    public float openAngleRight = -95f; // swings forward into room
+    public float swingDuration = 1.1f;
+    public AnimationCurve swingCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
-    [Header("Audio")]
+    [Header("Audio SFX")]
     public AudioSource audioSource;
-    public AudioClip openSound;
-    public AudioClip clothesSound;
+    public AudioClip creakSound;
+    public AudioClip clothRustleSound;
+
+    [Header("State")]
+    public WardrobeState currentState = WardrobeState.Closed;
 
     public string PromptMessage
     {
         get
         {
-            if (HouseObjectiveController.Instance != null && HouseObjectiveController.Instance.hasWornClothes)
+            switch (currentState)
             {
-                return isOpen ? "Close Wardrobe" : "Open Wardrobe";
+                case WardrobeState.Closed:
+                    return "Open wardrobe";
+                case WardrobeState.OpenNotDressed:
+                    return "Put on clothes";
+                default:
+                    return ""; // consumed
             }
-            return "Wear Clothes";
         }
     }
 
-    private bool isOpen = false;
     private Quaternion leftClosedRot;
     private Quaternion rightClosedRot;
-    private Quaternion leftOpenRot;
-    private Quaternion rightOpenRot;
-    private Coroutine doorCoroutine;
+    private Coroutine activeRoutine;
 
     private void Awake()
     {
         if (leftDoor == null) leftDoor = transform.Find("LeftDoor");
         if (rightDoor == null) rightDoor = transform.Find("RightDoor");
 
-        if (leftDoor != null)
-        {
-            leftClosedRot = leftDoor.localRotation;
-            leftOpenRot = leftClosedRot * Quaternion.Euler(0f, openAngleLeft, 0f);
-        }
-
-        if (rightDoor != null)
-        {
-            rightClosedRot = rightDoor.localRotation;
-            rightOpenRot = rightClosedRot * Quaternion.Euler(0f, openAngleRight, 0f);
-        }
+        if (leftDoor != null) leftClosedRot = leftDoor.rotation;
+        if (rightDoor != null) rightClosedRot = rightDoor.rotation;
 
         if (audioSource == null)
         {
@@ -60,75 +70,123 @@ public class HouseWardrobeInteractable : MonoBehaviour, IInteractable
             {
                 audioSource = gameObject.AddComponent<AudioSource>();
                 audioSource.spatialBlend = 1f;
+                audioSource.minDistance = 1f;
+                audioSource.maxDistance = 10f;
+                audioSource.rolloffMode = AudioRolloffMode.Linear;
             }
         }
+
+        // Auto-load audio clips if null
+#if UNITY_EDITOR
+        if (creakSound == null)
+            creakSound = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/House/Audio/WardrobeCreak.wav");
+        if (creakSound == null)
+            creakSound = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/House/Audio/DoorOpen.wav");
+
+        if (clothRustleSound == null)
+            clothRustleSound = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/House/Audio/ClothRustle.wav");
+#endif
     }
 
     public void Interact()
     {
-        bool wasDressed = HouseObjectiveController.Instance != null && HouseObjectiveController.Instance.hasWornClothes;
+        if (activeRoutine != null) return; // avoid double trigger while animating
 
-        isOpen = !isOpen;
-
-        if (doorCoroutine != null) StopCoroutine(doorCoroutine);
-        doorCoroutine = StartCoroutine(AnimateDoorsRoutine(isOpen));
-
-        if (audioSource != null && openSound != null)
+        if (currentState == WardrobeState.Closed)
         {
-            audioSource.PlayOneShot(openSound);
+            activeRoutine = StartCoroutine(OpenDoorsRoutine());
         }
-
-        if (!wasDressed)
+        else if (currentState == WardrobeState.OpenNotDressed)
         {
-            if (audioSource != null && clothesSound != null)
-            {
-                audioSource.PlayOneShot(clothesSound);
-            }
-
-            if (HouseObjectiveController.Instance != null)
-            {
-                HouseObjectiveController.Instance.OnClothesWorn();
-            }
-
-            string label = "School Clothes Worn";
-            if (LocalizationManager.Instance != null)
-            {
-                string loc = LocalizationManager.Instance.Get("house_clothes_worn");
-                if (!string.IsNullOrEmpty(loc) && !loc.StartsWith("[")) label = loc;
-            }
-
-            if (ItemPickupToast.Instance != null)
-            {
-                ItemPickupToast.Instance.Show(null, label, 1);
-            }
-
-            HouseUIBridge.ShowMessage("house_clothes_worn", 2.0f);
+            activeRoutine = StartCoroutine(PutOnClothesRoutine());
         }
     }
 
-    private IEnumerator AnimateDoorsRoutine(bool open)
+    private IEnumerator OpenDoorsRoutine()
     {
-        if (leftDoor == null || rightDoor == null) yield break;
+        if (audioSource != null)
+        {
+            if (creakSound != null) audioSource.PlayOneShot(creakSound, 0.9f);
+            if (clothRustleSound != null) audioSource.PlayOneShot(clothRustleSound, 0.6f);
+        }
 
         float elapsed = 0f;
-        Quaternion startLeft = leftDoor.localRotation;
-        Quaternion targetLeft = open ? leftOpenRot : leftClosedRot;
-
-        Quaternion startRight = rightDoor.localRotation;
-        Quaternion targetRight = open ? rightOpenRot : rightClosedRot;
-
-        while (elapsed < animationDuration)
+        while (elapsed < swingDuration)
         {
             elapsed += Time.deltaTime;
-            float t = Mathf.SmoothStep(0f, 1f, elapsed / animationDuration);
+            float rawT = Mathf.Clamp01(elapsed / swingDuration);
+            float t = swingCurve != null ? swingCurve.Evaluate(rawT) : rawT;
 
-            leftDoor.localRotation = Quaternion.Slerp(startLeft, targetLeft, t);
-            rightDoor.localRotation = Quaternion.Slerp(startRight, targetRight, t);
+            if (leftDoor != null)
+                leftDoor.rotation = Quaternion.AngleAxis(openAngleLeft * t, Vector3.up) * leftClosedRot;
+
+            if (rightDoor != null)
+                rightDoor.rotation = Quaternion.AngleAxis(openAngleRight * t, Vector3.up) * rightClosedRot;
+
             yield return null;
         }
 
-        leftDoor.localRotation = targetLeft;
-        rightDoor.localRotation = targetRight;
-        doorCoroutine = null;
+        if (leftDoor != null)
+            leftDoor.rotation = Quaternion.AngleAxis(openAngleLeft, Vector3.up) * leftClosedRot;
+
+        if (rightDoor != null)
+            rightDoor.rotation = Quaternion.AngleAxis(openAngleRight, Vector3.up) * rightClosedRot;
+
+        currentState = WardrobeState.OpenNotDressed;
+        activeRoutine = null;
+
+        // Refresh UI prompt
+        if (NpcInteractionText.Instance != null)
+        {
+            NpcInteractionText.Instance.SetPrompt(PromptMessage);
+        }
+    }
+
+    private IEnumerator PutOnClothesRoutine()
+    {
+        // 1. Play cloth rustle SFX
+        if (audioSource != null && clothRustleSound != null)
+        {
+            audioSource.PlayOneShot(clothRustleSound, 1.0f);
+        }
+
+        // 2. Short dip to black (~0.4s)
+        if (EyelidBlink.Instance != null)
+        {
+            yield return EyelidBlink.Instance.DipToBlack(0.45f);
+        }
+        else
+        {
+            yield return new WaitForSeconds(0.45f);
+        }
+
+        // 3. Mark clothes worn
+        currentState = WardrobeState.ClothesWorn;
+
+        if (HouseObjectiveController.Instance != null)
+        {
+            HouseObjectiveController.Instance.OnClothesWorn();
+        }
+
+        // 4. Notification
+        string label = "School Clothes Worn";
+        if (LocalizationManager.Instance != null)
+        {
+            string loc = LocalizationManager.Instance.Get("house_clothes_worn");
+            if (!string.IsNullOrEmpty(loc) && !loc.StartsWith("[")) label = loc;
+        }
+
+        if (ItemPickupToast.Instance != null)
+        {
+            ItemPickupToast.Instance.Show(null, label, 1);
+        }
+
+        // 5. Clear prompt (interaction consumed, doors stay open)
+        if (NpcInteractionText.Instance != null)
+        {
+            NpcInteractionText.Instance.ClearPrompt();
+        }
+
+        activeRoutine = null;
     }
 }

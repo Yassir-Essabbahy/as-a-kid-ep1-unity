@@ -305,20 +305,22 @@ public class NpcInteractionText : MonoBehaviour
             var interactable = hit.collider.GetComponent<IInteractable>() ?? hit.collider.GetComponentInParent<IInteractable>();
             if (interactable != null)
             {
-                currentInteractable = interactable;
-                currentPlaceholder = null;
-                currentFindable = null;
-                currentNpcConv = null;
-                bool isNpc = interactable is DialogueTrigger || hit.collider.CompareTag("InteractNPC") || hit.collider.GetComponent<NpcConversation>() != null || hit.collider.GetComponentInParent<DialogueTrigger>() != null;
-                string prompt = isNpc ? "tap to talk" : "tap to interact";
-                SetPrompt(prompt);
+                string prompt = interactable.PromptMessage;
+                if (!string.IsNullOrEmpty(prompt))
+                {
+                    currentInteractable = interactable;
+                    currentPlaceholder = null;
+                    currentFindable = null;
+                    currentNpcConv = null;
+                    SetPrompt(prompt);
 
- if (Input.GetKeyDown(KeyCode.E) || ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame)
- {
- TriggerCurrentInteraction();
- }
- return;
- }
+                    if (Input.GetKeyDown(KeyCode.E) || ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame)
+                    {
+                        TriggerCurrentInteraction();
+                    }
+                    return;
+                }
+            }
 
             if (hit.collider.CompareTag("InteractNPC"))
             {

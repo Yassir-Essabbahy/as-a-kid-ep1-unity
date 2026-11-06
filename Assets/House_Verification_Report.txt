@@ -1,0 +1,18 @@
+=== HOUSE CINEMATIC & STORY VERIFICATION REPORT ===
+Timestamp: 2026-11-06 23:25:31 UTC
+[PASS] Stage 1 Captured: House_Cinematic_01_Black.png (Eyelids fully closed, alarm ringing muffled)
+[PASS] Stage 2 Captured: House_Cinematic_02_Slit.png (Slit open ~14%, heavy-eyes wash)
+[PASS] Stage 3 Captured: House_Cinematic_03_HalfOpen.png (Half open ~45%, alarm clearer)
+[PASS] Stage 4 Captured: House_Cinematic_04_FullyOpen_Clock.png (Fully open 100%, turning to clock, click sound)
+[PASS] Stage 5 Captured: House_Cinematic_05_Sitting.png (Sitting upright on bed edge facing door)
+[PASS] Stage 6 Captured: House_Cinematic_06_Standing_CinematicEnd.png (Standing at (103.500, 7.541, 120.200), rot (0.0, 325.0, 0.0))
+[PASS] Bug 2 Verified: View seamlessly persisted across handoff (posDiff=0.0008m, rotDiff=0.00°, NO 180° flip)
+[PASS] Wardrobe Raycast & Prompt Check 1: Displayed 'Open wardrobe'
+[PASS] Wardrobe Prompt Check 2: Prompt changed to 'Put on clothes'
+[PASS] Bug 1 Verified: Wardrobe opened smoothly, clothes put on with dip-to-black, interaction consumed (prompt empty, no double trigger)
+[PASS] Backpack Raycast Prompt: Displayed 'Take Backpack'
+[PASS] Backpack & Bedroom Door Check: Backpack collected, bedroom door unlocked (isLocked=false)
+[PASS] Mama Raycast Prompt: Displayed 'tap to talk'
+[PASS] Mama & Outside Door Check: Doctor's Certificate given, front door unlocked (targetScene='Start')
+[PASS] Outside Door Prompt Check: Displayed 'Leave for School' (Ready to transition to school)
+=== VERIFICATION COMPLETED SUCCESSFULLY ===
