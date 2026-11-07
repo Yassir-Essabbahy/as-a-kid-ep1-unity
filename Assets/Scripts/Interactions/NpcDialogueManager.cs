@@ -41,6 +41,8 @@ public class NpcDialogueManager : MonoBehaviour
     [Header("Typing")]
     [Min(0f)]
     public float charactersPerSecond = 25f;
+    public AudioClip typingSound;
+    public AudioSource typingSource;
 
     [Header("Choice")]
     public int lastChoiceIndex;
@@ -110,11 +112,11 @@ public class NpcDialogueManager : MonoBehaviour
             return new Color(0.36f, 0.88f, 0.90f, 1.0f); // #5CE1E6 Soft Sky Blue / Cyan
 
         // Mother
-        if (s.Contains("mother") || s.Contains("mere") || s.Contains("الأم") || s.Contains("ام"))
+        if (s.Contains("mother") || s.Contains("mama") || s.Contains("mere") || s.Contains("الأم") || s.Contains("ام"))
             return new Color(0.87f, 0.63f, 0.87f, 1.0f); // #DDA0DD Soft Lilac / Lavender
 
         // Father
-        if (s.Contains("father") || s.Contains("pere") || s.Contains("الأب") || s.Contains("اب"))
+        if (s.Contains("father") || s.Contains("baba") || s.Contains("dad") || s.Contains("pere") || s.Contains("الأب") || s.Contains("اب"))
             return new Color(0.56f, 0.80f, 0.96f, 1.0f); // #90CDF4 Slate / Steel Blue
 
         // Intercom / System / Announcement
@@ -174,6 +176,26 @@ public class NpcDialogueManager : MonoBehaviour
         }
 
         Instance = this;
+
+        if (typingSource == null)
+        {
+            typingSource = GetComponent<AudioSource>();
+            if (typingSource == null)
+            {
+                typingSource = gameObject.AddComponent<AudioSource>();
+            }
+            typingSource.playOnAwake = false;
+            typingSource.loop = true;
+            typingSource.spatialBlend = 0f;
+            typingSource.volume = 0.35f;
+        }
+
+#if UNITY_EDITOR
+        if (typingSound == null)
+        {
+            typingSound = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Sounds/TypingSound.wav");
+        }
+#endif
 
         EnsureBandsBound();
         ResetBandsOffscreen();
@@ -711,6 +733,15 @@ public class NpcDialogueManager : MonoBehaviour
             yield break;
         }
 
+        // Play typing audio
+        if (typingSource != null && typingSound != null)
+        {
+            typingSource.clip = typingSound;
+            typingSource.loop = true;
+            typingSource.volume = 0.35f;
+            typingSource.Play();
+        }
+
         float delay = 1f / charactersPerSecond;
 
         for (int i = 0; i < line.Length; i++)
@@ -724,8 +755,7 @@ public class NpcDialogueManager : MonoBehaviour
             {
                 dialogueText.text = line;
                 skipTypingRequested = false;
-                isTyping = false;
-                yield break;
+                break;
             }
 
             if (line[i] == '<')
@@ -741,6 +771,12 @@ public class NpcDialogueManager : MonoBehaviour
 
             dialogueText.text += line[i];
             yield return new WaitForSeconds(delay);
+        }
+
+        // Stop typing audio when finished typing
+        if (typingSource != null && typingSource.isPlaying)
+        {
+            typingSource.Stop();
         }
 
         isTyping = false;
@@ -779,10 +815,11 @@ public class NpcDialogueManager : MonoBehaviour
                                 Input.GetKeyDown(KeyCode.E) ||
                                 (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began);
 
-            // Advance with continue button, left mouse click, Space, E, or Touch once voice has finished
-            if (advanceInput && voiceFinished)
+            // Advance with continue button, left mouse click, Space, E, or Touch
+            if (advanceInput)
             {
                 continueClicked = false;
+                StopVoice(voiceSource);
                 yield break;
             }
 
@@ -1007,6 +1044,11 @@ public class NpcDialogueManager : MonoBehaviour
 
     private void StopVoice(AudioSource voiceSource)
     {
+        if (typingSource != null && typingSource.isPlaying)
+        {
+            typingSource.Stop();
+        }
+
         if (voiceSource == null)
             return;
 
