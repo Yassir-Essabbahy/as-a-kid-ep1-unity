@@ -57,6 +57,7 @@ public class HouseWakingCinematic : MonoBehaviour
 
     [Header("Doorway Sequence (Mama Waking)")]
     public GameObject mamaObject;
+    public GameObject mamaDoorwayObject;
     public DoorController bedroomDoorCtrl;
     public AudioClip momVoiceClip;
     public AudioClip doorCloseClip;
@@ -166,6 +167,23 @@ public class HouseWakingCinematic : MonoBehaviour
         }
 
         if (mainCamera == null) mainCamera = Camera.main;
+
+        if (mamaDoorwayObject == null)
+        {
+            var md = GameObject.Find("Mama_Doorway");
+            if (md != null) mamaDoorwayObject = md;
+            else
+            {
+                foreach (var g in Resources.FindObjectsOfTypeAll<GameObject>())
+                {
+                    if (g.name == "Mama_Doorway" && g.scene.isLoaded)
+                    {
+                        mamaDoorwayObject = g;
+                        break;
+                    }
+                }
+            }
+        }
 
         if (mamaObject == null)
             mamaObject = GameObject.Find("Mama");
@@ -304,12 +322,21 @@ public class HouseWakingCinematic : MonoBehaviour
             bedroomDoorCtrl.transform.localRotation = Quaternion.Euler(0f, 0f, doorOpenAngle);
         }
 
+        if (mamaDoorwayObject != null)
+        {
+            mamaDoorwayObject.transform.position = mamaDoorwayPos;
+            mamaDoorwayObject.transform.rotation = mamaDoorwayRot;
+            mamaDoorwayObject.SetActive(true);
+            var doorwayAnim = mamaDoorwayObject.GetComponent<Animator>();
+            if (doorwayAnim != null) doorwayAnim.Play("Talking");
+        }
+
         if (mamaObject != null)
         {
-            mamaObject.transform.position = mamaDoorwayPos;
-            mamaObject.transform.rotation = mamaDoorwayRot;
+            mamaObject.transform.position = mamaKitchenPos;
+            mamaObject.transform.rotation = mamaKitchenRot;
             var mamaAnim = mamaObject.GetComponent<Animator>();
-            if (mamaAnim != null) mamaAnim.Play("Talking");
+            if (mamaAnim != null) mamaAnim.Play("Cooking_Loop");
         }
 
         yield return new WaitForSeconds(0.2f);
@@ -355,14 +382,7 @@ public class HouseWakingCinematic : MonoBehaviour
         // 4. MAMA STEPS BACK AND CLOSES THE BEDROOM DOOR (Clear of any door collision)
         yield return StartCoroutine(AnimateMamaStepBackAndDoorClose(doorCloseDuration));
 
-        // Move Mama back to kitchen counter making tea/breakfast
-        if (mamaObject != null)
-        {
-            mamaObject.transform.position = mamaKitchenPos;
-            mamaObject.transform.rotation = mamaKitchenRot;
-            var mamaAnim = mamaObject.GetComponent<Animator>();
-            if (mamaAnim != null) mamaAnim.Play("mixamo_com");
-        }
+        // Doorway Mama is now inactive and kitchen Mama is cooking at the stove
 
         // Close eyes drowsily (Blink 1 Close)
         CurrentStage = CinematicStage.Blink1_Close;
@@ -472,10 +492,10 @@ public class HouseWakingCinematic : MonoBehaviour
             float rawT = Mathf.Clamp01(elapsed / duration);
             float t = Mathf.SmoothStep(0f, 1f, rawT);
 
-            // Mama smoothly steps back into the hallway clear of the door
-            if (mamaObject != null)
+            // Doorway Mama smoothly steps back into the hallway clear of the door
+            if (mamaDoorwayObject != null)
             {
-                mamaObject.transform.position = Vector3.Lerp(startMamaPos, stepBackPos, t);
+                mamaDoorwayObject.transform.position = Vector3.Lerp(startMamaPos, stepBackPos, t);
             }
 
             // Door rotates smoothly shut
@@ -485,6 +505,12 @@ public class HouseWakingCinematic : MonoBehaviour
             }
 
             yield return null;
+        }
+
+        // Deactivate Doorway Mama once bedroom door closes
+        if (mamaDoorwayObject != null)
+        {
+            mamaDoorwayObject.SetActive(false);
         }
 
         if (bedroomDoorCtrl != null)
@@ -507,12 +533,13 @@ public class HouseWakingCinematic : MonoBehaviour
 
     private void PlayMamaVoice()
     {
-        if (mamaObject == null || momVoiceClip == null) return;
+        var voiceTarget = (mamaDoorwayObject != null && mamaDoorwayObject.activeInHierarchy) ? mamaDoorwayObject : mamaObject;
+        if (voiceTarget == null || momVoiceClip == null) return;
 
-        var src = mamaObject.GetComponent<AudioSource>();
+        var src = voiceTarget.GetComponent<AudioSource>();
         if (src == null)
         {
-            src = mamaObject.AddComponent<AudioSource>();
+            src = voiceTarget.AddComponent<AudioSource>();
             src.spatialBlend = 0.5f;
             src.minDistance = 2f;
             src.maxDistance = 20f;
@@ -596,12 +623,17 @@ public class HouseWakingCinematic : MonoBehaviour
             bedroomDoorCtrl.isLocked = true;
         }
 
+        if (mamaDoorwayObject != null)
+        {
+            mamaDoorwayObject.SetActive(false);
+        }
+
         if (mamaObject != null)
         {
             mamaObject.transform.position = mamaKitchenPos;
             mamaObject.transform.rotation = mamaKitchenRot;
             var mamaAnim = mamaObject.GetComponent<Animator>();
-            if (mamaAnim != null) mamaAnim.Play("mixamo_com");
+            if (mamaAnim != null) mamaAnim.Play("Cooking_Loop");
         }
 
         Vector3 standFloor = wakePoseStanding != null ? wakePoseStanding.position : new Vector3(103.50f, 7.20f, 120.20f);
