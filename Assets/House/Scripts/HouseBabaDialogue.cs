@@ -18,13 +18,11 @@ public class HouseBabaDialogue : MonoBehaviour, IInteractable
 
     private bool hasSpoken = false;
     private NPCLookAt lookAt;
-    private Animator animator;
     private Coroutine activeRoutine;
 
     private void Awake()
     {
         lookAt = GetComponent<NPCLookAt>();
-        animator = GetComponent<Animator>();
         if (audioSource == null) audioSource = GetComponent<AudioSource>();
 
         if (audioSource == null)
@@ -61,19 +59,13 @@ public class HouseBabaDialogue : MonoBehaviour, IInteractable
     {
         if (NpcDialogueManager.Instance == null) yield break;
 
-        // 1. IK Look At: Turn head & face smoothly towards player (couch-safe)
+        // 1. IK Look At: Turn head & face smoothly towards player (keeps existing seated body animation playing)
         if (lookAt != null)
         {
             lookAt.StartLooking();
         }
 
-        // 2. Play Talking animation
-        if (animator != null)
-        {
-            animator.CrossFade("Talking", 0.2f);
-        }
-
-        // 3. Resolve dialogue text
+        // 2. Resolve dialogue text
         string keyToUse = hasSpoken ? repeatDialogueKey : dialogueKey;
         string defaultLine = hasSpoken
             ? "Straight to school, straight back home. Go on."
@@ -92,7 +84,7 @@ public class HouseBabaDialogue : MonoBehaviour, IInteractable
 
         AudioClip[] clips = (!hasSpoken && dadVoiceClip != null) ? new AudioClip[] { dadVoiceClip } : null;
 
-        // 4. Show dialogue with typewriter typing effect and audio
+        // 3. Show dialogue with typewriter typing effect and audio
         yield return NpcDialogueManager.Instance.ShowDialogue(
             new string[] { formattedLine },
             false,
@@ -102,13 +94,7 @@ public class HouseBabaDialogue : MonoBehaviour, IInteractable
             clips
         );
 
-        // 5. Return animation to idle (SitIdle)
-        if (animator != null)
-        {
-            animator.CrossFade("mixamo_com", 0.3f);
-        }
-
-        // 6. Return head from looking
+        // 4. Return head from looking
         if (lookAt != null)
         {
             lookAt.StopLooking();
