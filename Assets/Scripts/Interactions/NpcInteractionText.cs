@@ -101,6 +101,15 @@ public class NpcInteractionText : MonoBehaviour
         if (promptBox == null)
         {
             var pb = GameObject.Find("PromptBox");
+            if (pb == null)
+            {
+                var canvas = GameObject.Find("Canvas");
+                if (canvas != null)
+                {
+                    var t = canvas.transform.Find("PromptBox");
+                    if (t != null) pb = t.gameObject;
+                }
+            }
             if (pb != null)
             {
                 promptBox = pb;
@@ -109,9 +118,35 @@ public class NpcInteractionText : MonoBehaviour
             }
         }
 
-        if (promptBoxText == null && promptBox != null)
+        if (promptBox != null)
         {
-            promptBoxText = promptBox.GetComponentInChildren<TextMeshProUGUI>(true);
+            if (promptBoxRect == null)
+                promptBoxRect = promptBox.GetComponent<RectTransform>();
+            if (promptButton == null)
+                promptButton = promptBox.GetComponent<UnityEngine.UI.Button>();
+            if (promptBoxText == null)
+                promptBoxText = promptBox.GetComponentInChildren<TextMeshProUGUI>(true);
+
+            if (promptBoxText != null && !promptBoxText.gameObject.activeSelf)
+            {
+                promptBoxText.gameObject.SetActive(true);
+            }
+        }
+
+        // Prevent InteractText from mistakenly pointing to PromptText / child of PromptBox
+        if (InteractText != null && promptBox != null && (InteractText == promptBoxText || InteractText.transform.IsChildOf(promptBox.transform)))
+        {
+            InteractText = null;
+        }
+
+        if (InteractText == null)
+        {
+            var canvas = GameObject.Find("Canvas");
+            if (canvas != null)
+            {
+                var it = canvas.transform.Find("InteractText");
+                if (it != null) InteractText = it.GetComponent<TextMeshProUGUI>();
+            }
         }
 
         if (InteractText != null)
@@ -146,7 +181,7 @@ public class NpcInteractionText : MonoBehaviour
         }
 
         // Remove all white text press e when interact
-        if (InteractText != null)
+        if (InteractText != null && InteractText != promptBoxText && (promptBox == null || !InteractText.transform.IsChildOf(promptBox.transform)))
         {
             InteractText.text = "";
             InteractText.gameObject.SetActive(false);
@@ -161,6 +196,7 @@ public class NpcInteractionText : MonoBehaviour
             }
             if (promptBoxText != null)
             {
+                promptBoxText.gameObject.SetActive(true);
                 promptBoxText.text = currentPromptString;
             }
             if (promptBoxRect != null)
@@ -179,7 +215,7 @@ public class NpcInteractionText : MonoBehaviour
         currentNpcConv = null;
  currentInteractable = null;
 
-        if (InteractText != null)
+        if (InteractText != null && InteractText != promptBoxText && (promptBox == null || !InteractText.transform.IsChildOf(promptBox.transform)))
         {
             InteractText.text = "";
             InteractText.gameObject.SetActive(false);

@@ -15,6 +15,15 @@ public class DoorInteractable : MonoBehaviour
         if (interactText == null)
         {
             var textObj = GameObject.Find("Canvas/InteractText");
+            if (textObj == null)
+            {
+                var canvas = GameObject.Find("Canvas");
+                if (canvas != null)
+                {
+                    var t = canvas.transform.Find("InteractText");
+                    if (t != null) textObj = t.gameObject;
+                }
+            }
             if (textObj != null) interactText = textObj.GetComponent<TextMeshProUGUI>();
         }
     }
@@ -27,7 +36,8 @@ public class DoorInteractable : MonoBehaviour
             if (playerInRange)
             {
                 playerInRange = false;
-                if (interactText != null) interactText.text = "";
+                if (NpcInteractionText.Instance != null) NpcInteractionText.Instance.ClearPrompt();
+                if (interactText != null) { interactText.text = ""; interactText.gameObject.SetActive(false); }
             }
             return;
         }
@@ -57,11 +67,20 @@ public class DoorInteractable : MonoBehaviour
             if (isLookingAtDoor)
             {
                 playerInRange = true;
-                if (interactText != null) interactText.text = Story.MobileUIAdapter.AdaptPrompt("Press 'E' to open door");
+                if (NpcInteractionText.Instance != null)
+                {
+                    NpcInteractionText.Instance.SetPrompt("Press 'E' to open door");
+                }
+                else if (interactText != null)
+                {
+                    interactText.gameObject.SetActive(true);
+                    interactText.text = Story.MobileUIAdapter.AdaptPrompt("Press 'E' to open door");
+                }
 
                 if (Input.GetKeyDown(interactKey) || ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame)
                 {
-                    if (interactText != null) interactText.text = "";
+                    if (NpcInteractionText.Instance != null) NpcInteractionText.Instance.ClearPrompt();
+                    if (interactText != null) { interactText.text = ""; interactText.gameObject.SetActive(false); }
                     MetroStorySequenceController.Instance.OnDoorInteracted();
                 }
                 return;
@@ -71,7 +90,8 @@ public class DoorInteractable : MonoBehaviour
         if (playerInRange)
         {
             playerInRange = false;
-            if (interactText != null) interactText.text = "";
+            if (NpcInteractionText.Instance != null) NpcInteractionText.Instance.ClearPrompt();
+            if (interactText != null) { interactText.text = ""; interactText.gameObject.SetActive(false); }
         }
     }
 
@@ -81,13 +101,22 @@ public class DoorInteractable : MonoBehaviour
         if (MetroStorySequenceController.Instance == null) return;
         if (MetroStorySequenceController.Instance.currentPhase == MetroStorySequenceController.StoryPhase.DoorWaiting)
         {
-            if (interactText != null) interactText.text = Story.MobileUIAdapter.AdaptPrompt("Press 'E' to open door");
+            if (NpcInteractionText.Instance != null)
+            {
+                NpcInteractionText.Instance.SetPrompt("Press 'E' to open door");
+            }
+            else if (interactText != null)
+            {
+                interactText.gameObject.SetActive(true);
+                interactText.text = Story.MobileUIAdapter.AdaptPrompt("Press 'E' to open door");
+            }
         }
     }
 
     private void OnTriggerExit(Collider other)
     {
         if (!other.CompareTag("Player")) return;
-        if (interactText != null) interactText.text = "";
+        if (NpcInteractionText.Instance != null) NpcInteractionText.Instance.ClearPrompt();
+        if (interactText != null) { interactText.text = ""; interactText.gameObject.SetActive(false); }
     }
 }
