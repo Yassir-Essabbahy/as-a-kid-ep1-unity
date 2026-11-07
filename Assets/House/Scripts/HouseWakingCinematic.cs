@@ -18,6 +18,12 @@ public class HouseWakingCinematic : MonoBehaviour
     public static HouseWakingCinematic Instance { get; private set; }
     public static bool HasSeenIntroThisSession = false;
 
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics()
+    {
+        HasSeenIntroThisSession = false;
+    }
+
     public enum CinematicStage
     {
         Init,
@@ -68,13 +74,14 @@ public class HouseWakingCinematic : MonoBehaviour
     public float blink2RestDuration = 0.8f;
 
     public float blink3OpenDuration = 2.2f;
-    public float blink3RestDuration = 1.5f;
+    public float blink3RestDuration = 1.2f;
 
-    public float lookClockDuration = 1.5f;
-    public float clockPauseDuration = 1.2f;
-    public float sitUpDuration = 2.5f;
-    public float sitPauseDuration = 1.0f;
-    public float standUpDuration = 2.0f;
+    [Header("Timings (Getting Up - approx 5s total)")]
+    [Tooltip("Total duration for getting up from bed to standing (approx 5s)")]
+    public float getUpDuration = 5.0f;
+    public float sitUpFraction = 0.52f;    // ~2.6s
+    public float sitPauseFraction = 0.12f;  // ~0.6s
+    public float standUpFraction = 0.36f;   // ~1.8s
 
     [Header("Curves & Noise")]
     public AnimationCurve motionCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
@@ -222,9 +229,9 @@ public class HouseWakingCinematic : MonoBehaviour
         if (EyelidBlink.Instance != null)
             EyelidBlink.Instance.SetOpenImmediate(0f);
 
-        // Snap player and camera to Lying pose directly on the pillow
-        Vector3 lyingPos = wakePoseLying != null ? wakePoseLying.position : new Vector3(105.65f, 7.22f, 119.25f);
-        Quaternion lyingRot = wakePoseLying != null ? wakePoseLying.rotation : Quaternion.Euler(-42f, 315f, 5f);
+        // Snap player and camera to Lying pose directly on the pillow from the specified perspective
+        Vector3 lyingPos = wakePoseLying != null ? wakePoseLying.position : new Vector3(105.61f, 7.21f, 119.74f);
+        Quaternion lyingRot = wakePoseLying != null ? wakePoseLying.rotation : Quaternion.Euler(352.02f, 273.02f, 0f);
 
         if (player != null)
         {
@@ -302,18 +309,12 @@ public class HouseWakingCinematic : MonoBehaviour
             yield return EyelidBlink.Instance.OpenSlow(1.0f, blink3OpenDuration);
         }
 
-        // Take a little time on the bed, looking up from the pillow as morning light fills the room
+        // Take a little time on the bed looking out across the room from this perspective
         yield return StartCoroutine(RestOnBed(lyingPos, lyingRot, blink3RestDuration));
 
-        // 6. Camera turns toward nightstand and clock while still on the pillow
-        Vector3 clockPos = alarmAudioSource != null ? alarmAudioSource.transform.position : new Vector3(105.75f, 7.35f, 120.00f);
-        Vector3 dirToClock = (clockPos - lyingPos).normalized;
-        Quaternion lookClockRot = Quaternion.LookRotation(dirToClock, Vector3.up);
-
-        yield return StartCoroutine(AnimateCameraPose(lyingPos, lyingRot, lyingPos, lookClockRot, lookClockDuration));
+        // 6. Awake moment: click sound, alarm stops, morning breath sigh, room ambience fades in
         CurrentStage = CinematicStage.ClockReach;
-
-        // Player reaches clock: mechanical click sound, alarm stops, sleepy morning breath, morning ambience fades in
+        Vector3 clockPos = alarmAudioSource != null ? alarmAudioSource.transform.position : new Vector3(105.75f, 7.35f, 120.00f);
         if (alarmAudioSource != null && alarmAudioSource.isPlaying)
         {
             alarmAudioSource.Stop();
@@ -334,25 +335,32 @@ public class HouseWakingCinematic : MonoBehaviour
             StartCoroutine(FadeAmbienceVolume(0.4f, 2.5f));
         }
 
-        // Take a little time on the bed after turning off the alarm
-        yield return StartCoroutine(RestOnBed(lyingPos, lookClockRot, clockPauseDuration));
+        // 7. GETTING UP FROM THIS PERSPECTIVE (approx 5s total duration)
+        float totalGetUp = Mathf.Max(getUpDuration, 2.0f);
+        float sitUpDur = totalGetUp * sitUpFraction;
+        float sitPauseDur = totalGetUp * sitPauseFraction;
+        float standUpDur = totalGetUp * standUpFraction;
 
-        // 7. THEN GET UP: First sit up to WakePose_Sitting on bed edge (with cloth rustle)
+        // Cloth rustle as body begins moving out of bed
         if (clothRustleClip != null && alarmAudioSource != null)
         {
             alarmAudioSource.PlayOneShot(clothRustleClip, 0.7f);
         }
 
-        Vector3 sitPos = wakePoseSitting != null ? wakePoseSitting.position : new Vector3(104.05f, 7.65f, 119.65f);
-        Quaternion sitRot = wakePoseSitting != null ? wakePoseSitting.rotation : Quaternion.Euler(0f, 323f, 0f);
+        Vector3 sitPos = wakePoseSitting != null ? wakePoseSitting.position : new Vector3(104.15f, 7.65f, 119.70f);
+        Quaternion sitRot = wakePoseSitting != null ? wakePoseSitting.rotation : Quaternion.Euler(0f, 290.00f, 0f);
 
-        yield return StartCoroutine(AnimateCameraPose(lyingPos, lookClockRot, sitPos, sitRot, sitUpDuration));
+        // Sit up smoothly from pillow with natural anatomical pitch arc
+        yield return StartCoroutine(AnimateSitUp(lyingPos, lyingRot, sitPos, sitRot, sitUpDur));
         CurrentStage = CinematicStage.Sitting;
 
-        // Pause sitting on the bed edge, gathering thoughts
-        yield return StartCoroutine(RestOnBed(sitPos, sitRot, sitPauseDuration));
+        // Brief pause sitting upright on the bed edge, gathering thoughts
+        if (sitPauseDur > 0.01f)
+        {
+            yield return StartCoroutine(RestOnBed(sitPos, sitRot, sitPauseDur));
+        }
 
-        // 8. Rise to WakePose_Standing (standing next to bed on floor)
+        // 8. Stand up onto floor beside bed
         Vector3 standFloor = wakePoseStanding != null ? wakePoseStanding.position : new Vector3(103.50f, 7.094f, 120.20f);
         Quaternion standRot = wakePoseStanding != null ? wakePoseStanding.rotation : Quaternion.Euler(0f, 325f, 0f);
         float eyeHeight = 0.45f;
@@ -363,7 +371,7 @@ public class HouseWakingCinematic : MonoBehaviour
         }
         Vector3 standCamPos = standFloor + Vector3.up * eyeHeight;
 
-        yield return StartCoroutine(AnimateCameraPose(sitPos, sitRot, standCamPos, standRot, standUpDuration));
+        yield return StartCoroutine(AnimateCameraPose(sitPos, sitRot, standCamPos, standRot, standUpDur));
         CurrentStage = CinematicStage.StandingEnd;
 
         // 9. Complete cinematic and hand off control seamlessly
@@ -387,8 +395,8 @@ public class HouseWakingCinematic : MonoBehaviour
         if (EyelidBlink.Instance != null)
             EyelidBlink.Instance.SetOpenImmediate(0f);
 
-        Vector3 lyingPos = wakePoseLying != null ? wakePoseLying.position : new Vector3(105.65f, 7.22f, 119.25f);
-        Quaternion lyingRot = wakePoseLying != null ? wakePoseLying.rotation : Quaternion.Euler(-42f, 315f, 5f);
+        Vector3 lyingPos = wakePoseLying != null ? wakePoseLying.position : new Vector3(105.61f, 7.21f, 119.74f);
+        Quaternion lyingRot = wakePoseLying != null ? wakePoseLying.rotation : Quaternion.Euler(352.02f, 273.02f, 0f);
 
         if (mainCamera != null)
         {
@@ -401,10 +409,10 @@ public class HouseWakingCinematic : MonoBehaviour
         if (EyelidBlink.Instance != null)
             yield return EyelidBlink.Instance.OpenSlow(1.0f, 1.2f);
 
-        Vector3 sitPos = wakePoseSitting != null ? wakePoseSitting.position : new Vector3(104.05f, 7.65f, 119.65f);
-        Quaternion sitRot = wakePoseSitting != null ? wakePoseSitting.rotation : Quaternion.Euler(0f, 323f, 0f);
+        Vector3 sitPos = wakePoseSitting != null ? wakePoseSitting.position : new Vector3(104.15f, 7.65f, 119.70f);
+        Quaternion sitRot = wakePoseSitting != null ? wakePoseSitting.rotation : Quaternion.Euler(0f, 290.00f, 0f);
 
-        yield return StartCoroutine(AnimateCameraPose(lyingPos, lyingRot, sitPos, sitRot, 1.2f));
+        yield return StartCoroutine(AnimateSitUp(lyingPos, lyingRot, sitPos, sitRot, 1.2f));
 
         Vector3 standFloor = wakePoseStanding != null ? wakePoseStanding.position : new Vector3(103.50f, 7.094f, 120.20f);
         Quaternion standRot = wakePoseStanding != null ? wakePoseStanding.rotation : Quaternion.Euler(0f, 325f, 0f);
@@ -478,6 +486,46 @@ public class HouseWakingCinematic : MonoBehaviour
         isCinematicActive = false;
         CurrentStage = CinematicStage.Completed;
         HasSeenIntroThisSession = true;
+    }
+
+    private IEnumerator AnimateSitUp(Vector3 fromPos, Quaternion fromRot, Vector3 toPos, Quaternion toRot, float duration)
+    {
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float rawT = Mathf.Clamp01(elapsed / duration);
+            float t = motionCurve != null ? motionCurve.Evaluate(rawT) : rawT;
+
+            // Subtle biomechanical pitch dip while pushing up off mattress (slight look down at blanket, returning to level)
+            float pitchDip = Mathf.Sin(rawT * Mathf.PI) * 7f;
+
+            // Subtle handheld Perlin noise
+            float noiseX = (Mathf.PerlinNoise(Time.time * 1.5f, 0f) - 0.5f) * handheldNoisePos;
+            float noiseY = (Mathf.PerlinNoise(0f, Time.time * 1.5f) - 0.5f) * handheldNoisePos;
+            float noiseRot = (Mathf.PerlinNoise(Time.time * 1.2f, 10f) - 0.5f) * handheldNoiseRot;
+
+            Vector3 basePos = Vector3.Lerp(fromPos, toPos, t);
+
+            float yaw = Mathf.LerpAngle(fromRot.eulerAngles.y, toRot.eulerAngles.y, t);
+            float pitch = Mathf.LerpAngle(fromRot.eulerAngles.x, toRot.eulerAngles.x, t) + pitchDip;
+            float roll = Mathf.LerpAngle(fromRot.eulerAngles.z, toRot.eulerAngles.z, t);
+            Quaternion baseRot = Quaternion.Euler(pitch, yaw, roll);
+
+            if (mainCamera != null)
+            {
+                mainCamera.transform.position = basePos + new Vector3(noiseX, noiseY, 0f);
+                mainCamera.transform.rotation = baseRot * Quaternion.Euler(0f, 0f, noiseRot);
+            }
+
+            yield return null;
+        }
+
+        if (mainCamera != null)
+        {
+            mainCamera.transform.position = toPos;
+            mainCamera.transform.rotation = toRot;
+        }
     }
 
     private IEnumerator AnimateCameraPose(Vector3 fromPos, Quaternion fromRot, Vector3 toPos, Quaternion toRot, float duration)

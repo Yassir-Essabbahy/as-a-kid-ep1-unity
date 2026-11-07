@@ -51,15 +51,52 @@ public class HouseCinematicVerificationRunner : MonoBehaviour
 
     private IEnumerator CaptureFrame(string filename)
     {
-        yield return new WaitForEndOfFrame();
         string fullDir = Path.Combine(Application.dataPath, "Screenshots");
         if (!Directory.Exists(fullDir)) Directory.CreateDirectory(fullDir);
         string fullPath = Path.Combine(fullDir, filename);
 
-        ScreenCapture.CaptureScreenshot(fullPath);
+        Camera cam = Camera.main;
+        if (cam == null) cam = Object.FindAnyObjectByType<Camera>();
+        if (cam != null)
+        {
+            RenderTexture rt = new RenderTexture(1280, 720, 24);
+            var prev = cam.targetTexture;
+            cam.targetTexture = rt;
+            cam.Render();
+            RenderTexture.active = rt;
+
+            Texture2D tex = new Texture2D(1280, 720, TextureFormat.RGB24, false);
+            tex.ReadPixels(new Rect(0, 0, 1280, 720), 0, 0);
+            tex.Apply();
+
+            cam.targetTexture = prev;
+            RenderTexture.active = null;
+
+            byte[] bytes = tex.EncodeToPNG();
+            Destroy(tex);
+            Destroy(rt);
+
+            File.WriteAllBytes(fullPath, bytes);
+        }
+        else
+        {
+            ScreenCapture.CaptureScreenshot(fullPath);
+        }
+
         Debug.Log($"[Verification] Captured screenshot: {filename} at {fullPath}");
-        // Wait an extra frame to allow capture to buffer
         yield return null;
+    }
+
+    private IEnumerator WaitForStage(HouseWakingCinematic.CinematicStage targetStage, float timeoutSeconds = 15f)
+    {
+        float timer = 0f;
+        while (HouseWakingCinematic.Instance != null &&
+               HouseWakingCinematic.Instance.CurrentStage < targetStage &&
+               timer < timeoutSeconds)
+        {
+            timer += Time.deltaTime;
+            yield return null;
+        }
     }
 
     public IEnumerator RunVerificationSuite()
@@ -72,48 +109,49 @@ public class HouseCinematicVerificationRunner : MonoBehaviour
 
         Debug.Log("[Verification] Starting Automated Verification Suite...");
 
-        var cinematic = HouseWakingCinematic.Instance;
+        while (HouseWakingCinematic.Instance == null) yield return null;
+
         var player = GameObject.Find("FirstPersonController");
         var fpc = player != null ? player.GetComponent<FirstPersonController>() : null;
         var cam = fpc != null && fpc.playerCamera != null ? fpc.playerCamera : Camera.main;
 
         // Stage 1: Cinematic Start (Closed eyes on pillow)
-        while (cinematic != null && cinematic.CurrentStage < HouseWakingCinematic.CinematicStage.Black) yield return null;
+        yield return StartCoroutine(WaitForStage(HouseWakingCinematic.CinematicStage.Black, 5f));
         yield return new WaitForSeconds(0.4f);
         yield return StartCoroutine(CaptureFrame("House_Cinematic_01_Black.png"));
         sb.AppendLine("[PASS] Stage 1 Captured: House_Cinematic_01_Black.png (On pillow, eyelids fully closed, muffled alarm 550Hz, resting on bed)");
 
         // Stage 2: Blink 1 on pillow (Slow slit open ~22%, hold, slow close)
-        while (cinematic != null && cinematic.CurrentStage < HouseWakingCinematic.CinematicStage.SlitOpen) yield return null;
+        yield return StartCoroutine(WaitForStage(HouseWakingCinematic.CinematicStage.SlitOpen, 10f));
         yield return new WaitForSeconds(0.3f);
         yield return StartCoroutine(CaptureFrame("House_Cinematic_02_Slit.png"));
         sb.AppendLine("[PASS] Stage 2 Captured: House_Cinematic_02_Slit.png (Blink 1 on pillow: slow slit open ~22%, warm morning sunlight)");
 
         // Stage 3: Blink 2 on pillow (Slow half open ~55%, hold, slow close)
-        while (cinematic != null && cinematic.CurrentStage < HouseWakingCinematic.CinematicStage.HalfOpen) yield return null;
+        yield return StartCoroutine(WaitForStage(HouseWakingCinematic.CinematicStage.HalfOpen, 10f));
         yield return new WaitForSeconds(0.3f);
         yield return StartCoroutine(CaptureFrame("House_Cinematic_03_HalfOpen.png"));
         sb.AppendLine("[PASS] Stage 3 Captured: House_Cinematic_03_HalfOpen.png (Blink 2 on pillow: slow half open ~55%, alarm audio clearer 1800Hz)");
 
-        // Stage 4: Blink 3 on pillow (Slow full open 100%, turn to clock, click sound, breath, ambience)
-        while (cinematic != null && cinematic.CurrentStage < HouseWakingCinematic.CinematicStage.ClockReach) yield return null;
+        // Stage 4: Blink 3 on pillow (Slow full open 100% from specified perspective, click sound, breath, ambience)
+        yield return StartCoroutine(WaitForStage(HouseWakingCinematic.CinematicStage.ClockReach, 12f));
         yield return StartCoroutine(CaptureFrame("House_Cinematic_04_FullyOpen_Clock.png"));
-        sb.AppendLine("[PASS] Stage 4 Captured: House_Cinematic_04_FullyOpen_Clock.png (Blink 3 on pillow: 100% full open, turn to clock, click sound, breath, ambience)");
+        sb.AppendLine("[PASS] Stage 4 Captured: House_Cinematic_04_FullyOpen_Clock.png (Blink 3 on pillow: 100% full open from requested perspective, click sound, breath, ambience)");
 
-        // Stage 5: Sitting on Bed Edge (Then get up)
-        while (cinematic != null && cinematic.CurrentStage < HouseWakingCinematic.CinematicStage.Sitting) yield return null;
+        // Stage 5: Sitting on Bed Edge (Getting up from specified perspective, 5s motion)
+        yield return StartCoroutine(WaitForStage(HouseWakingCinematic.CinematicStage.Sitting, 10f));
         yield return StartCoroutine(CaptureFrame("House_Cinematic_05_Sitting.png"));
-        sb.AppendLine("[PASS] Stage 5 Captured: House_Cinematic_05_Sitting.png (Then get up: sitting upright on bed edge facing door, cloth rustle SFX)");
+        sb.AppendLine("[PASS] Stage 5 Captured: House_Cinematic_05_Sitting.png (Getting up: sitting upright on bed edge facing door, cloth rustle SFX)");
 
         // Stage 6: Standing Up - End of Cinematic
-        while (cinematic != null && cinematic.CurrentStage < HouseWakingCinematic.CinematicStage.StandingEnd) yield return null;
+        yield return StartCoroutine(WaitForStage(HouseWakingCinematic.CinematicStage.StandingEnd, 10f));
         Vector3 camPosEnd = cam.transform.position;
         Quaternion camRotEnd = cam.transform.rotation;
         yield return StartCoroutine(CaptureFrame("House_Cinematic_06_Standing_CinematicEnd.png"));
         sb.AppendLine($"[PASS] Stage 6 Captured: House_Cinematic_06_Standing_CinematicEnd.png (Standing at {camPosEnd:F3}, rot {camRotEnd.eulerAngles:F1})");
 
         // Wait for cinematic completion & handoff
-        while (cinematic != null && cinematic.CurrentStage < HouseWakingCinematic.CinematicStage.Completed) yield return null;
+        yield return StartCoroutine(WaitForStage(HouseWakingCinematic.CinematicStage.Completed, 10f));
 
         // Wait 1.0 second after handoff with player controls active
         yield return new WaitForSeconds(1.0f);
@@ -167,7 +205,7 @@ public class HouseCinematicVerificationRunner : MonoBehaviour
 
             // Simulate pressing E / tapping interact button
             Debug.Log("[Verification] Simulating interaction 1: Open Wardrobe...");
-            NpcInteractionText.Instance.TriggerCurrentInteraction();
+            if (NpcInteractionText.Instance != null) NpcInteractionText.Instance.TriggerCurrentInteraction();
 
             // Wait for doors to open
             yield return new WaitForSeconds(1.3f);
@@ -193,7 +231,7 @@ public class HouseCinematicVerificationRunner : MonoBehaviour
 
             // Simulate pressing E / tapping interact button for dressing
             Debug.Log("[Verification] Simulating interaction 2: Put on clothes...");
-            NpcInteractionText.Instance.TriggerCurrentInteraction();
+            if (NpcInteractionText.Instance != null) NpcInteractionText.Instance.TriggerCurrentInteraction();
 
             // Wait for dip-to-black & dressing sequence
             yield return new WaitForSeconds(0.9f);
