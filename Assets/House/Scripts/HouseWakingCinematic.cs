@@ -104,12 +104,21 @@ public class HouseWakingCinematic : MonoBehaviour
             return;
         }
         Instance = this;
+        CurrentStage = CinematicStage.Init;
+
+        // Ensure cursor is locked and hidden right from awake
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
 
         FindSceneReferences();
     }
 
     private void Start()
     {
+        // Ensure cursor remains locked and hidden
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+
         if (HasSeenIntroThisSession)
         {
             cinematicCoroutine = StartCoroutine(ShortWakingRoutine());
@@ -188,6 +197,12 @@ public class HouseWakingCinematic : MonoBehaviour
     {
         if (!isCinematicActive) return;
 
+        // Keep cursor strictly locked and hidden during cinematic
+        if (Cursor.lockState != CursorLockMode.Locked)
+            Cursor.lockState = CursorLockMode.Locked;
+        if (Cursor.visible)
+            Cursor.visible = false;
+
         // Skip detection: Space, Escape, or screen tap
         if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Escape) ||
             (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began))
@@ -207,13 +222,22 @@ public class HouseWakingCinematic : MonoBehaviour
     {
         isCinematicActive = true;
 
-        // 1. Lock controls and hide mobile controls
+        // Lock cursor and hide OS arrow
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+
+        // 1. Lock controls and hide mobile controls & crosshair UI ("no point")
         if (fpc != null)
         {
             fpc.enabled = false;
             fpc.playerCanMove = false;
             fpc.cameraCanMove = false;
+            fpc.SetCrosshairVisible(false);
         }
+
+        var crosshairCanvas = GameObject.Find("CrosshairAndStamina");
+        if (crosshairCanvas != null)
+            crosshairCanvas.SetActive(false);
 
         if (mobileControlsCanvas != null)
             mobileControlsCanvas.gameObject.SetActive(false);
@@ -335,11 +359,8 @@ public class HouseWakingCinematic : MonoBehaviour
             StartCoroutine(FadeAmbienceVolume(0.4f, 2.5f));
         }
 
-        // 7. GETTING UP FROM THIS PERSPECTIVE (approx 5s total duration)
+        // 7. GETTING UP FROM THIS PERSPECTIVE (fluid, continuous 5s get-up motion)
         float totalGetUp = Mathf.Max(getUpDuration, 2.0f);
-        float sitUpDur = totalGetUp * sitUpFraction;
-        float sitPauseDur = totalGetUp * sitPauseFraction;
-        float standUpDur = totalGetUp * standUpFraction;
 
         // Cloth rustle as body begins moving out of bed
         if (clothRustleClip != null && alarmAudioSource != null)
@@ -347,20 +368,9 @@ public class HouseWakingCinematic : MonoBehaviour
             alarmAudioSource.PlayOneShot(clothRustleClip, 0.7f);
         }
 
-        Vector3 sitPos = wakePoseSitting != null ? wakePoseSitting.position : new Vector3(104.15f, 7.65f, 119.70f);
-        Quaternion sitRot = wakePoseSitting != null ? wakePoseSitting.rotation : Quaternion.Euler(0f, 290.00f, 0f);
+        Vector3 sitPos = wakePoseSitting != null ? wakePoseSitting.position : new Vector3(104.25f, 7.65f, 119.80f);
+        Quaternion sitRot = wakePoseSitting != null ? wakePoseSitting.rotation : Quaternion.Euler(0f, 295.00f, 0f);
 
-        // Sit up smoothly from pillow with natural anatomical pitch arc
-        yield return StartCoroutine(AnimateSitUp(lyingPos, lyingRot, sitPos, sitRot, sitUpDur));
-        CurrentStage = CinematicStage.Sitting;
-
-        // Brief pause sitting upright on the bed edge, gathering thoughts
-        if (sitPauseDur > 0.01f)
-        {
-            yield return StartCoroutine(RestOnBed(sitPos, sitRot, sitPauseDur));
-        }
-
-        // 8. Stand up onto floor beside bed
         Vector3 standFloor = wakePoseStanding != null ? wakePoseStanding.position : new Vector3(103.50f, 7.094f, 120.20f);
         Quaternion standRot = wakePoseStanding != null ? wakePoseStanding.rotation : Quaternion.Euler(0f, 325f, 0f);
         float eyeHeight = 0.45f;
@@ -371,10 +381,10 @@ public class HouseWakingCinematic : MonoBehaviour
         }
         Vector3 standCamPos = standFloor + Vector3.up * eyeHeight;
 
-        yield return StartCoroutine(AnimateCameraPose(sitPos, sitRot, standCamPos, standRot, standUpDur));
-        CurrentStage = CinematicStage.StandingEnd;
+        // Fluid, continuous 5-second get-up movement through sitting into standing
+        yield return StartCoroutine(AnimateSmoothGetUp(lyingPos, lyingRot, sitPos, sitRot, standCamPos, standRot, totalGetUp));
 
-        // 9. Complete cinematic and hand off control seamlessly
+        // 8. Complete cinematic and hand off control seamlessly
         FinishAndHandoverControl(standFloor, standRot);
     }
 
@@ -409,10 +419,8 @@ public class HouseWakingCinematic : MonoBehaviour
         if (EyelidBlink.Instance != null)
             yield return EyelidBlink.Instance.OpenSlow(1.0f, 1.2f);
 
-        Vector3 sitPos = wakePoseSitting != null ? wakePoseSitting.position : new Vector3(104.15f, 7.65f, 119.70f);
-        Quaternion sitRot = wakePoseSitting != null ? wakePoseSitting.rotation : Quaternion.Euler(0f, 290.00f, 0f);
-
-        yield return StartCoroutine(AnimateSitUp(lyingPos, lyingRot, sitPos, sitRot, 1.2f));
+        Vector3 sitPos = wakePoseSitting != null ? wakePoseSitting.position : new Vector3(104.25f, 7.65f, 119.80f);
+        Quaternion sitRot = wakePoseSitting != null ? wakePoseSitting.rotation : Quaternion.Euler(0f, 295.00f, 0f);
 
         Vector3 standFloor = wakePoseStanding != null ? wakePoseStanding.position : new Vector3(103.50f, 7.094f, 120.20f);
         Quaternion standRot = wakePoseStanding != null ? wakePoseStanding.rotation : Quaternion.Euler(0f, 325f, 0f);
@@ -424,7 +432,7 @@ public class HouseWakingCinematic : MonoBehaviour
         }
         Vector3 standCamPos = standFloor + Vector3.up * eyeHeight;
 
-        yield return StartCoroutine(AnimateCameraPose(sitPos, sitRot, standCamPos, standRot, 1.0f));
+        yield return StartCoroutine(AnimateSmoothGetUp(lyingPos, lyingRot, sitPos, sitRot, standCamPos, standRot, 1.8f));
 
         FinishAndHandoverControl(standFloor, standRot);
     }
@@ -470,11 +478,19 @@ public class HouseWakingCinematic : MonoBehaviour
             fpc.enabled = true;
             fpc.playerCanMove = true;
             fpc.cameraCanMove = true;
+            fpc.SetCrosshairVisible(true);
         }
 
-        // 4. Restore mobile controls
+        // 4. Restore crosshair and mobile controls
+        var crosshairCanvas = GameObject.Find("CrosshairAndStamina");
+        if (crosshairCanvas != null)
+            crosshairCanvas.SetActive(true);
+
         if (mobileControlsCanvas != null)
             mobileControlsCanvas.gameObject.SetActive(true);
+
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
 
         // 5. Update objectives
         if (HouseObjectiveController.Instance != null)
@@ -488,34 +504,45 @@ public class HouseWakingCinematic : MonoBehaviour
         HasSeenIntroThisSession = true;
     }
 
-    private IEnumerator AnimateSitUp(Vector3 fromPos, Quaternion fromRot, Vector3 toPos, Quaternion toRot, float duration)
+    private IEnumerator AnimateSmoothGetUp(Vector3 p0, Quaternion r0, Vector3 pMid, Quaternion rMid, Vector3 p2, Quaternion r2, float duration)
     {
+        // Smooth quadratic Bezier control point passing through pMid at u=0.5
+        Vector3 p1 = 2f * pMid - 0.5f * (p0 + p2);
+
         float elapsed = 0f;
         while (elapsed < duration)
         {
             elapsed += Time.deltaTime;
             float rawT = Mathf.Clamp01(elapsed / duration);
-            float t = motionCurve != null ? motionCurve.Evaluate(rawT) : rawT;
 
-            // Subtle biomechanical pitch dip while pushing up off mattress (slight look down at blanket, returning to level)
-            float pitchDip = Mathf.Sin(rawT * Mathf.PI) * 7f;
+            // S-curve easing across the entire getting-up motion
+            float u = Mathf.SmoothStep(0f, 1f, rawT);
 
-            // Subtle handheld Perlin noise
-            float noiseX = (Mathf.PerlinNoise(Time.time * 1.5f, 0f) - 0.5f) * handheldNoisePos;
-            float noiseY = (Mathf.PerlinNoise(0f, Time.time * 1.5f) - 0.5f) * handheldNoisePos;
-            float noiseRot = (Mathf.PerlinNoise(Time.time * 1.2f, 10f) - 0.5f) * handheldNoiseRot;
+            // Continuous quadratic Bezier position
+            Vector3 pos = (1f - u) * (1f - u) * p0 + 2f * (1f - u) * u * p1 + u * u * p2;
 
-            Vector3 basePos = Vector3.Lerp(fromPos, toPos, t);
-
-            float yaw = Mathf.LerpAngle(fromRot.eulerAngles.y, toRot.eulerAngles.y, t);
-            float pitch = Mathf.LerpAngle(fromRot.eulerAngles.x, toRot.eulerAngles.x, t) + pitchDip;
-            float roll = Mathf.LerpAngle(fromRot.eulerAngles.z, toRot.eulerAngles.z, t);
-            Quaternion baseRot = Quaternion.Euler(pitch, yaw, roll);
+            // Continuous spherical rotation interpolation
+            Quaternion rot;
+            if (u < 0.5f)
+            {
+                float subU = Mathf.SmoothStep(0f, 1f, u * 2f);
+                rot = Quaternion.Slerp(r0, rMid, subU);
+            }
+            else
+            {
+                float subU = Mathf.SmoothStep(0f, 1f, (u - 0.5f) * 2f);
+                rot = Quaternion.Slerp(rMid, r2, subU);
+            }
 
             if (mainCamera != null)
             {
-                mainCamera.transform.position = basePos + new Vector3(noiseX, noiseY, 0f);
-                mainCamera.transform.rotation = baseRot * Quaternion.Euler(0f, 0f, noiseRot);
+                mainCamera.transform.position = pos;
+                mainCamera.transform.rotation = rot;
+            }
+
+            if (rawT >= 0.48f && CurrentStage < CinematicStage.Sitting)
+            {
+                CurrentStage = CinematicStage.Sitting;
             }
 
             yield return null;
@@ -523,9 +550,11 @@ public class HouseWakingCinematic : MonoBehaviour
 
         if (mainCamera != null)
         {
-            mainCamera.transform.position = toPos;
-            mainCamera.transform.rotation = toRot;
+            mainCamera.transform.position = p2;
+            mainCamera.transform.rotation = r2;
         }
+
+        CurrentStage = CinematicStage.StandingEnd;
     }
 
     private IEnumerator AnimateCameraPose(Vector3 fromPos, Quaternion fromRot, Vector3 toPos, Quaternion toRot, float duration)

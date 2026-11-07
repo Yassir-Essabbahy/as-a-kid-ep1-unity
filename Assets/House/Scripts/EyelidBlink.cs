@@ -101,26 +101,26 @@ public class EyelidBlink : MonoBehaviour
             lowerLidSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/House/Textures/EyelidLower.png");
 #endif
 
-        // Build Upper Eyelid panel if needed
+        // Build Upper Eyelid panel if needed (solid black full-screen bar, no blur sprite)
         if (upperLid == null && overlayCanvas != null)
         {
             var upperGo = new GameObject("UpperEyelid", typeof(RectTransform), typeof(Image));
             upperGo.transform.SetParent(overlayCanvas.transform, false);
             upperLid = upperGo.GetComponent<RectTransform>();
             upperLidImage = upperGo.GetComponent<Image>();
-            if (upperLidSprite != null) upperLidImage.sprite = upperLidSprite;
+            upperLidImage.sprite = null;
             upperLidImage.color = Color.black;
             upperLidImage.raycastTarget = false;
         }
 
-        // Build Lower Eyelid panel if needed
+        // Build Lower Eyelid panel if needed (solid black full-screen bar, no blur sprite)
         if (lowerLid == null && overlayCanvas != null)
         {
             var lowerGo = new GameObject("LowerEyelid", typeof(RectTransform), typeof(Image));
             lowerGo.transform.SetParent(overlayCanvas.transform, false);
             lowerLid = lowerGo.GetComponent<RectTransform>();
             lowerLidImage = lowerGo.GetComponent<Image>();
-            if (lowerLidSprite != null) lowerLidImage.sprite = lowerLidSprite;
+            lowerLidImage.sprite = null;
             lowerLidImage.color = Color.black;
             lowerLidImage.raycastTarget = false;
         }
@@ -132,22 +132,32 @@ public class EyelidBlink : MonoBehaviour
     {
         // Reference height extra padding so wide aspect ratios (20:9, 21:9) never reveal edges
         screenHeight = 1080f;
-        float halfHeight = screenHeight * 0.5f + 160f;
+        float halfHeight = screenHeight * 0.5f + 300f;
 
         if (upperLid != null)
         {
             upperLid.anchorMin = new Vector2(0f, 0.5f);
             upperLid.anchorMax = new Vector2(1f, 1f);
-            upperLid.pivot = new Vector2(0.5f, 0f); // pivot at center bottom of upper lid
+            upperLid.pivot = new Vector2(0.5f, 0f); // pivot at center line (bottom of upper half)
             upperLid.sizeDelta = new Vector2(0f, halfHeight);
+            if (upperLidImage != null)
+            {
+                upperLidImage.sprite = null;
+                upperLidImage.color = Color.black;
+            }
         }
 
         if (lowerLid != null)
         {
             lowerLid.anchorMin = new Vector2(0f, 0f);
             lowerLid.anchorMax = new Vector2(1f, 0.5f);
-            lowerLid.pivot = new Vector2(0.5f, 1f); // pivot at center top of lower lid
+            lowerLid.pivot = new Vector2(0.5f, 1f); // pivot at center line (top of lower half)
             lowerLid.sizeDelta = new Vector2(0f, halfHeight);
+            if (lowerLidImage != null)
+            {
+                lowerLidImage.sprite = null;
+                lowerLidImage.color = Color.black;
+            }
         }
     }
 
@@ -185,17 +195,11 @@ public class EyelidBlink : MonoBehaviour
 
     private void ApplyHeavyEyesWeight(float openAmount)
     {
-        if (heavyEyesVolume == null) return;
-
-        if (mobileSafePostProcessing && Application.isMobilePlatform && QualitySettings.GetQualityLevel() < 2)
+        // Zero blur requested ("no blur blink")
+        if (heavyEyesVolume != null)
         {
             heavyEyesVolume.weight = 0f;
-            return;
         }
-
-        // Heavy eyes wash starts strong and clears smoothly as eyes reach full aperture
-        float t = Mathf.Clamp01(openAmount);
-        heavyEyesVolume.weight = Mathf.Clamp01(1f - t);
     }
 
     public Coroutine OpenSlow(float targetOpen, float duration)

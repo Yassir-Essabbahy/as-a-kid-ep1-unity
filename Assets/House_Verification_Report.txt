@@ -1,5 +1,5 @@
 === HOUSE CINEMATIC & STORY VERIFICATION REPORT ===
-Timestamp: 2026-11-07 00:24:00 UTC
+Timestamp: 2026-11-07 00:32:12 UTC
 [PASS] Stage 1 Captured: House_Cinematic_01_Black.png (On pillow, eyelids fully closed, muffled alarm 550Hz, resting on bed)
 [PASS] Stage 2 Captured: House_Cinematic_02_Slit.png (Blink 1 on pillow: slow slit open ~22%, warm morning sunlight)
 [PASS] Stage 3 Captured: House_Cinematic_03_HalfOpen.png (Blink 2 on pillow: slow half open ~55%, alarm audio clearer 1800Hz)
