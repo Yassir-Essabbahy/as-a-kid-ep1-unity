@@ -28793,7 +28793,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HouseBackpackInteractable
   audioSource: {fileID: 0}
-  pickupSound: {fileID: 8300000, guid: a8a9a724eb248ba4b87759aa828ea5a6, type: 3}
+  clothRustleSound: {fileID: 8300000, guid: d82eaf94b31bc914dadbab15b8856a70, type: 3}
+  pickupSound: {fileID: 8300000, guid: d82eaf94b31bc914dadbab15b8856a70, type: 3}
+  dipDuration: 0.45
 --- !u!65 &7092275476554038081
 BoxCollider:
   m_ObjectHideFlags: 0

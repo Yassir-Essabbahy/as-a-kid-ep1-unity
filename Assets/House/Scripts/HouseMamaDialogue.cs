@@ -48,17 +48,5 @@ public class HouseMamaDialogue : MonoBehaviour, IInteractable
         {
             HouseObjectiveController.Instance.OnMamaTalked();
         }
-
-        string certLabel = "Doctor's Certificate";
-        if (LocalizationManager.Instance != null)
-        {
-            string loc = LocalizationManager.Instance.Get("item_doctor_certificate");
-            if (!string.IsNullOrEmpty(loc) && !loc.StartsWith("[")) certLabel = loc;
-        }
-
-        if (ItemPickupToast.Instance != null)
-        {
-            ItemPickupToast.Instance.Show(null, certLabel, 1);
-        }
     }
 }
