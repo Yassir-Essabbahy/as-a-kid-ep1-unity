@@ -21,7 +21,7 @@ public class HouseWardrobeInteractable : MonoBehaviour, IInteractable
     public Transform leftDoor;
     public Transform rightDoor;
 
-    [Header("Door Swing Angles (World Y)")]
+    [Header("Door Swing Angles (Cabinet Up)")]
     public float openAngleLeft = 95f;   // swings forward into room
     public float openAngleRight = -95f; // swings forward into room
     public float swingDuration = 1.1f;
@@ -59,6 +59,16 @@ public class HouseWardrobeInteractable : MonoBehaviour, IInteractable
     {
         if (leftDoor == null) leftDoor = transform.Find("LeftDoor");
         if (rightDoor == null) rightDoor = transform.Find("RightDoor");
+
+        // Ensure doors have upright orientation matching the wardrobe frame if uninitialized or broken
+        if (leftDoor != null && Mathf.Abs(leftDoor.localEulerAngles.x - 270f) > 5f)
+        {
+            leftDoor.localEulerAngles = new Vector3(270f, 270f, 0f);
+        }
+        if (rightDoor != null && Mathf.Abs(rightDoor.localEulerAngles.x - 270f) > 5f)
+        {
+            rightDoor.localEulerAngles = new Vector3(270f, 270f, 0f);
+        }
 
         if (leftDoor != null) leftClosedRot = leftDoor.rotation;
         if (rightDoor != null) rightClosedRot = rightDoor.rotation;
@@ -122,6 +132,7 @@ public class HouseWardrobeInteractable : MonoBehaviour, IInteractable
             if (clothRustleSound != null) audioSource.PlayOneShot(clothRustleSound, 0.6f);
         }
 
+        Vector3 axis = transform.up;
         float elapsed = 0f;
         while (elapsed < swingDuration)
         {
@@ -130,19 +141,19 @@ public class HouseWardrobeInteractable : MonoBehaviour, IInteractable
             float t = swingCurve != null ? swingCurve.Evaluate(rawT) : rawT;
 
             if (leftDoor != null)
-                leftDoor.rotation = Quaternion.AngleAxis(openAngleLeft * t, Vector3.up) * leftClosedRot;
+                leftDoor.rotation = Quaternion.AngleAxis(openAngleLeft * t, axis) * leftClosedRot;
 
             if (rightDoor != null)
-                rightDoor.rotation = Quaternion.AngleAxis(openAngleRight * t, Vector3.up) * rightClosedRot;
+                rightDoor.rotation = Quaternion.AngleAxis(openAngleRight * t, axis) * rightClosedRot;
 
             yield return null;
         }
 
         if (leftDoor != null)
-            leftDoor.rotation = Quaternion.AngleAxis(openAngleLeft, Vector3.up) * leftClosedRot;
+            leftDoor.rotation = Quaternion.AngleAxis(openAngleLeft, axis) * leftClosedRot;
 
         if (rightDoor != null)
-            rightDoor.rotation = Quaternion.AngleAxis(openAngleRight, Vector3.up) * rightClosedRot;
+            rightDoor.rotation = Quaternion.AngleAxis(openAngleRight, axis) * rightClosedRot;
 
         currentState = WardrobeState.OpenNotDressed;
         activeRoutine = null;

@@ -18,6 +18,16 @@ public class HouseBackpackInteractable : MonoBehaviour, IInteractable
 
     private void Awake()
     {
+        var col = GetComponent<BoxCollider>();
+        if (col == null) col = gameObject.AddComponent<BoxCollider>();
+        if (!col.enabled || col.size.sqrMagnitude < 0.000001f)
+        {
+            col.enabled = true;
+            col.isTrigger = true;
+            col.center = Vector3.zero;
+            col.size = new Vector3(0.0055f, 0.0050f, 0.0055f);
+        }
+
         if (audioSource == null)
         {
             audioSource = GetComponent<AudioSource>();

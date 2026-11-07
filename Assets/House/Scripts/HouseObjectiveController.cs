@@ -3,7 +3,19 @@ using TMPro;
 
 public class HouseObjectiveController : MonoBehaviour
 {
-    public static HouseObjectiveController Instance { get; private set; }
+    private static HouseObjectiveController _instance;
+    public static HouseObjectiveController Instance
+    {
+        get
+        {
+            if (_instance == null)
+            {
+                _instance = Object.FindAnyObjectByType<HouseObjectiveController>();
+            }
+            return _instance;
+        }
+        private set => _instance = value;
+    }
 
     [Header("UI Reference")]
     public TextMeshProUGUI objectiveText;
@@ -18,12 +30,12 @@ public class HouseObjectiveController : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance != null && Instance != this)
+        if (_instance != null && _instance != this)
         {
             Destroy(gameObject);
             return;
         }
-        Instance = this;
+        _instance = this;
     }
 
     private void Start()
@@ -125,3 +137,4 @@ public class HouseObjectiveController : MonoBehaviour
         objectiveText.gameObject.SetActive(true);
     }
 }
+

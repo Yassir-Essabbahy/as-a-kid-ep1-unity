@@ -681,7 +681,7 @@ public class HouseWakingCinematic : MonoBehaviour
         Cursor.visible = false;
 
         // 5. Update objectives
-        if (HouseObjectiveController.Instance != null)
+        if (HouseObjectiveController.Instance != null && !HouseObjectiveController.Instance.hasWashedFace)
         {
             HouseObjectiveController.Instance.phase = 0;
             HouseObjectiveController.Instance.UpdateObjectiveUI();

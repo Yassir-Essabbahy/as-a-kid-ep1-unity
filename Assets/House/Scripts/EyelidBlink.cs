@@ -12,7 +12,7 @@ using UnityEngine.Rendering;
 [DisallowMultipleComponent]
 public class EyelidBlink : MonoBehaviour
 {
-    public static EyelidBlink Instance { get; private set; }
+    private static EyelidBlink _instance; public static EyelidBlink Instance { get { if (_instance == null) _instance = Object.FindAnyObjectByType<EyelidBlink>(); return _instance; } private set => _instance = value; }
 
     [Header("Eyelid UI RectTransforms")]
     public RectTransform upperLid;
@@ -291,3 +291,5 @@ public class EyelidBlink : MonoBehaviour
         activeCoroutine = null;
     }
 }
+
+
