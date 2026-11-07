@@ -14,15 +14,23 @@ public class HouseMamaDialogue : MonoBehaviour, IInteractable
     [Header("Repeat Dialogue Key")]
     public string repeatDialogueKey = "mama_house_reminder";
 
+    [Header("Animation Settings")]
+    [SerializeField] private bool returnToCookingAfterDialogue = true;
+    [SerializeField] private string talkAnimBool = "IsTalking";
+    [SerializeField] private string talkAnimTrigger = "TalkToPlayer";
+
     public string PromptMessage => "tap to talk";
 
     private bool hasSpoken = false;
     private NPCLookAt lookAt;
+    private Animator animator;
     private Coroutine activeRoutine;
 
     private void Awake()
     {
         lookAt = GetComponent<NPCLookAt>();
+        animator = GetComponent<Animator>();
+        if (animator == null) animator = GetComponentInChildren<Animator>();
         if (audioSource == null) audioSource = GetComponent<AudioSource>();
 
         if (audioSource == null)
@@ -58,10 +66,16 @@ public class HouseMamaDialogue : MonoBehaviour, IInteractable
     {
         if (NpcDialogueManager.Instance == null) yield break;
 
-        // 1. IK Look At: Turn head & face smoothly towards player (keeps existing body animation playing)
+        // 1. IK Look At & Turn Animation: Face player smoothly and play turn animation
         if (lookAt != null)
         {
             lookAt.StartLooking();
+        }
+
+        if (animator != null)
+        {
+            if (!string.IsNullOrEmpty(talkAnimBool)) animator.SetBool(talkAnimBool, true);
+            if (!string.IsNullOrEmpty(talkAnimTrigger)) animator.SetTrigger(talkAnimTrigger);
         }
 
         // 2. Resolve dialogue text
@@ -93,10 +107,15 @@ public class HouseMamaDialogue : MonoBehaviour, IInteractable
             clips
         );
 
-        // 4. Return head from looking
+        // 4. Return head from looking & resume cooking if configured
         if (lookAt != null)
         {
             lookAt.StopLooking();
+        }
+
+        if (animator != null && returnToCookingAfterDialogue)
+        {
+            if (!string.IsNullOrEmpty(talkAnimBool)) animator.SetBool(talkAnimBool, false);
         }
 
         hasSpoken = true;
