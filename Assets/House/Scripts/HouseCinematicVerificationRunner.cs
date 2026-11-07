@@ -131,7 +131,7 @@ public class HouseCinematicVerificationRunner : MonoBehaviour
         var door5Ctrl = door5Go != null ? door5Go.GetComponentInChildren<DoorController>() : null;
         var hinchTrans = door5Go != null ? door5Go.transform.Find("DoorHinch") : null;
 
-        bool mamaAtDoorway = mamaGo != null && Vector3.Distance(mamaGo.transform.position, new Vector3(101.90f, 6.47f, 122.90f)) < 1.0f;
+        bool mamaAtDoorway = mamaGo != null && Vector3.Distance(mamaGo.transform.position, new Vector3(101.70f, 6.47f, 122.85f)) < 1.0f;
         float doorAngle = hinchTrans != null ? hinchTrans.localEulerAngles.z : 0f;
         bool doorIsOpen = doorAngle > 45f && doorAngle < 135f;
 

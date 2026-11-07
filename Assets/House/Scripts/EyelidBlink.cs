@@ -74,7 +74,7 @@ public class EyelidBlink : MonoBehaviour
             overlayCanvas = canvasGo.GetComponent<Canvas>();
             if (overlayCanvas == null) overlayCanvas = canvasGo.AddComponent<Canvas>();
             overlayCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            overlayCanvas.sortingOrder = 999;
+            overlayCanvas.sortingOrder = 50;
 
             var scaler = canvasGo.GetComponent<CanvasScaler>();
             if (scaler == null) scaler = canvasGo.AddComponent<CanvasScaler>();

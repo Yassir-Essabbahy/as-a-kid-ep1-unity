@@ -61,11 +61,11 @@ public class HouseWakingCinematic : MonoBehaviour
     public AudioClip momVoiceClip;
     public AudioClip doorCloseClip;
     public AudioClip doorOpenClip;
-    public Vector3 mamaDoorwayPos = new Vector3(101.90f, 6.47f, 122.90f);
-    public Quaternion mamaDoorwayRot = Quaternion.Euler(0f, 129.60f, 0f);
+    public Vector3 mamaDoorwayPos = new Vector3(101.70f, 6.47f, 122.85f);
+    public Quaternion mamaDoorwayRot = Quaternion.Euler(0f, 131.00f, 0f);
     public Vector3 mamaKitchenPos = new Vector3(103.80f, 6.47f, 129.50f);
     public Quaternion mamaKitchenRot = Quaternion.Euler(0f, 160.00f, 0f);
-    public float doorOpenAngle = 80f;
+    public float doorOpenAngle = 85f;
 
     [Header("Alarm Clock & Audio")]
     public AudioSource alarmAudioSource;
@@ -104,16 +104,10 @@ public class HouseWakingCinematic : MonoBehaviour
     [Header("Skip UI")]
     public GameObject skipPromptUI;
 
-    [Header("Cinematic Subtitle UI")]
-    private GameObject subtitlePanel;
-    private TextMeshProUGUI subtitleText;
-    private CanvasGroup subtitleCanvasGroup;
-
     private FirstPersonController fpc;
     private float originalNearClip = 0.3f;
     private bool isCinematicActive = false;
     private Coroutine cinematicCoroutine;
-    private Coroutine subtitleCoroutine;
 
     private void Awake()
     {
@@ -249,7 +243,6 @@ public class HouseWakingCinematic : MonoBehaviour
     {
         if (!isCinematicActive) return;
         if (cinematicCoroutine != null) StopCoroutine(cinematicCoroutine);
-        if (subtitleCoroutine != null) StopCoroutine(subtitleCoroutine);
         StartCoroutine(QuickFinishRoutine());
     }
 
@@ -348,15 +341,19 @@ public class HouseWakingCinematic : MonoBehaviour
         // Play Mama's voice: "Yallah fyeq a wlidi, nod lmdrassa..."
         PlayMamaVoice();
 
-        // Show cinematic subtitle
-        string mamaLine = "<color=#C4B5FD>Mama:</color> \"Yallah fyeq a wlidi, nod lmdrassa...\"\n<size=75%><color=#D1D5DB><i>(Wake up, sweetheart, it's time for school.)</i></color></size>";
-        subtitleCoroutine = StartCoroutine(ShowSubtitleRoutine(mamaLine, mamaSpeechHoldDuration));
+        // Show dialogue matching the other scenes with cinematic letterbox borders
+        Color motherLilac = new Color(0.77f, 0.71f, 0.99f);
+        string mamaLine = "Mama: Yallah fyeq a wlidi, nod lmdrassa...\n<size=75%><color=#D1D5DB><i>(Wake up, sweetheart, it's time for school.)</i></color></size>";
+        if (NpcDialogueManager.Instance != null)
+        {
+            NpcDialogueManager.Instance.ShowInteractableMessage(mamaLine, mamaSpeechHoldDuration, motherLilac);
+        }
 
         // Kid looks at Mama from pillow while she speaks
         yield return StartCoroutine(RestOnBed(lyingPos, lyingRot, mamaSpeechHoldDuration));
 
-        // 4. MAMA CLOSES THE BEDROOM DOOR
-        yield return StartCoroutine(AnimateDoorClose(doorCloseDuration));
+        // 4. MAMA STEPS BACK AND CLOSES THE BEDROOM DOOR (Clear of any door collision)
+        yield return StartCoroutine(AnimateMamaStepBackAndDoorClose(doorCloseDuration));
 
         // Move Mama back to kitchen counter making tea/breakfast
         if (mamaObject != null)
@@ -460,34 +457,51 @@ public class HouseWakingCinematic : MonoBehaviour
         FinishAndHandoverControl(standFloor, standRot);
     }
 
-    private IEnumerator AnimateDoorClose(float duration)
+    private IEnumerator AnimateMamaStepBackAndDoorClose(float duration)
     {
-        if (bedroomDoorCtrl == null) yield break;
+        Vector3 startMamaPos = mamaDoorwayPos;
+        Vector3 stepBackPos = mamaDoorwayPos + new Vector3(0f, 0f, 0.50f);
 
-        Quaternion openRot = bedroomDoorCtrl.transform.localRotation;
+        Quaternion openRot = bedroomDoorCtrl != null ? bedroomDoorCtrl.transform.localRotation : Quaternion.Euler(0f, 0f, doorOpenAngle);
         Quaternion closedRot = Quaternion.identity;
 
         float elapsed = 0f;
         while (elapsed < duration)
         {
             elapsed += Time.deltaTime;
-            float t = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / duration));
-            bedroomDoorCtrl.transform.localRotation = Quaternion.Slerp(openRot, closedRot, t);
+            float rawT = Mathf.Clamp01(elapsed / duration);
+            float t = Mathf.SmoothStep(0f, 1f, rawT);
+
+            // Mama smoothly steps back into the hallway clear of the door
+            if (mamaObject != null)
+            {
+                mamaObject.transform.position = Vector3.Lerp(startMamaPos, stepBackPos, t);
+            }
+
+            // Door rotates smoothly shut
+            if (bedroomDoorCtrl != null)
+            {
+                bedroomDoorCtrl.transform.localRotation = Quaternion.Slerp(openRot, closedRot, t);
+            }
+
             yield return null;
         }
 
-        bedroomDoorCtrl.transform.localRotation = closedRot;
-        bedroomDoorCtrl.isCinematicControlled = false;
-        bedroomDoorCtrl.SetOpenImmediate(false);
-        bedroomDoorCtrl.isLocked = true;
-
-        // Play door close audio with solid latch
-        if (doorCloseClip != null)
+        if (bedroomDoorCtrl != null)
         {
-            var doorSrc = bedroomDoorCtrl.GetComponent<AudioSource>();
-            if (doorSrc == null) doorSrc = bedroomDoorCtrl.gameObject.AddComponent<AudioSource>();
-            doorSrc.spatialBlend = 0.8f;
-            doorSrc.PlayOneShot(doorCloseClip, 1.0f);
+            bedroomDoorCtrl.transform.localRotation = closedRot;
+            bedroomDoorCtrl.isCinematicControlled = false;
+            bedroomDoorCtrl.SetOpenImmediate(false);
+            bedroomDoorCtrl.isLocked = true;
+
+            // Play door close audio with solid latch
+            if (doorCloseClip != null)
+            {
+                var doorSrc = bedroomDoorCtrl.GetComponent<AudioSource>();
+                if (doorSrc == null) doorSrc = bedroomDoorCtrl.gameObject.AddComponent<AudioSource>();
+                doorSrc.spatialBlend = 0.8f;
+                doorSrc.PlayOneShot(doorCloseClip, 1.0f);
+            }
         }
     }
 
@@ -508,97 +522,6 @@ public class HouseWakingCinematic : MonoBehaviour
         src.clip = momVoiceClip;
         src.volume = 1.0f;
         src.Play();
-    }
-
-    private void EnsureSubtitleUI()
-    {
-        if (subtitlePanel != null) return;
-
-        var eyelidBlink = EyelidBlink.Instance;
-        Canvas parentCanvas = eyelidBlink != null ? eyelidBlink.overlayCanvas : null;
-        if (parentCanvas == null)
-        {
-            var go = GameObject.Find("EyelidCanvas");
-            if (go != null) parentCanvas = go.GetComponent<Canvas>();
-        }
-        if (parentCanvas == null)
-        {
-            var go = GameObject.Find("Canvas");
-            if (go != null) parentCanvas = go.GetComponent<Canvas>();
-        }
-        if (parentCanvas == null) return;
-
-        subtitlePanel = new GameObject("CinematicSubtitlePanel", typeof(RectTransform), typeof(CanvasGroup), typeof(Image));
-        subtitlePanel.transform.SetParent(parentCanvas.transform, false);
-
-        var rt = subtitlePanel.GetComponent<RectTransform>();
-        rt.anchorMin = new Vector2(0.5f, 0.22f);
-        rt.anchorMax = new Vector2(0.5f, 0.22f);
-        rt.pivot = new Vector2(0.5f, 0.5f);
-        rt.sizeDelta = new Vector2(960f, 85f);
-
-        var bg = subtitlePanel.GetComponent<Image>();
-        bg.color = new Color(0.04f, 0.04f, 0.05f, 0.78f);
-        bg.raycastTarget = false;
-
-        subtitleCanvasGroup = subtitlePanel.GetComponent<CanvasGroup>();
-        subtitleCanvasGroup.alpha = 0f;
-        subtitleCanvasGroup.blocksRaycasts = false;
-
-        var textGo = new GameObject("SubtitleText", typeof(RectTransform), typeof(TextMeshProUGUI));
-        textGo.transform.SetParent(subtitlePanel.transform, false);
-
-        var textRt = textGo.GetComponent<RectTransform>();
-        textRt.anchorMin = Vector2.zero;
-        textRt.anchorMax = Vector2.one;
-        textRt.offsetMin = new Vector2(16f, 6f);
-        textRt.offsetMax = new Vector2(-16f, -6f);
-
-        subtitleText = textGo.GetComponent<TextMeshProUGUI>();
-        subtitleText.alignment = TextAlignmentOptions.Center;
-        subtitleText.textWrappingMode = TextWrappingModes.Normal;
-        subtitleText.fontSize = 24f;
-        subtitleText.raycastTarget = false;
-
-        var font = Resources.Load<TMP_FontAsset>("Fonts/GeistPixel-Regular-VariableFont_ELSH SDF");
-        if (font != null) subtitleText.font = font;
-    }
-
-    private IEnumerator ShowSubtitleRoutine(string text, float duration)
-    {
-        EnsureSubtitleUI();
-        if (subtitleText != null && subtitleCanvasGroup != null)
-        {
-            subtitleText.text = text;
-
-            // Fade in
-            float fadeElapsed = 0f;
-            while (fadeElapsed < 0.25f)
-            {
-                fadeElapsed += Time.deltaTime;
-                subtitleCanvasGroup.alpha = Mathf.Lerp(0f, 1f, fadeElapsed / 0.25f);
-                yield return null;
-            }
-            subtitleCanvasGroup.alpha = 1f;
-
-            yield return new WaitForSeconds(duration);
-
-            // Fade out
-            fadeElapsed = 0f;
-            while (fadeElapsed < 0.3f)
-            {
-                fadeElapsed += Time.deltaTime;
-                subtitleCanvasGroup.alpha = Mathf.Lerp(1f, 0f, fadeElapsed / 0.3f);
-                yield return null;
-            }
-            subtitleCanvasGroup.alpha = 0f;
-        }
-    }
-
-    private void HideSubtitleImmediate()
-    {
-        if (subtitleCanvasGroup != null)
-            subtitleCanvasGroup.alpha = 0f;
     }
 
     private IEnumerator ShortWakingRoutine()
@@ -658,7 +581,13 @@ public class HouseWakingCinematic : MonoBehaviour
         if (EyelidBlink.Instance != null)
             EyelidBlink.Instance.SetOpenImmediate(1f);
 
-        HideSubtitleImmediate();
+        if (NpcDialogueManager.Instance != null)
+        {
+            NpcDialogueManager.Instance.StopAllCoroutines();
+            NpcDialogueManager.Instance.ResetBandsOffscreen();
+            if (NpcDialogueManager.Instance.talkPanel != null)
+                NpcDialogueManager.Instance.talkPanel.SetActive(false);
+        }
 
         if (bedroomDoorCtrl != null)
         {
