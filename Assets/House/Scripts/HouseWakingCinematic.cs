@@ -518,7 +518,7 @@ public class HouseWakingCinematic : MonoBehaviour
             bedroomDoorCtrl.transform.localRotation = closedRot;
             bedroomDoorCtrl.isCinematicControlled = false;
             bedroomDoorCtrl.SetOpenImmediate(false);
-            bedroomDoorCtrl.isLocked = true;
+            bedroomDoorCtrl.isLocked = false;
 
             // Play door close audio with solid latch
             if (doorCloseClip != null)
@@ -610,17 +610,14 @@ public class HouseWakingCinematic : MonoBehaviour
 
         if (NpcDialogueManager.Instance != null)
         {
-            NpcDialogueManager.Instance.StopAllCoroutines();
-            NpcDialogueManager.Instance.ResetBandsOffscreen();
-            if (NpcDialogueManager.Instance.talkPanel != null)
-                NpcDialogueManager.Instance.talkPanel.SetActive(false);
+            NpcDialogueManager.Instance.ForceEndDialogue();
         }
 
         if (bedroomDoorCtrl != null)
         {
             bedroomDoorCtrl.isCinematicControlled = false;
             bedroomDoorCtrl.SetOpenImmediate(false);
-            bedroomDoorCtrl.isLocked = true;
+            bedroomDoorCtrl.isLocked = false;
         }
 
         if (mamaDoorwayObject != null)

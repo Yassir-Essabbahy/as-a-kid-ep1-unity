@@ -42,6 +42,10 @@ public static class HouseUIBridge
             key = "window_locked";
         else if (lower == "الخزانة مسدودة" || lower == "الخزانة مقفولة" || lower == "cupboard_locked" || lower.Contains("cabinet is locked"))
             key = "cupboard_locked";
+        else if (lower == "house_need_wash_face" || lower.Contains("wash my face") || lower.Contains("laver le visage") || lower.Contains("nghsel wjhi"))
+            key = "house_need_wash_face";
+        else if (lower == "house_face_washed" || lower.Contains("face washed") || lower.Contains("visage lav") || lower.Contains("غسلت"))
+            key = "house_face_washed";
         else if (lower == "house_need_clothes_and_bag" || lower.Contains("need to put on my clothes") || lower.Contains("mettre mes vêtements") || lower.Contains("nlbes hwayji"))
             key = "house_need_clothes_and_bag";
         else if (lower == "house_need_talk_mom" || lower == "door_cant_leave_no_papers" || lower.Contains("talk to mom") || lower.Contains("talk to mama") || lower.Contains("parler à maman") || lower.Contains("nhdr m3a mama"))

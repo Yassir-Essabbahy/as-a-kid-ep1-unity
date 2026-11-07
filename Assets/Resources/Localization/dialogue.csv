@@ -174,3 +174,9 @@ house_backpack_taken,School backpack collected.,Sac d'école récupéré.,خدي
 item_doctor_certificate,Doctor's Certificate,Certificat Médical,شهادة طبية
 mama_house_envelope,Take this. Hand it directly to the headmaster (Al-Mudir). Don't lose it... we had a hard time convincing the doctor you were ready to go back.,Prends ceci. Donne-le directement au directeur (Al-Mudir). Ne le perds pas... on a eu du mal à convaincre le médecin que tu étais prêt à y retourner.,خودي هادي. عطيها نيشان للمدير. متودريهاش... راه بصيف باش قنعنا الطبيب بلي راك واجد ترجع.
 baba_house_advice,"Watch the road. Straight to school, straight back home. No wandering off.","Fais attention à la route. Directement à l'école, directement à la maison. Pas de détours.",عندك الطريق. نيشان للمدرسة، نيشان للدار. بلا دوران.
+house_objective_wash_face,Go to the bathroom and wash your face,Va aux toilettes et lave-toi le visage,سير للطواليط وغسل وجهك
+house_need_wash_face,I should go to the bathroom and wash my face first.,Je devrais d'abord aller me laver le visage.,خاصني نمشي للطواليط نغسل وجهي بعدا.
+house_face_washed,Face washed. Feeling awake!,Visage lavé. Bien réveillé !,غسلت وجهي، دابا فقت مزيان!
+mama_remind_wash_face,Go to the bathroom and wash your face first, sleepyhead!,Va te laver le visage d'abord !,سير غسل وجهك هو اللول، باقي فيك النعاس!
+mama_remind_get_ready,Go put on your clothes and take your backpack!,Va t'habiller et prends ton sac d'école !,سير لبس حوايجك وخد الكارطابل ديالك!
+prompt_wash_face,Wash Face,Se laver le visage,غسل وجهك

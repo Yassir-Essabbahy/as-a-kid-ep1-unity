@@ -539,6 +539,16 @@ public class NpcDialogueManager : MonoBehaviour
         return activeInteractableRoutine;
     }
 
+    public void ForceEndDialogue()
+    {
+        StopAllCoroutines();
+        activeInteractableRoutine = null;
+        slideCoroutine = null;
+        dialogueRunning = false;
+        ResetBandsOffscreen();
+        if (talkPanel != null) talkPanel.SetActive(false);
+    }
+
     public IEnumerator ShowInteractableMessageRoutine(string message, float autoDismissDuration, Color textColor)
     {
         dialogueRunning = true;

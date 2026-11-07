@@ -78,6 +78,47 @@ public class HouseMamaDialogue : MonoBehaviour, IInteractable
             if (!string.IsNullOrEmpty(talkAnimTrigger)) animator.SetTrigger(talkAnimTrigger);
         }
 
+        // Check preparation state before handing over envelope
+        bool needsWash = HouseObjectiveController.Instance != null && !HouseObjectiveController.Instance.hasWashedFace;
+        bool needsClothesOrBag = HouseObjectiveController.Instance != null && (!HouseObjectiveController.Instance.hasWornClothes || !HouseObjectiveController.Instance.hasBackpack);
+
+        if (needsWash || needsClothesOrBag)
+        {
+            string reminderKey = needsWash ? "mama_remind_wash_face" : "mama_remind_get_ready";
+            string defaultReminder = needsWash
+                ? "Go to the bathroom and wash your face first, sleepyhead!"
+                : "Go put on your clothes and take your backpack!";
+
+            string reminderLine = defaultReminder;
+            if (LocalizationManager.Instance != null)
+            {
+                string loc = LocalizationManager.Instance.Get(reminderKey);
+                if (!string.IsNullOrEmpty(loc) && !loc.StartsWith("[")) reminderLine = loc;
+            }
+
+            string formattedReminder = $"{speakerName}: {reminderLine}";
+            Color sColor = NpcDialogueManager.GetSpeakerColor(speakerName);
+            var f = NpcDialogueManager.DefaultDialogueFont;
+
+            yield return NpcDialogueManager.Instance.ShowDialogue(
+                new string[] { formattedReminder },
+                false,
+                sColor,
+                f,
+                audioSource,
+                (mamaVoiceClip != null ? new AudioClip[] { mamaVoiceClip } : null)
+            );
+
+            if (lookAt != null) lookAt.StopLooking();
+            if (animator != null && returnToCookingAfterDialogue)
+            {
+                if (!string.IsNullOrEmpty(talkAnimBool)) animator.SetBool(talkAnimBool, false);
+            }
+
+            activeRoutine = null;
+            yield break;
+        }
+
         // 2. Resolve dialogue text
         string keyToUse = hasSpoken ? repeatDialogueKey : dialogueKey;
         string defaultLine = hasSpoken

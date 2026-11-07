@@ -42,6 +42,19 @@ public class HouseBackpackInteractable : MonoBehaviour, IInteractable
     public void Interact()
     {
         if (collected || activeRoutine != null) return;
+
+        if (HouseObjectiveController.Instance != null && !HouseObjectiveController.Instance.hasWashedFace)
+        {
+            string msg = "I should go to the bathroom and wash my face first.";
+            if (LocalizationManager.Instance != null)
+            {
+                string loc = LocalizationManager.Instance.Get("house_need_wash_face");
+                if (!string.IsNullOrEmpty(loc) && !loc.StartsWith("[")) msg = loc;
+            }
+            HouseUIBridge.ShowMessage(msg);
+            return;
+        }
+
         activeRoutine = StartCoroutine(TakeBackpackRoutine());
     }
 

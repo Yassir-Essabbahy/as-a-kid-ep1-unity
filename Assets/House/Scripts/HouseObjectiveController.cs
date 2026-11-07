@@ -9,7 +9,8 @@ public class HouseObjectiveController : MonoBehaviour
     public TextMeshProUGUI objectiveText;
 
     [Header("State")]
-    public int phase = 0; // 0 = get dressed & bag, 1 = talk to mom, 2 = exit to school
+    public int phase = 0; // 0 = wash face in bathroom, 1 = get dressed & bag, 2 = talk to mom, 3 = exit to school
+    public bool hasWashedFace = false;
     public bool hasWornClothes = false;
     public bool hasBackpack = false;
     public bool hasTalkedToMama = false;
@@ -35,6 +36,13 @@ public class HouseObjectiveController : MonoBehaviour
         UpdateObjectiveUI();
     }
 
+    public void OnFaceWashed()
+    {
+        hasWashedFace = true;
+        phase = 1;
+        UpdateObjectiveUI();
+    }
+
     public void OnClothesWorn()
     {
         hasWornClothes = true;
@@ -51,11 +59,8 @@ public class HouseObjectiveController : MonoBehaviour
     {
         if (hasWornClothes && hasBackpack)
         {
-            phase = 1;
+            phase = 2;
             UpdateObjectiveUI();
-
-            // Unlock bedroom door
-            UnlockBedroomDoor();
         }
     }
 
@@ -72,7 +77,7 @@ public class HouseObjectiveController : MonoBehaviour
     public void OnMamaTalked()
     {
         hasTalkedToMama = true;
-        phase = 2;
+        phase = 3;
         UpdateObjectiveUI();
     }
 
@@ -90,15 +95,20 @@ public class HouseObjectiveController : MonoBehaviour
     {
         if (objectiveText == null) return;
 
-        string key = "house_objective_get_dressed";
-        string fallback = "Put on clothes and take your backpack";
+        string key = "house_objective_wash_face";
+        string fallback = "Go to the bathroom and wash your face";
 
         if (phase == 1)
+        {
+            key = "house_objective_get_dressed";
+            fallback = "Put on clothes and take your backpack";
+        }
+        else if (phase == 2)
         {
             key = "house_objective_talk_mom";
             fallback = "Talk to your mom in the kitchen";
         }
-        else if (phase >= 2)
+        else if (phase >= 3)
         {
             key = "house_objective_go_school";
             fallback = "Head out to school";
