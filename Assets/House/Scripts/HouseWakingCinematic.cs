@@ -220,8 +220,13 @@ public class HouseWakingCinematic : MonoBehaviour
         }
 
 #if UNITY_EDITOR
-        if (alarmClip == null)
-            alarmClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/House/Audio/AlarmClockRing.wav");
+        if (alarmClip == null || alarmClip.name == "AlarmClockRing")
+        {
+            var userAlarm = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Sounds/alarm.mp3");
+            if (userAlarm != null) alarmClip = userAlarm;
+            else if (alarmClip == null)
+                alarmClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/House/Audio/AlarmClockRing.wav");
+        }
         if (clockClickClip == null)
             clockClickClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/House/Audio/ClockClick.wav");
         if (morningBreathClip == null)
@@ -479,9 +484,6 @@ public class HouseWakingCinematic : MonoBehaviour
 
     private IEnumerator AnimateMamaStepBackAndDoorClose(float duration)
     {
-        Vector3 startMamaPos = mamaDoorwayPos;
-        Vector3 stepBackPos = mamaDoorwayPos + new Vector3(0f, 0f, 0.50f);
-
         Quaternion openRot = bedroomDoorCtrl != null ? bedroomDoorCtrl.transform.localRotation : Quaternion.Euler(0f, 0f, doorOpenAngle);
         Quaternion closedRot = Quaternion.identity;
 
@@ -492,13 +494,7 @@ public class HouseWakingCinematic : MonoBehaviour
             float rawT = Mathf.Clamp01(elapsed / duration);
             float t = Mathf.SmoothStep(0f, 1f, rawT);
 
-            // Doorway Mama smoothly steps back into the hallway clear of the door
-            if (mamaDoorwayObject != null)
-            {
-                mamaDoorwayObject.transform.position = Vector3.Lerp(startMamaPos, stepBackPos, t);
-            }
-
-            // Door rotates smoothly shut
+            // Door rotates smoothly shut without Mama sliding
             if (bedroomDoorCtrl != null)
             {
                 bedroomDoorCtrl.transform.localRotation = Quaternion.Slerp(openRot, closedRot, t);

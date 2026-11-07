@@ -5,11 +5,12 @@ using System.Collections;
 /// Controls the bathroom washbasin / sink interaction:
 /// 1. Prompts "Wash Face" when the player approaches the bathroom sink before grabbing clothes & bag.
 /// 2. When interacted:
-///    - Locks player control temporarily (~2.5s).
-///    - Audio: Plays tap water running and splashing on face (WaterSplashFace.wav).
-///    - Camera: Smoothly dips down toward the sink basin as hands cup water.
-///    - Visual: Eyelids blink/dip to black as cool water hits the eyes/face.
-///    - Plays refreshed morning sigh (MorningBreath.wav).
+///    - Locks player control.
+///    - Camera: Smoothly dips down toward the sink basin.
+///    - Visual: 2 to 3 seconds of drowsy morning blinks.
+///    - Then screen turns pitch dark while washing takes place.
+///    - Audio: Plays authentic washing & splash sound effect (WaterSplashFace.wav) during the dark phase.
+///    - When washing finishes: Plays refreshed morning sigh (MorningBreath.wav) and eyelids open smoothly.
 ///    - Displays toast: "Face washed. Feeling awake!"
 ///    - Signals HouseObjectiveController.Instance.OnFaceWashed(), advancing to phase 1 (grab clothes & backpack).
 ///    - Unlocks player control and marks interaction consumed.
@@ -23,7 +24,6 @@ public class HouseWashBasinInteractable : MonoBehaviour, IInteractable
     public AudioClip breathSound;
 
     [Header("Animation & Camera Settings")]
-    public float interactionDuration = 2.5f;
     public float cameraDipAngle = 20f; // tilts down towards basin
 
     [Header("Prompt Settings")]
@@ -102,21 +102,15 @@ public class HouseWashBasinInteractable : MonoBehaviour, IInteractable
             fpc.SetControlLocked(true);
         }
 
-        // 3. Play water splash & faucet sound
-        if (audioSource != null && waterSplashSound != null)
-        {
-            audioSource.PlayOneShot(waterSplashSound, 1.0f);
-        }
-
-        // 4. Smooth camera lean / dip down toward the sink basin
+        // 3. Smooth camera lean / dip down toward the sink basin
         Camera cam = Camera.main;
         float startPitch = fpc != null ? fpc.Pitch : (cam != null ? cam.transform.localEulerAngles.x : 0f);
         if (startPitch > 180f) startPitch -= 360f;
         float maxAngle = fpc != null ? fpc.maxLookAngle : 50f;
         float targetPitch = Mathf.Clamp(startPitch + cameraDipAngle, -maxAngle, maxAngle);
 
-        // Tilt down toward water
-        float dipTime = 0.6f;
+        // Tilt down toward water basin
+        float dipTime = 0.5f;
         float elapsed = 0f;
         while (elapsed < dipTime)
         {
@@ -129,15 +123,53 @@ public class HouseWashBasinInteractable : MonoBehaviour, IInteractable
             yield return null;
         }
 
-        // 5. Water splashes on face: Eyelids blink/dip to black
+        // 4. "like 2 or 3 seconds of blink":
+        // Drowsy morning blinks while leaning over the sink (~2.5s total)
         if (EyelidBlink.Instance != null)
         {
-            EyelidBlink.Instance.DipToBlack(0.55f);
+            // Blink 1 (~0.8s)
+            yield return EyelidBlink.Instance.Blink(0.8f);
+            yield return new WaitForSeconds(0.15f);
+            // Blink 2 (~0.8s)
+            yield return EyelidBlink.Instance.Blink(0.8f);
+            yield return new WaitForSeconds(0.15f);
+            // Eyes close down into darkness (~0.5s)
+            yield return EyelidBlink.Instance.Close(0.5f);
         }
-        yield return new WaitForSeconds(0.55f);
+        else
+        {
+            yield return new WaitForSeconds(2.4f);
+        }
 
-        // 6. Camera tilts back up to original level
-        float returnTime = 0.5f;
+        // 5. "then dark until it finish washing with a washing soundeffect":
+        // Screen is now pitch black
+        if (EyelidBlink.Instance != null)
+        {
+            EyelidBlink.Instance.SetOpenImmediate(0f);
+        }
+
+        // Play washing sound effect
+        if (audioSource != null && waterSplashSound != null)
+        {
+            audioSource.PlayOneShot(waterSplashSound, 1.0f);
+        }
+
+        // Stay completely dark while the washing sound effect plays (~2.8s)
+        float washDuration = (waterSplashSound != null && waterSplashSound.length > 0.5f) ? waterSplashSound.length : 2.8f;
+        yield return new WaitForSeconds(washDuration);
+
+        // 6. Washing finished: Morning sigh, open eyes smoothly, camera tilts back up
+        if (audioSource != null && breathSound != null)
+        {
+            audioSource.PlayOneShot(breathSound, 0.9f);
+        }
+
+        float returnTime = 0.8f;
+        if (EyelidBlink.Instance != null)
+        {
+            EyelidBlink.Instance.OpenSlow(1f, returnTime);
+        }
+
         elapsed = 0f;
         while (elapsed < returnTime)
         {
@@ -150,15 +182,12 @@ public class HouseWashBasinInteractable : MonoBehaviour, IInteractable
             yield return null;
         }
 
-        // 7. Refreshing sigh / breath sound
-        if (audioSource != null && breathSound != null)
+        if (EyelidBlink.Instance != null)
         {
-            audioSource.PlayOneShot(breathSound, 0.85f);
+            EyelidBlink.Instance.SetOpenImmediate(1f);
         }
 
-        yield return new WaitForSeconds(0.3f);
-
-        // 8. Update objective system to phase 1 (grab clothes & backpack)
+        // 7. Update objective system to phase 1 (grab clothes & backpack)
         Debug.Log("[WashBasin] Updating objective to phase 1...");
         if (HouseObjectiveController.Instance != null)
         {
@@ -170,10 +199,10 @@ public class HouseWashBasinInteractable : MonoBehaviour, IInteractable
             Debug.LogError("[WashBasin] HouseObjectiveController.Instance is null!");
         }
 
-        // 9. Show refreshed feedback toast
+        // 8. Show refreshed feedback toast
         HouseUIBridge.ShowMessage("house_face_washed", 3.0f);
 
-        // 10. Unlock player movement & look
+        // 9. Unlock player movement & look
         if (fpc != null)
         {
             fpc.SetControlLocked(false);
