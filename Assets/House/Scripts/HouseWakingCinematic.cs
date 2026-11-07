@@ -1,16 +1,19 @@
 using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
+using TMPro;
 
 /// <summary>
 /// Cinematic wake-up sequence for the kid's bedroom:
-/// - Uses named scene pose transforms (WakePose_Lying, WakePose_Sitting, WakePose_Standing).
-/// - Integrates organic EyelidBlink system (slits, drowsy blinks, heavy-eyes wash).
-/// - Low-pass filtered alarm audio that clears as eyes open.
-/// - Clock button click and sleepy breath on waking.
-/// - Camera motion with ease-in/out and subtle handheld Perlin noise.
-/// - Adjusts near-clip plane during bed sequence to avoid blanket/pillow clipping.
-/// - Seamless handoff syncing controller's internal yaw & pitch variables (no 180° flip).
-/// - Skip feature for replayability (tap or short version if already seen).
+/// - In the first second, the bedroom door is open and Mama is posed at the doorway,
+///   looking at the kid in bed, telling him to get up ("Yallah fyeq a wlidi, nod lmdrassa...").
+/// - Mama closes the bedroom door, which latches and locks shut.
+/// - Mama returns to the kitchen counter to prepare tea/breakfast.
+/// - Kid experiences 3 organic eyelid blinks with muffled alarm clearing up.
+/// - Reaching for the alarm clock, morning breath sigh, and ambient room tone.
+/// - Smooth 5-second continuous Bezier get-up motion from pillow to standing.
+/// - Seamless view synchronization with controller yaw & pitch (no 180° flip).
+/// - Full mobile and PC support with skip capabilities.
 /// </summary>
 [DisallowMultipleComponent]
 public class HouseWakingCinematic : MonoBehaviour
@@ -28,6 +31,7 @@ public class HouseWakingCinematic : MonoBehaviour
     {
         Init,
         Black,
+        MamaDoorway,  // First second: Mama waking the kid in the doorway
         SlitOpen,     // Blink 1 Open
         Blink1_Close,
         HalfOpen,     // Blink 2 Open
@@ -51,6 +55,18 @@ public class HouseWakingCinematic : MonoBehaviour
     public Camera mainCamera;
     public Canvas mobileControlsCanvas;
 
+    [Header("Doorway Sequence (Mama Waking)")]
+    public GameObject mamaObject;
+    public DoorController bedroomDoorCtrl;
+    public AudioClip momVoiceClip;
+    public AudioClip doorCloseClip;
+    public AudioClip doorOpenClip;
+    public Vector3 mamaDoorwayPos = new Vector3(101.90f, 6.47f, 122.90f);
+    public Quaternion mamaDoorwayRot = Quaternion.Euler(0f, 129.60f, 0f);
+    public Vector3 mamaKitchenPos = new Vector3(103.80f, 6.47f, 129.50f);
+    public Quaternion mamaKitchenRot = Quaternion.Euler(0f, 160.00f, 0f);
+    public float doorOpenAngle = 80f;
+
     [Header("Alarm Clock & Audio")]
     public AudioSource alarmAudioSource;
     public AudioLowPassFilter alarmLowPass;
@@ -62,11 +78,11 @@ public class HouseWakingCinematic : MonoBehaviour
     public AudioClip clothRustleClip;
 
     [Header("Timings (Bed Awakening & 3 Slow Blinks)")]
-    public float ringStartDuration = 2.0f;
-    public float blink1OpenDuration = 1.8f;
-    public float blink1HoldDuration = 1.0f;
-    public float blink1CloseDuration = 1.3f;
-    public float blink1RestDuration = 1.0f;
+    public float blink1OpenDuration = 0.8f;
+    public float mamaSpeechHoldDuration = 1.8f;
+    public float doorCloseDuration = 0.9f;
+    public float blink1CloseDuration = 1.0f;
+    public float blink1RestDuration = 0.8f;
 
     public float blink2OpenDuration = 2.0f;
     public float blink2HoldDuration = 1.2f;
@@ -79,9 +95,6 @@ public class HouseWakingCinematic : MonoBehaviour
     [Header("Timings (Getting Up - approx 5s total)")]
     [Tooltip("Total duration for getting up from bed to standing (approx 5s)")]
     public float getUpDuration = 5.0f;
-    public float sitUpFraction = 0.52f;    // ~2.6s
-    public float sitPauseFraction = 0.12f;  // ~0.6s
-    public float standUpFraction = 0.36f;   // ~1.8s
 
     [Header("Curves & Noise")]
     public AnimationCurve motionCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
@@ -91,10 +104,16 @@ public class HouseWakingCinematic : MonoBehaviour
     [Header("Skip UI")]
     public GameObject skipPromptUI;
 
+    [Header("Cinematic Subtitle UI")]
+    private GameObject subtitlePanel;
+    private TextMeshProUGUI subtitleText;
+    private CanvasGroup subtitleCanvasGroup;
+
     private FirstPersonController fpc;
     private float originalNearClip = 0.3f;
     private bool isCinematicActive = false;
     private Coroutine cinematicCoroutine;
+    private Coroutine subtitleCoroutine;
 
     private void Awake()
     {
@@ -154,6 +173,15 @@ public class HouseWakingCinematic : MonoBehaviour
 
         if (mainCamera == null) mainCamera = Camera.main;
 
+        if (mamaObject == null)
+            mamaObject = GameObject.Find("Mama");
+
+        if (bedroomDoorCtrl == null)
+        {
+            var d5 = GameObject.Find("Door5");
+            if (d5 != null) bedroomDoorCtrl = d5.GetComponentInChildren<DoorController>();
+        }
+
         if (alarmAudioSource == null)
         {
             var clock = GameObject.Find("AlarmClock");
@@ -190,6 +218,12 @@ public class HouseWakingCinematic : MonoBehaviour
             morningAmbienceClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/House/Audio/MorningAmbience.wav");
         if (clothRustleClip == null)
             clothRustleClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/House/Audio/ClothRustle.wav");
+        if (momVoiceClip == null)
+            momVoiceClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/House/Audio/MomVoice.wav");
+        if (doorCloseClip == null)
+            doorCloseClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/House/Audio/DoorClose.wav");
+        if (doorOpenClip == null)
+            doorOpenClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/House/Audio/DoorOpen.wav");
 #endif
     }
 
@@ -215,6 +249,7 @@ public class HouseWakingCinematic : MonoBehaviour
     {
         if (!isCinematicActive) return;
         if (cinematicCoroutine != null) StopCoroutine(cinematicCoroutine);
+        if (subtitleCoroutine != null) StopCoroutine(subtitleCoroutine);
         StartCoroutine(QuickFinishRoutine());
     }
 
@@ -249,7 +284,7 @@ public class HouseWakingCinematic : MonoBehaviour
             mainCamera.nearClipPlane = 0.03f;
         }
 
-        // Close eyelids to pure black
+        // Close eyelids to pure black initially
         if (EyelidBlink.Instance != null)
             EyelidBlink.Instance.SetOpenImmediate(0f);
 
@@ -269,6 +304,21 @@ public class HouseWakingCinematic : MonoBehaviour
             mainCamera.transform.rotation = lyingRot;
         }
 
+        // PREPARE DOORWAY SCENE: Bedroom door is open, Mama is in doorway looking at bed
+        if (bedroomDoorCtrl != null)
+        {
+            bedroomDoorCtrl.isCinematicControlled = true;
+            bedroomDoorCtrl.transform.localRotation = Quaternion.Euler(0f, 0f, doorOpenAngle);
+        }
+
+        if (mamaObject != null)
+        {
+            mamaObject.transform.position = mamaDoorwayPos;
+            mamaObject.transform.rotation = mamaDoorwayRot;
+            var mamaAnim = mamaObject.GetComponent<Animator>();
+            if (mamaAnim != null) mamaAnim.Play("Talking");
+        }
+
         yield return new WaitForSeconds(0.2f);
         CurrentStage = CinematicStage.Black;
 
@@ -285,27 +335,49 @@ public class HouseWakingCinematic : MonoBehaviour
             alarmAudioSource.Play();
         }
 
-        // Take time on the bed in darkness on the pillow
-        yield return StartCoroutine(RestOnBed(lyingPos, lyingRot, ringStartDuration));
+        // Rest momentarily on bed in darkness (0.5s)
+        yield return StartCoroutine(RestOnBed(lyingPos, lyingRot, 0.5f));
 
-        // 3. BLINK 1: Slow sleepy slit open (~22%), hold drowsily on pillow, slowly close
-        CurrentStage = CinematicStage.SlitOpen;
+        // 3. THE FIRST SECOND: BLINK 1 - Eyes slit open, Mama in doorway tells kid to get up
+        CurrentStage = CinematicStage.MamaDoorway;
         if (EyelidBlink.Instance != null)
         {
-            yield return EyelidBlink.Instance.OpenSlow(0.22f, blink1OpenDuration);
-            yield return StartCoroutine(RestOnBed(lyingPos, lyingRot, blink1HoldDuration));
-            CurrentStage = CinematicStage.Blink1_Close;
-            yield return EyelidBlink.Instance.Close(blink1CloseDuration);
+            yield return EyelidBlink.Instance.OpenSlow(0.40f, blink1OpenDuration);
         }
-        else
+
+        // Play Mama's voice: "Yallah fyeq a wlidi, nod lmdrassa..."
+        PlayMamaVoice();
+
+        // Show cinematic subtitle
+        string mamaLine = "<color=#C4B5FD>Mama:</color> \"Yallah fyeq a wlidi, nod lmdrassa...\"\n<size=75%><color=#D1D5DB><i>(Wake up, sweetheart, it's time for school.)</i></color></size>";
+        subtitleCoroutine = StartCoroutine(ShowSubtitleRoutine(mamaLine, mamaSpeechHoldDuration));
+
+        // Kid looks at Mama from pillow while she speaks
+        yield return StartCoroutine(RestOnBed(lyingPos, lyingRot, mamaSpeechHoldDuration));
+
+        // 4. MAMA CLOSES THE BEDROOM DOOR
+        yield return StartCoroutine(AnimateDoorClose(doorCloseDuration));
+
+        // Move Mama back to kitchen counter making tea/breakfast
+        if (mamaObject != null)
         {
-            yield return new WaitForSeconds(blink1OpenDuration + blink1HoldDuration + blink1CloseDuration);
+            mamaObject.transform.position = mamaKitchenPos;
+            mamaObject.transform.rotation = mamaKitchenRot;
+            var mamaAnim = mamaObject.GetComponent<Animator>();
+            if (mamaAnim != null) mamaAnim.Play("mixamo_com");
+        }
+
+        // Close eyes drowsily (Blink 1 Close)
+        CurrentStage = CinematicStage.Blink1_Close;
+        if (EyelidBlink.Instance != null)
+        {
+            yield return EyelidBlink.Instance.Close(blink1CloseDuration);
         }
 
         // Rest on pillow between blinks in darkness
         yield return StartCoroutine(RestOnBed(lyingPos, lyingRot, blink1RestDuration));
 
-        // 4. BLINK 2: Slow half-open (~55%), alarm clearer (1800 Hz), hold on pillow, slowly close
+        // 5. BLINK 2: Slow half-open (~55%), alarm clearer (1800 Hz), hold on pillow, slowly close
         if (alarmLowPass != null) alarmLowPass.cutoffFrequency = 1800f;
 
         CurrentStage = CinematicStage.HalfOpen;
@@ -324,7 +396,7 @@ public class HouseWakingCinematic : MonoBehaviour
         // Rest on pillow between blinks in darkness
         yield return StartCoroutine(RestOnBed(lyingPos, lyingRot, blink2RestDuration));
 
-        // 5. BLINK 3: Slow full open (100%), heavy eyes clearing, alarm full audio (22000 Hz)
+        // 6. BLINK 3: Slow full open (100%), heavy eyes clearing, alarm full audio (22000 Hz)
         if (alarmLowPass != null) alarmLowPass.cutoffFrequency = 22000f;
 
         CurrentStage = CinematicStage.Blink3_Open;
@@ -336,7 +408,7 @@ public class HouseWakingCinematic : MonoBehaviour
         // Take a little time on the bed looking out across the room from this perspective
         yield return StartCoroutine(RestOnBed(lyingPos, lyingRot, blink3RestDuration));
 
-        // 6. Awake moment: click sound, alarm stops, morning breath sigh, room ambience fades in
+        // 7. Awake moment: click sound, alarm stops, morning breath sigh, room ambience fades in
         CurrentStage = CinematicStage.ClockReach;
         Vector3 clockPos = alarmAudioSource != null ? alarmAudioSource.transform.position : new Vector3(105.75f, 7.35f, 120.00f);
         if (alarmAudioSource != null && alarmAudioSource.isPlaying)
@@ -359,7 +431,7 @@ public class HouseWakingCinematic : MonoBehaviour
             StartCoroutine(FadeAmbienceVolume(0.4f, 2.5f));
         }
 
-        // 7. GETTING UP FROM THIS PERSPECTIVE (fluid, continuous 5s get-up motion)
+        // 8. GETTING UP FROM THIS PERSPECTIVE (fluid, continuous 5s get-up motion)
         float totalGetUp = Mathf.Max(getUpDuration, 2.0f);
 
         // Cloth rustle as body begins moving out of bed
@@ -384,8 +456,149 @@ public class HouseWakingCinematic : MonoBehaviour
         // Fluid, continuous 5-second get-up movement through sitting into standing
         yield return StartCoroutine(AnimateSmoothGetUp(lyingPos, lyingRot, sitPos, sitRot, standCamPos, standRot, totalGetUp));
 
-        // 8. Complete cinematic and hand off control seamlessly
+        // 9. Complete cinematic and hand off control seamlessly
         FinishAndHandoverControl(standFloor, standRot);
+    }
+
+    private IEnumerator AnimateDoorClose(float duration)
+    {
+        if (bedroomDoorCtrl == null) yield break;
+
+        Quaternion openRot = bedroomDoorCtrl.transform.localRotation;
+        Quaternion closedRot = Quaternion.identity;
+
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / duration));
+            bedroomDoorCtrl.transform.localRotation = Quaternion.Slerp(openRot, closedRot, t);
+            yield return null;
+        }
+
+        bedroomDoorCtrl.transform.localRotation = closedRot;
+        bedroomDoorCtrl.isCinematicControlled = false;
+        bedroomDoorCtrl.SetOpenImmediate(false);
+        bedroomDoorCtrl.isLocked = true;
+
+        // Play door close audio with solid latch
+        if (doorCloseClip != null)
+        {
+            var doorSrc = bedroomDoorCtrl.GetComponent<AudioSource>();
+            if (doorSrc == null) doorSrc = bedroomDoorCtrl.gameObject.AddComponent<AudioSource>();
+            doorSrc.spatialBlend = 0.8f;
+            doorSrc.PlayOneShot(doorCloseClip, 1.0f);
+        }
+    }
+
+    private void PlayMamaVoice()
+    {
+        if (mamaObject == null || momVoiceClip == null) return;
+
+        var src = mamaObject.GetComponent<AudioSource>();
+        if (src == null)
+        {
+            src = mamaObject.AddComponent<AudioSource>();
+            src.spatialBlend = 0.5f;
+            src.minDistance = 2f;
+            src.maxDistance = 20f;
+            src.rolloffMode = AudioRolloffMode.Linear;
+            src.playOnAwake = false;
+        }
+        src.clip = momVoiceClip;
+        src.volume = 1.0f;
+        src.Play();
+    }
+
+    private void EnsureSubtitleUI()
+    {
+        if (subtitlePanel != null) return;
+
+        var eyelidBlink = EyelidBlink.Instance;
+        Canvas parentCanvas = eyelidBlink != null ? eyelidBlink.overlayCanvas : null;
+        if (parentCanvas == null)
+        {
+            var go = GameObject.Find("EyelidCanvas");
+            if (go != null) parentCanvas = go.GetComponent<Canvas>();
+        }
+        if (parentCanvas == null)
+        {
+            var go = GameObject.Find("Canvas");
+            if (go != null) parentCanvas = go.GetComponent<Canvas>();
+        }
+        if (parentCanvas == null) return;
+
+        subtitlePanel = new GameObject("CinematicSubtitlePanel", typeof(RectTransform), typeof(CanvasGroup), typeof(Image));
+        subtitlePanel.transform.SetParent(parentCanvas.transform, false);
+
+        var rt = subtitlePanel.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0.5f, 0.22f);
+        rt.anchorMax = new Vector2(0.5f, 0.22f);
+        rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.sizeDelta = new Vector2(960f, 85f);
+
+        var bg = subtitlePanel.GetComponent<Image>();
+        bg.color = new Color(0.04f, 0.04f, 0.05f, 0.78f);
+        bg.raycastTarget = false;
+
+        subtitleCanvasGroup = subtitlePanel.GetComponent<CanvasGroup>();
+        subtitleCanvasGroup.alpha = 0f;
+        subtitleCanvasGroup.blocksRaycasts = false;
+
+        var textGo = new GameObject("SubtitleText", typeof(RectTransform), typeof(TextMeshProUGUI));
+        textGo.transform.SetParent(subtitlePanel.transform, false);
+
+        var textRt = textGo.GetComponent<RectTransform>();
+        textRt.anchorMin = Vector2.zero;
+        textRt.anchorMax = Vector2.one;
+        textRt.offsetMin = new Vector2(16f, 6f);
+        textRt.offsetMax = new Vector2(-16f, -6f);
+
+        subtitleText = textGo.GetComponent<TextMeshProUGUI>();
+        subtitleText.alignment = TextAlignmentOptions.Center;
+        subtitleText.textWrappingMode = TextWrappingModes.Normal;
+        subtitleText.fontSize = 24f;
+        subtitleText.raycastTarget = false;
+
+        var font = Resources.Load<TMP_FontAsset>("Fonts/GeistPixel-Regular-VariableFont_ELSH SDF");
+        if (font != null) subtitleText.font = font;
+    }
+
+    private IEnumerator ShowSubtitleRoutine(string text, float duration)
+    {
+        EnsureSubtitleUI();
+        if (subtitleText != null && subtitleCanvasGroup != null)
+        {
+            subtitleText.text = text;
+
+            // Fade in
+            float fadeElapsed = 0f;
+            while (fadeElapsed < 0.25f)
+            {
+                fadeElapsed += Time.deltaTime;
+                subtitleCanvasGroup.alpha = Mathf.Lerp(0f, 1f, fadeElapsed / 0.25f);
+                yield return null;
+            }
+            subtitleCanvasGroup.alpha = 1f;
+
+            yield return new WaitForSeconds(duration);
+
+            // Fade out
+            fadeElapsed = 0f;
+            while (fadeElapsed < 0.3f)
+            {
+                fadeElapsed += Time.deltaTime;
+                subtitleCanvasGroup.alpha = Mathf.Lerp(1f, 0f, fadeElapsed / 0.3f);
+                yield return null;
+            }
+            subtitleCanvasGroup.alpha = 0f;
+        }
+    }
+
+    private void HideSubtitleImmediate()
+    {
+        if (subtitleCanvasGroup != null)
+            subtitleCanvasGroup.alpha = 0f;
     }
 
     private IEnumerator ShortWakingRoutine()
@@ -444,6 +657,23 @@ public class HouseWakingCinematic : MonoBehaviour
 
         if (EyelidBlink.Instance != null)
             EyelidBlink.Instance.SetOpenImmediate(1f);
+
+        HideSubtitleImmediate();
+
+        if (bedroomDoorCtrl != null)
+        {
+            bedroomDoorCtrl.isCinematicControlled = false;
+            bedroomDoorCtrl.SetOpenImmediate(false);
+            bedroomDoorCtrl.isLocked = true;
+        }
+
+        if (mamaObject != null)
+        {
+            mamaObject.transform.position = mamaKitchenPos;
+            mamaObject.transform.rotation = mamaKitchenRot;
+            var mamaAnim = mamaObject.GetComponent<Animator>();
+            if (mamaAnim != null) mamaAnim.Play("mixamo_com");
+        }
 
         Vector3 standFloor = wakePoseStanding != null ? wakePoseStanding.position : new Vector3(103.50f, 7.20f, 120.20f);
         Quaternion standRot = wakePoseStanding != null ? wakePoseStanding.rotation : Quaternion.Euler(0f, 325f, 0f);

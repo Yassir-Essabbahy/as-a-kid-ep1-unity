@@ -16,15 +16,27 @@ public class DoorController : MonoBehaviour, IInteractable
 
     public string PromptMessage => isOpen ? "Close Door" : "Open Door";
 
+    public bool IsOpen => isOpen;
+    public bool isCinematicControlled = false;
+
     private bool isOpen = false;
 
     private Quaternion closedRotation;
     private Quaternion openRotation;
 
-    void Start()
+    void Awake()
     {
         closedRotation = transform.localRotation;
         openRotation = closedRotation * Quaternion.Euler(0, 0, openAngle);
+    }
+
+    void Start()
+    {
+        if (closedRotation == Quaternion.identity && openRotation == Quaternion.identity)
+        {
+            closedRotation = transform.localRotation;
+            openRotation = closedRotation * Quaternion.Euler(0, 0, openAngle);
+        }
 
         if (audioSource == null)
         {
@@ -39,10 +51,28 @@ public class DoorController : MonoBehaviour, IInteractable
 
     void Update()
     {
+        if (isCinematicControlled) return;
+
         if (isOpen)
             transform.localRotation = Quaternion.Slerp(transform.localRotation, openRotation, Time.deltaTime * smooth);
         else
             transform.localRotation = Quaternion.Slerp(transform.localRotation, closedRotation, Time.deltaTime * smooth);
+    }
+
+    public void SetOpenImmediate(bool open)
+    {
+        isOpen = open;
+        if (closedRotation == Quaternion.identity && openRotation == Quaternion.identity)
+        {
+            closedRotation = transform.localRotation;
+            openRotation = closedRotation * Quaternion.Euler(0, 0, openAngle);
+        }
+        transform.localRotation = open ? openRotation : closedRotation;
+    }
+
+    public void SetOpen(bool open)
+    {
+        isOpen = open;
     }
 
     public void Interact()

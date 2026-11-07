@@ -1,7 +1,8 @@
 === HOUSE CINEMATIC & STORY VERIFICATION REPORT ===
-Timestamp: 2026-11-07 00:32:12 UTC
+Timestamp: 2026-11-07 00:55:56 UTC
 [PASS] Stage 1 Captured: House_Cinematic_01_Black.png (On pillow, eyelids fully closed, muffled alarm 550Hz, resting on bed)
-[PASS] Stage 2 Captured: House_Cinematic_02_Slit.png (Blink 1 on pillow: slow slit open ~22%, warm morning sunlight)
+[PASS] Stage 2 Captured: House_Cinematic_02_MamaDoorway.png (Mama posed at doorway pos=(101.90, 6.47, 122.90), door open angle=80.0°, speaking 'Yallah fyeq a wlidi, nod lmdrassa...')
+[PASS] Door Close & Return to Kitchen: Door closed & locked (isLocked=True), Mama back at kitchen counter ((103.80, 6.47, 129.50))
 [PASS] Stage 3 Captured: House_Cinematic_03_HalfOpen.png (Blink 2 on pillow: slow half open ~55%, alarm audio clearer 1800Hz)
 [PASS] Stage 4 Captured: House_Cinematic_04_FullyOpen_Clock.png (Blink 3 on pillow: 100% full open from requested perspective, click sound, breath, ambience)
 [PASS] Stage 5 Captured: House_Cinematic_05_Sitting.png (Getting up: sitting upright on bed edge facing door, cloth rustle SFX)

@@ -117,15 +117,48 @@ public class HouseCinematicVerificationRunner : MonoBehaviour
 
         // Stage 1: Cinematic Start (Closed eyes on pillow)
         yield return StartCoroutine(WaitForStage(HouseWakingCinematic.CinematicStage.Black, 5f));
-        yield return new WaitForSeconds(0.4f);
+        yield return new WaitForSeconds(0.3f);
         yield return StartCoroutine(CaptureFrame("House_Cinematic_01_Black.png"));
         sb.AppendLine("[PASS] Stage 1 Captured: House_Cinematic_01_Black.png (On pillow, eyelids fully closed, muffled alarm 550Hz, resting on bed)");
 
-        // Stage 2: Blink 1 on pillow (Slow slit open ~22%, hold, slow close)
-        yield return StartCoroutine(WaitForStage(HouseWakingCinematic.CinematicStage.SlitOpen, 10f));
-        yield return new WaitForSeconds(0.3f);
-        yield return StartCoroutine(CaptureFrame("House_Cinematic_02_Slit.png"));
-        sb.AppendLine("[PASS] Stage 2 Captured: House_Cinematic_02_Slit.png (Blink 1 on pillow: slow slit open ~22%, warm morning sunlight)");
+        // Stage 2: First Second - Mama in Doorway waking the kid
+        yield return StartCoroutine(WaitForStage(HouseWakingCinematic.CinematicStage.MamaDoorway, 5f));
+        yield return new WaitForSeconds(0.4f);
+        yield return StartCoroutine(CaptureFrame("House_Cinematic_02_MamaDoorway.png"));
+
+        var mamaGo = GameObject.Find("Mama");
+        var door5Go = GameObject.Find("Door5");
+        var door5Ctrl = door5Go != null ? door5Go.GetComponentInChildren<DoorController>() : null;
+        var hinchTrans = door5Go != null ? door5Go.transform.Find("DoorHinch") : null;
+
+        bool mamaAtDoorway = mamaGo != null && Vector3.Distance(mamaGo.transform.position, new Vector3(101.90f, 6.47f, 122.90f)) < 1.0f;
+        float doorAngle = hinchTrans != null ? hinchTrans.localEulerAngles.z : 0f;
+        bool doorIsOpen = doorAngle > 45f && doorAngle < 135f;
+
+        if (mamaAtDoorway && doorIsOpen)
+        {
+            sb.AppendLine($"[PASS] Stage 2 Captured: House_Cinematic_02_MamaDoorway.png (Mama posed at doorway pos={mamaGo.transform.position:F2}, door open angle={doorAngle:F1}°, speaking 'Yallah fyeq a wlidi, nod lmdrassa...')");
+            Debug.Log($"[Verification] Stage 2 PASS: Mama posed at doorway ({mamaGo.transform.position}), door open angle={doorAngle:F1}°");
+        }
+        else
+        {
+            sb.AppendLine($"[WARNING] Stage 2: mamaAtDoorway={mamaAtDoorway} (pos={(mamaGo != null ? mamaGo.transform.position.ToString() : "null")}), doorIsOpen={doorIsOpen} (angle={doorAngle:F1}°)");
+        }
+
+        // Wait for door to close and Mama to return to kitchen
+        yield return StartCoroutine(WaitForStage(HouseWakingCinematic.CinematicStage.Blink1_Close, 8f));
+        bool mamaInKitchen = mamaGo != null && Vector3.Distance(mamaGo.transform.position, new Vector3(103.80f, 6.47f, 129.50f)) < 1.0f;
+        bool doorIsLocked = door5Ctrl != null && door5Ctrl.isLocked;
+
+        if (mamaInKitchen && doorIsLocked)
+        {
+            sb.AppendLine($"[PASS] Door Close & Return to Kitchen: Door closed & locked (isLocked={doorIsLocked}), Mama back at kitchen counter ({mamaGo.transform.position:F2})");
+            Debug.Log($"[Verification] Door Close PASS: Mama back in kitchen ({mamaGo.transform.position}), door locked={doorIsLocked}");
+        }
+        else
+        {
+            sb.AppendLine($"[WARNING] Door Close Check: mamaInKitchen={mamaInKitchen}, doorIsLocked={doorIsLocked}");
+        }
 
         // Stage 3: Blink 2 on pillow (Slow half open ~55%, hold, slow close)
         yield return StartCoroutine(WaitForStage(HouseWakingCinematic.CinematicStage.HalfOpen, 10f));
@@ -285,8 +318,8 @@ public class HouseCinematicVerificationRunner : MonoBehaviour
             yield return new WaitForSeconds(0.5f);
 
             bool hasBag = HouseObjectiveController.Instance != null && HouseObjectiveController.Instance.hasBackpack;
-            var door5 = GameObject.Find("Door5");
-            var door5Ctrl = door5 != null ? door5.GetComponentInChildren<DoorController>() : null;
+            var d5Obj = GameObject.Find("Door5");
+            door5Ctrl = d5Obj != null ? d5Obj.GetComponentInChildren<DoorController>() : null;
             bool bedroomDoorUnlocked = door5Ctrl != null && !door5Ctrl.isLocked;
 
             if (hasBag && bedroomDoorUnlocked)
@@ -311,7 +344,7 @@ public class HouseCinematicVerificationRunner : MonoBehaviour
 
         // Stage 9: Mama Dialogue & Front Door
         Debug.Log("[Verification] Testing Mama Dialogue & Front Door...");
-        var mamaGo = GameObject.Find("Mama");
+        mamaGo = GameObject.Find("Mama");
         if (mamaGo != null && player != null && fpc != null)
         {
             Vector3 kitchenPos = new Vector3(103.80f, 7.094f, 127.50f);
