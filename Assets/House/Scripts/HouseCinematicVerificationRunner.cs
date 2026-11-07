@@ -16,7 +16,7 @@ public class HouseCinematicVerificationRunner : MonoBehaviour
     public static HouseCinematicVerificationRunner Instance { get; private set; }
 
     [Header("Configuration")]
-    public bool autoRunOnStart = true;
+    public bool autoRunOnStart = false;
     public string screenshotDirectory = "Assets/Screenshots";
 
     public bool IsRunning { get; private set; }
