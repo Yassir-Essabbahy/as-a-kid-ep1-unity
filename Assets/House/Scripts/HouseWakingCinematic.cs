@@ -79,7 +79,7 @@ public class HouseWakingCinematic : MonoBehaviour
 
     [Header("Timings (Bed Awakening & 3 Slow Blinks)")]
     public float blink1OpenDuration = 0.8f;
-    public float mamaSpeechHoldDuration = 1.8f;
+    public float mamaSpeechHoldDuration = 3.2f;
     public float doorCloseDuration = 0.9f;
     public float blink1CloseDuration = 1.0f;
     public float blink1RestDuration = 0.8f;

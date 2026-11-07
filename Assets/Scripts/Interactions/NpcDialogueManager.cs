@@ -229,6 +229,15 @@ public class NpcDialogueManager : MonoBehaviour
                 }
             }
         }
+
+        if (continueButton != null)
+        {
+            var btnText = continueButton.GetComponentInChildren<TMPro.TextMeshProUGUI>();
+            if (btnText != null && btnText.text != null && btnText.text.Contains("\u25B6"))
+            {
+                btnText.text = btnText.text.Replace("\u25B6", ">");
+            }
+        }
     }
 
     public void ResetBandsOffscreen()
@@ -717,6 +726,17 @@ public class NpcDialogueManager : MonoBehaviour
                 skipTypingRequested = false;
                 isTyping = false;
                 yield break;
+            }
+
+            if (line[i] == '<')
+            {
+                int closeTag = line.IndexOf('>', i);
+                if (closeTag > i)
+                {
+                    dialogueText.text += line.Substring(i, closeTag - i + 1);
+                    i = closeTag;
+                    continue;
+                }
             }
 
             dialogueText.text += line[i];

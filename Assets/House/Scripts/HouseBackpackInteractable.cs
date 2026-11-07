@@ -28,29 +28,10 @@ public class HouseBackpackInteractable : MonoBehaviour, IInteractable
         if (collected) return;
         collected = true;
 
-        if (audioSource != null && pickupSound != null)
-        {
-            AudioSource.PlayClipAtPoint(pickupSound, transform.position);
-        }
-
         if (HouseObjectiveController.Instance != null)
         {
             HouseObjectiveController.Instance.OnBackpackTaken();
         }
-
-        string label = "School Backpack Collected";
-        if (LocalizationManager.Instance != null)
-        {
-            string loc = LocalizationManager.Instance.Get("house_backpack_taken");
-            if (!string.IsNullOrEmpty(loc) && !loc.StartsWith("[")) label = loc;
-        }
-
-        if (ItemPickupToast.Instance != null)
-        {
-            ItemPickupToast.Instance.Show(null, label, 1);
-        }
-
-        HouseUIBridge.ShowMessage("house_backpack_taken", 2.0f);
 
         gameObject.SetActive(false);
     }

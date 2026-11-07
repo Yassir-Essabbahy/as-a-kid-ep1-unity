@@ -168,20 +168,7 @@ public class HouseWardrobeInteractable : MonoBehaviour, IInteractable
             HouseObjectiveController.Instance.OnClothesWorn();
         }
 
-        // 4. Notification
-        string label = "School Clothes Worn";
-        if (LocalizationManager.Instance != null)
-        {
-            string loc = LocalizationManager.Instance.Get("house_clothes_worn");
-            if (!string.IsNullOrEmpty(loc) && !loc.StartsWith("[")) label = loc;
-        }
-
-        if (ItemPickupToast.Instance != null)
-        {
-            ItemPickupToast.Instance.Show(null, label, 1);
-        }
-
-        // 5. Clear prompt (interaction consumed, doors stay open)
+        // 4. Clear prompt (interaction consumed, doors stay open)
         if (NpcInteractionText.Instance != null)
         {
             NpcInteractionText.Instance.ClearPrompt();

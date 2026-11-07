@@ -11038,7 +11038,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "CONTINUE \u25B6"
+  m_text: "CONTINUE >"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 9760074bf33164947ad4a08727dee0a4, type: 2}
   m_sharedMaterial: {fileID: 6179473881242153786, guid: 9760074bf33164947ad4a08727dee0a4, type: 2}
@@ -13454,7 +13454,7 @@ MonoBehaviour:
   morningAmbienceClip: {fileID: 8300000, guid: cc8ed577bac65454f915bc1291255593, type: 3}
   clothRustleClip: {fileID: 8300000, guid: d82eaf94b31bc914dadbab15b8856a70, type: 3}
   blink1OpenDuration: 1.8
-  mamaSpeechHoldDuration: 1.8
+  mamaSpeechHoldDuration: 3.2
   doorCloseDuration: 0.9
   blink1CloseDuration: 1.3
   blink1RestDuration: 1
