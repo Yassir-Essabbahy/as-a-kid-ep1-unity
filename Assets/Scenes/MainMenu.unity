@@ -709,6 +709,7 @@ MonoBehaviour:
   Vcam_02: {fileID: 1233179072}
   Vcam_03: {fileID: 30267700}
   Vcam_04: {fileID: 321444429}
+  firstSceneName: House_Export
 --- !u!4 &190873558
 Transform:
   m_ObjectHideFlags: 0
@@ -1805,6 +1806,7 @@ GameObject:
   - component: {fileID: 272259558}
   - component: {fileID: 272259557}
   - component: {fileID: 272259556}
+  - component: {fileID: 272259559}
   m_Layer: 5
   m_Name: Dropdown
   m_TagString: Untagged
@@ -1936,6 +1938,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 272259554}
   m_CullTransparentMesh: 1
+--- !u!114 &272259559
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 272259554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8fb33755dd9a7fc49ae79e6140ad90e6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LanguageDropdownHandler
 --- !u!1 &277323907
 GameObject:
   m_ObjectHideFlags: 0

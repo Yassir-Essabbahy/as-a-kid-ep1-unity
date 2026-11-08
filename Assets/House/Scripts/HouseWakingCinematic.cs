@@ -375,7 +375,12 @@ public class HouseWakingCinematic : MonoBehaviour
 
         // Show dialogue matching the other scenes with cinematic letterbox borders
         Color motherLilac = new Color(0.77f, 0.71f, 0.99f);
-        string mamaLine = "Mama: Yallah fyeq a wlidi, nod lmdrassa...\n<size=75%><color=#D1D5DB><i>(Wake up, sweetheart, it's time for school.)</i></color></size>";
+        string mamaLine = "Mama: Yallah fyeq a wlidi, nod lmdrassa...";
+        if (LocalizationManager.Instance != null)
+        {
+            string loc = LocalizationManager.Instance.Get("mama_doorway_wake");
+            if (!string.IsNullOrEmpty(loc) && !loc.StartsWith("[")) mamaLine = loc;
+        }
         if (NpcDialogueManager.Instance != null)
         {
             NpcDialogueManager.Instance.ShowInteractableMessage(mamaLine, mamaSpeechHoldDuration, motherLilac);
