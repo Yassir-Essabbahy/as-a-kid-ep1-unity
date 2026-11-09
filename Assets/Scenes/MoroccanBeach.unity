@@ -5286,7 +5286,6 @@ GameObject:
   - component: {fileID: 1307467876}
   - component: {fileID: 1307467875}
   - component: {fileID: 1307467874}
-  - component: {fileID: 1307467873}
   - component: {fileID: 1307467877}
   - component: {fileID: 1307467879}
   - component: {fileID: 1307467878}
@@ -5297,18 +5296,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 0
---- !u!114 &1307467873
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1307467872}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 1867322857}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MobileHoldButtonForwarder
 --- !u!114 &1307467874
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5376,10 +5363,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1307467872}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 2083388510}
+  m_Script: {fileID: 11500000, guid: 4ead1868b24c732479d9bea73a83b9ee, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MobileInteractButtonForwarder
-  targetInput: {fileID: 0}
+  targetInput: {fileID: 1352609648}
 --- !u!114 &1307467878
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5389,7 +5376,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1307467872}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 1394094097}
+  m_Script: {fileID: 11500000, guid: e509b8d69ca40e342901aa32dc608c43, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ModularFirstPersonController.MobileInteractZone
   controls: {fileID: 587222551}
@@ -5774,21 +5761,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1367969404}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
---- !u!115 &1394094097
-MonoScript:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: 
-  serializedVersion: 7
-  m_DefaultReferences: {}
-  m_Icon: {fileID: 0}
-  m_Type: 0
-  m_ExecutionOrder: 0
-  m_ClassName: MobileInteractZone
-  m_Namespace: ModularFirstPersonController
-  m_AssemblyName: Assembly-CSharp
 --- !u!1 &1406127012
 GameObject:
   m_ObjectHideFlags: 0
@@ -7763,21 +7735,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.0168333, y: 0.017802678, z: 0.024163015}
   m_Center: {x: -0.000032366723, y: 0.000000052619484, z: -0.0010708035}
---- !u!115 &1867322857
-MonoScript:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: 
-  serializedVersion: 7
-  m_DefaultReferences: {}
-  m_Icon: {fileID: 0}
-  m_Type: 0
-  m_ExecutionOrder: 0
-  m_ClassName: MobileHoldButtonForwarder
-  m_Namespace: 
-  m_AssemblyName: Assembly-CSharp
 --- !u!1 &1885311565
 GameObject:
   m_ObjectHideFlags: 0
@@ -8571,21 +8528,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2079012782}
   m_CullTransparentMesh: 1
---- !u!115 &2083388510
-MonoScript:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: 
-  serializedVersion: 7
-  m_DefaultReferences: {}
-  m_Icon: {fileID: 0}
-  m_Type: 0
-  m_ExecutionOrder: 0
-  m_ClassName: MobileInteractButtonForwarder
-  m_Namespace: 
-  m_AssemblyName: Assembly-CSharp
 --- !u!1 &2083682517
 GameObject:
   m_ObjectHideFlags: 0

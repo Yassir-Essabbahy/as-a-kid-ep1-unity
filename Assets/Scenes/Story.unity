@@ -12921,21 +12921,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!115 &580145880
-MonoScript:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: 
-  serializedVersion: 7
-  m_DefaultReferences: {}
-  m_Icon: {fileID: 0}
-  m_Type: 0
-  m_ExecutionOrder: 0
-  m_ClassName: MobileLookZone
-  m_Namespace: ModularFirstPersonController
-  m_AssemblyName: Assembly-CSharp
 --- !u!4 &585459529 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 678b85ffdb9599547bd00a02a7c5906f, type: 3}
@@ -26306,7 +26291,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1244165029}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 580145880}
+  m_Script: {fileID: 11500000, guid: c6a5535f8e2626741964035084035163, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ModularFirstPersonController.MobileLookZone
   controls: {fileID: 1558794510}
