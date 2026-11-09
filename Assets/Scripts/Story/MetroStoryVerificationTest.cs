@@ -41,8 +41,6 @@ public static class MetroStoryVerificationTest
         // 7. Elevator System & False Stop Setup
         TestElevatorSystem(results);
 
-        // 8. Platform End Trigger for Dare
-        TestPlatformEndTrigger(results);
 
         // 9. Floor 3 Climax Door & Room
         TestFloor3ClimaxStaging(results);
@@ -65,14 +63,9 @@ public static class MetroStoryVerificationTest
         // 15. Elevator Ride & False Stop Transitions
         TestElevatorTransitions(results);
 
-        // 16. Floor 3 Progression & Truth/Dare Gate
+        // 16. Floor 3 Bully Progression
         TestFloor3Progression(results);
 
-        // 17. Truth Branch State Machine
-        TestTruthBranch(results);
-
-        // 18. Dare Branch & Objective
-        TestDareBranch(results);
 
         // 19. Teddy Turn & Door Activation
         TestTeddyTurnAndDoor(results);
@@ -95,17 +88,12 @@ public static class MetroStoryVerificationTest
         // 25. Moroccan Beach Build Settings Registration
         TestMoroccanBeachBuildSettings(results);
 
-        // 26. Truth or Dare Monochrome UI Theme Applied
+        // 26. Monochrome Choice UI Theme Applied
         TestMonochromeChoiceTheme(results);
 
         // 27. ChoicePack Position Above Letterbox Band
         TestChoicePackPositionAboveBands(results);
 
-        // 28. Floor 3 Back Table and Paper Staged & Linked
-        TestFloor3TableAndPaper(results);
-
-        // 29. Paper Inspect & Math Drawing System
-        TestPaperInspectDrawingSystem(results);
 
         // 30. Door Behind Teacher Elevator Audio Spam Eliminated
         TestDoorAudioSpamEliminated(results);
@@ -154,8 +142,6 @@ public static class MetroStoryVerificationTest
             ctrl.intercomInspected = false;
             ctrl.departureBoardInspected = false;
             ctrl.teddyLostPieceCollected = false;
-            ctrl.dareObjectiveCompleted = false;
-            if (ctrl.platformEndTrigger != null) ctrl.platformEndTrigger.SetActive(false);
             if (ctrl.doorTrigger != null) ctrl.doorTrigger.enabled = false;
             if (ctrl.endPrototypePanel != null) ctrl.endPrototypePanel.SetActive(false);
 
@@ -293,19 +279,6 @@ public static class MetroStoryVerificationTest
         });
     }
 
-    private static void TestPlatformEndTrigger(List<TestResult> results)
-    {
-        var ctrl = GameObject.FindAnyObjectByType<MetroStorySequenceController>();
-        var platformTrigger = ctrl != null ? ctrl.platformEndTrigger : null;
-        var ptCol = platformTrigger != null ? platformTrigger.GetComponent<BoxCollider>() : null;
-        var ptScript = platformTrigger != null ? platformTrigger.GetComponent<PlatformEndTrigger>() : null;
-        bool triggerOk = platformTrigger != null && ptCol != null && ptCol.isTrigger && ptScript != null;
-        results.Add(new TestResult {
-            testName = "8. Platform End Trigger Configured for Dare",
-            passed = triggerOk,
-            details = triggerOk ? $"Trigger at {platformTrigger.transform.position}" : "PlatformEndTrigger missing or invalid!"
-        });
-    }
 
     private static void TestFloor3ClimaxStaging(List<TestResult> results)
     {
@@ -360,10 +333,8 @@ public static class MetroStoryVerificationTest
             "transit_pass_01", "vending_machine_01", "intercom_01",
             "elevator_train_reaction_01", "elevator_train_reaction_02",
             "departure_board_01", "teddy_lost_piece_01",
-            "teddy_met_people_01", "teddy_met_people_02",
-            "truth_01", "truth_02", "truth_03", "truth_04",
-            "dare_01", "dare_02", "dare_complete_01",
-            "turn_01", "turn_02", "turn_04", "turn_06",
+            "teddy_met_people_01",
+            "turn_02", "turn_04", "turn_06",
             "cinematic_01", "cinematic_03", "cinematic_06", "cinematic_09",
             "scream_01", "episode_01", "episode_03",
             "final_teddy_01", "final_teddy_02",
@@ -430,17 +401,17 @@ public static class MetroStoryVerificationTest
         }
 
         dm.EnsureBandsBound();
-        dm.SetChoiceLabels("TRUTH", "DARE");
+        dm.SetChoiceLabels("OPTION_A", "OPTION_B");
 
         var yesLabel = dm.choicePack.transform.Find("YesButton/Label")?.GetComponent<TMPro.TextMeshProUGUI>();
         var noLabel = dm.choicePack.transform.Find("NoButton/Label")?.GetComponent<TMPro.TextMeshProUGUI>();
 
-        bool labelsOk = yesLabel != null && yesLabel.text.Contains("TRUTH") && noLabel != null && noLabel.text.Contains("DARE");
+        bool labelsOk = yesLabel != null && yesLabel.text.Contains("OPTION_A") && noLabel != null && noLabel.text.Contains("OPTION_B");
 
         results.Add(new TestResult {
-            testName = "13. Dynamic Choice Labels ('TRUTH' / 'DARE')",
+            testName = "13. Dynamic Choice Labels",
             passed = labelsOk,
-            details = labelsOk ? "ChoicePack buttons correctly updated to 'TRUTH' and 'DARE'" : "Choice labels mismatch!"
+            details = labelsOk ? "ChoicePack buttons correctly updated to custom labels" : "Choice labels mismatch!"
         });
     }
 
@@ -507,51 +478,12 @@ public static class MetroStoryVerificationTest
         ctrl.bullySpoken = false;
 
         ctrl.OnNpcSpoken(2);
-        bool readyForTruthOrDare = ctrl.currentPhase == MetroStorySequenceController.StoryPhase.Floor3_TruthOrDare;
+        bool bullySpokenRegistered = ctrl.bullySpoken;
 
         results.Add(new TestResult {
-            testName = "16. Floor 3 Bully Progression & Truth/Dare Trigger",
-            passed = readyForTruthOrDare,
-            details = readyForTruthOrDare ? "Bully dialogue completion triggers Floor3_TruthOrDare phase" : "Floor 3 progression failed!"
-        });
-    }
-
-    private static void TestTruthBranch(List<TestResult> results)
-    {
-        var ctrl = GameObject.FindAnyObjectByType<MetroStorySequenceController>();
-        if (ctrl == null) return;
-
-        ctrl.currentPhase = MetroStorySequenceController.StoryPhase.Floor3_TruthOrDare;
-        var dm = GameObject.FindAnyObjectByType<NpcDialogueManager>();
-        if (dm != null) dm.lastChoiceIndex = 0;
-
-        bool validChoice = (dm != null && dm.lastChoiceIndex == 0);
-
-        results.Add(new TestResult {
-            testName = "17. Truth Branch Selection (Choice 0)",
-            passed = validChoice,
-            details = "Choice 0 maps directly to Floor3_TruthResolution phase"
-        });
-    }
-
-    private static void TestDareBranch(List<TestResult> results)
-    {
-        var ctrl = GameObject.FindAnyObjectByType<MetroStorySequenceController>();
-        if (ctrl == null) return;
-
-        ctrl.currentPhase = MetroStorySequenceController.StoryPhase.Floor3_DareObjective;
-        ctrl.dareObjectiveCompleted = false;
-
-        string dare01 = MetroStorySequenceController.GetLoc("dare_01");
-        string dare02 = MetroStorySequenceController.GetLoc("dare_02");
-        string dareComp = MetroStorySequenceController.GetLoc("dare_complete_01");
-
-        bool dialogueValid = !string.IsNullOrEmpty(dare01) && !string.IsNullOrEmpty(dare02) && !string.IsNullOrEmpty(dareComp);
-
-        results.Add(new TestResult {
-            testName = "18. Dare Branch & Psychological Dare Mechanic (Close Eyes & Darkness)",
-            passed = dialogueValid,
-            details = dialogueValid ? $"Psychological Dare verified: '{dare02}' -> Darkness -> '{dareComp}'" : "Dare dialogue missing!"
+            testName = "16. Floor 3 Bully Progression",
+            passed = bullySpokenRegistered,
+            details = bullySpokenRegistered ? "Bully dialogue completion registers bullySpoken and triggers Teddy transition" : "Floor 3 progression failed!"
         });
     }
 
@@ -668,7 +600,7 @@ public static class MetroStoryVerificationTest
         }
 
         results.Add(new TestResult {
-            testName = "26. Monochrome Truth / Dare UI Theme Applied to Choice Buttons",
+            testName = "26. Monochrome Choice UI Theme Applied to Choice Buttons",
             passed = dmOk,
             details = dmOk ? "Monochrome styling (noir background, subtle outline, pixel font, white tint transitions) verified on YesButton/NoButton" : "NpcDialogueManager missing!"
         });
@@ -696,44 +628,6 @@ public static class MetroStoryVerificationTest
         });
     }
 
-    private static void TestFloor3TableAndPaper(List<TestResult> results)
-    {
-        var roots = SceneManager.GetActiveScene().GetRootGameObjects();
-        var f3 = System.Array.Find(roots, r => r.name == "Floor3");
-
-        var table = GameObject.Find("Floor3_Table_Back") ?? (f3 != null ? f3.transform.Find("Floor3_Table_Back")?.gameObject : null);
-        var paper = GameObject.Find("Floor3_Paper_Interactable") ?? (table != null ? table.transform.Find("Floor3_Paper_Interactable")?.gameObject : null);
-        var paperInteractable = paper != null ? paper.GetComponent<Floor3PaperInteractable>() : null;
-        var metro = GameObject.FindAnyObjectByType<MetroStorySequenceController>();
-
-        bool tableOk = table != null;
-        bool paperOk = paper != null && paperInteractable != null;
-        bool metroLinked = metro != null && metro.tablePaperObject != null;
-
-        bool ok = tableOk && paperOk && metroLinked;
-        results.Add(new TestResult {
-            testName = "28. Floor 3 Back Table and Paper Interactable Staged and Linked",
-            passed = ok,
-            details = ok ? $"Table found: {table != null}, Paper found: {paper != null}, Interactable: {paperInteractable != null}, Linked in controller: {metroLinked}" : "Table or paper interactable missing or unlinked!"
-        });
-    }
-
-    private static void TestPaperInspectDrawingSystem(List<TestResult> results)
-    {
-        var paperCtrl = Object.FindAnyObjectByType<PaperInspectController>();
-        if (paperCtrl == null)
-        {
-            var go = new GameObject("PaperInspectSystem_Test");
-            paperCtrl = go.AddComponent<PaperInspectController>();
-        }
-
-        bool ctrlOk = paperCtrl != null;
-        results.Add(new TestResult {
-            testName = "29. Paper Inspect & Math Drawing System Initialized",
-            passed = ctrlOk,
-            details = ctrlOk ? $"PaperInspectController functional with texture {paperCtrl.textureWidth}x{paperCtrl.textureHeight} and drawing modes" : "PaperInspectController missing!"
-        });
-    }
 
     private static void TestDoorAudioSpamEliminated(List<TestResult> results)
     {
@@ -776,7 +670,7 @@ public static class MetroStoryVerificationTest
 
     private static void TestAudioSourcesRestored(List<TestResult> results)
     {
-        var allAudio = Object.FindObjectsByType<AudioSource>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        var allAudio = Object.FindObjectsByType<AudioSource>(FindObjectsInactive.Include);
         int zeroCount = 0;
         int positiveCount = 0;
         foreach (var audio in allAudio)
@@ -818,33 +712,14 @@ public static class MetroStoryVerificationTest
 
     private static void TestCanvasesStartInactive(List<TestResult> results)
     {
-        var allCanvases = Object.FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-        bool paperActive = false;
-        bool fuseUIActive = false;
-
-        foreach (var c in allCanvases)
-        {
-            if (c == null) continue;
-            if (c.gameObject.name.Contains("PaperInspect_Canvas") && c.gameObject.activeInHierarchy)
-            {
-                paperActive = true;
-            }
-        }
-
         var fuseUI = GameObject.Find("MobileFuseBoxUI");
-        if (fuseUI != null && fuseUI.activeInHierarchy)
-        {
-            fuseUIActive = true;
-        }
+        bool fuseUIActive = fuseUI != null && fuseUI.activeInHierarchy;
 
-        var paperRoot = GameObject.Find("PaperRoot");
-        bool paperRootActive = paperRoot != null && paperRoot.activeInHierarchy;
-
-        bool passed = !paperActive && !fuseUIActive && !paperRootActive;
+        bool passed = !fuseUIActive;
         results.Add(new TestResult {
             testName = "39. UI Canvases Start Inactive on Scene Load",
             passed = passed,
-            details = passed ? "PaperInspect_Canvas, PaperRoot, and MobileFuseBoxUI start completely inactive on scene load" : $"UI started active on scene load! paperCanvasActive={paperActive}, paperRootActive={paperRootActive}, fuseUIActive={fuseUIActive}"
+            details = passed ? "MobileFuseBoxUI starts inactive on scene load" : "MobileFuseBoxUI started active on scene load!"
         });
     }
 

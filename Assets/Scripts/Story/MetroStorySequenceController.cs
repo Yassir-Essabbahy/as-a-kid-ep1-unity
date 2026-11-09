@@ -90,27 +90,24 @@ public class MetroStorySequenceController : MonoBehaviour
 
     public enum StoryPhase
     {
-        Floor1_Exploration,     // 0: Floor 1 - talk to NPCs (Neighbor, Shop Owner), search for Transit Pass
-        Floor1_ElevatorReady,   // 1: Floor 1 - Elevator unlocked, objective points up stairs
-        Elevator_Travel,        // 2: Inside elevator - doors close, travelling
-        Elevator_TrainFalseStop,// 3: False stop - doors open onto void track, train speeds past
-        Floor3_Arrival,         // 4: Arrived at Floor 3 - doors open, explore Floor 3
-        Floor3_NpcEncounter,    // 5: Floor 3 - Meet Bully and inspect Floor 3 clues
-        Floor3_TruthOrDare,     // 6: Truth or Dare choice on Floor 3
-        Floor3_TruthResolution, // 7: Truth branch dialogue
-        Floor3_DareObjective,   // 8: Dare branch - walk to end of Floor 3 platform
-        TeddyTurn,              // 9: Teddy says "Wake up" -> door knocking starts
-        DoorWaiting,            // 10: Player walks to Door on Floor 3
-        BehindDoorCinematic,    // 11: Teacher, Mother, Father cinematic
-        ChildEpisode,           // 12: Child seizure / panic episode
-        FinalTeddyMoment,       // 13: Final calm teddy view on Floor 3
-        EndOfPrototype,         // 14: Fade to black, End UI, Restart
-        DarkRoom_Reveal,        // 15: Teddy explains brother is gone and reveals he is imagination
-        MoroccanBeach_Transition, // 16: Transition directly to MoroccanBeach scene
-        Classroom_Return,       // 17: Return to S1 classroom scene
-        Classroom_ClockShot,    // 18: Camera focused on clock moving forward
-        Classroom_TeacherEnding,// 19: Teacher asks "Are you with us?"
-        EndOfEpisode            // 20: Fade to black, END OF EPISODE screen, restart
+        Floor1_Exploration = 0,     // 0: Floor 1 - talk to NPCs (Neighbor, Shop Owner), search for Transit Pass
+        Floor1_ElevatorReady = 1,   // 1: Floor 1 - Elevator unlocked, objective points up stairs
+        Elevator_Travel = 2,        // 2: Inside elevator - doors close, travelling
+        Elevator_TrainFalseStop = 3,// 3: False stop - doors open onto void track, train speeds past
+        Floor3_Arrival = 4,         // 4: Arrived at Floor 3 - doors open, explore Floor 3
+        Floor3_NpcEncounter = 5,    // 5: Floor 3 - Meet Bully and inspect Floor 3 clues
+        TeddyTurn = 9,              // 9: Teddy says "Wake up" -> door knocking starts
+        DoorWaiting = 10,           // 10: Player walks to Door on Floor 3
+        BehindDoorCinematic = 11,   // 11: Teacher, Mother, Father cinematic
+        ChildEpisode = 12,          // 12: Child seizure / panic episode
+        FinalTeddyMoment = 13,      // 13: Final calm teddy view on Floor 3
+        EndOfPrototype = 14,        // 14: Fade to black, End UI, Restart
+        DarkRoom_Reveal = 15,       // 15: Teddy explains brother is gone and reveals he is imagination
+        MoroccanBeach_Transition = 16, // 16: Transition directly to MoroccanBeach scene
+        Classroom_Return = 17,       // 17: Return to S1 classroom scene
+        Classroom_ClockShot = 18,    // 18: Camera focused on clock moving forward
+        Classroom_TeacherEnding = 19,// 19: Teacher asks "Are you with us?"
+        EndOfEpisode = 20            // 20: Fade to black, END OF EPISODE screen, restart
     }
 
     [Header("Teddy Identity (Single Source of Truth)")]
@@ -166,14 +163,7 @@ public class MetroStorySequenceController : MonoBehaviour
     public NpcConversation teddyConversation;
     public CarryableItem teddyCarryable;
 
-    [Header("Truth / Dare Table Paper")]
-    public GameObject tablePaperObject;
-    public PaperInspectController paperInspectController;
-    public bool paperObjectiveCompleted = false;
 
-    [Header("Dare Objective")]
-    public GameObject platformEndTrigger;
-    public bool dareObjectiveCompleted = false;
 
     [Header("Door & Cinematic")]
     public GameObject doorObject;
@@ -230,17 +220,11 @@ public class MetroStorySequenceController : MonoBehaviour
         ResolveReferences();
         HookConversations();
 
-        if (platformEndTrigger != null)
-            platformEndTrigger.SetActive(false);
-
         if (doorTrigger != null)
             doorTrigger.enabled = false;
 
         if (endPrototypePanel != null)
             endPrototypePanel.SetActive(false);
-
-        if (paperInspectController != null)
-            paperInspectController.CloseInspectImmediate();
 
         if (restartButton != null)
         {
@@ -375,15 +359,7 @@ public class MetroStorySequenceController : MonoBehaviour
             elevBtn.OnArrivalOnNewFloor += () => OnFloorArrived(1);
         }
 
-        if (paperInspectController == null)
-        {
-            paperInspectController = FindAnyObjectByType<PaperInspectController>(FindObjectsInactive.Include);
-            if (paperInspectController == null)
-            {
-                var paperObj = new GameObject("PaperInspectSystem");
-                paperInspectController = paperObj.AddComponent<PaperInspectController>();
-            }
-        }
+
     }
 
     private void HookConversations()
@@ -628,14 +604,14 @@ public class MetroStorySequenceController : MonoBehaviour
         }
     }
 
-    private bool isTruthOrDareStarted = false;
+    private bool isPostBullySequenceStarted = false;
 
     public void CheckFloor3Progress()
     {
-        if (bullySpoken && !isTruthOrDareStarted)
+        if (bullySpoken && !isPostBullySequenceStarted)
         {
-            currentPhase = StoryPhase.Floor3_TruthOrDare;
-            Debug.Log("[MetroStory] Bully spoken on Floor 3. Waiting 1.5 seconds then auto-firing Teddy dialogue...");
+            isPostBullySequenceStarted = true;
+            Debug.Log("[MetroStory] Bully spoken on Floor 3. Waiting 1.5 seconds then starting Teddy sequence...");
             StartCoroutine(AutoTriggerTeddyRoutine());
         }
     }
@@ -661,7 +637,7 @@ public class MetroStorySequenceController : MonoBehaviour
         }
 
         isAutoTriggeringTeddy = false;
-        yield return StartCoroutine(TruthOrDareSequence());
+        yield return StartCoroutine(TeddyTurnRoutine());
     }
 
     public void OnElevatorStarted()
@@ -826,7 +802,7 @@ public class MetroStorySequenceController : MonoBehaviour
                 return true;
             }
         }
-        else if (currentPhase == StoryPhase.Floor3_Arrival || currentPhase == StoryPhase.Floor3_NpcEncounter || currentPhase == StoryPhase.Floor3_TruthOrDare || bullySpoken)
+        else if (currentPhase == StoryPhase.Floor3_Arrival || currentPhase == StoryPhase.Floor3_NpcEncounter || bullySpoken)
         {
             if (!bullySpoken)
             {
@@ -838,9 +814,10 @@ public class MetroStorySequenceController : MonoBehaviour
             }
             else
             {
-                if (!isTruthOrDareStarted)
+                if (!isPostBullySequenceStarted)
                 {
-                    StartCoroutine(TruthOrDareSequence());
+                    isPostBullySequenceStarted = true;
+                    StartCoroutine(TeddyTurnRoutine());
                 }
                 return true;
             }
@@ -875,158 +852,17 @@ public class MetroStorySequenceController : MonoBehaviour
         sequenceBusy = false;
     }
 
-    public IEnumerator TruthOrDareSequence()
+    public IEnumerator TeddyTurnRoutine()
     {
+        currentPhase = StoryPhase.TeddyTurn;
         sequenceBusy = true;
-        currentPhase = StoryPhase.Floor3_TruthOrDare;
-
         EnsureTeddyCarried();
 
         if (objectiveText != null) objectiveText.gameObject.SetActive(false);
         if (fpsController != null) fpsController.SetControlLocked(true);
 
-        string[] introLines = new string[] {
-            GetLoc("teddy_met_people_01"),
-            GetLoc("teddy_met_people_02")
-        };
-
-        if (NpcDialogueManager.Instance != null)
-        {
-            string truthLabel = "TRUTH";
-            string dareLabel = "DARE";
-            if (LocalizationManager.Instance != null && LocalizationManager.Instance.CurrentLanguage == "ar")
-            {
-                truthLabel = "صراحة";
-                dareLabel = "جرأة";
-            }
-            else if (LocalizationManager.Instance != null && LocalizationManager.Instance.CurrentLanguage == "fr")
-            {
-                truthLabel = "VÉRITÉ";
-                dareLabel = "ACTION";
-            }
-            NpcDialogueManager.Instance.SetChoiceLabels(truthLabel, dareLabel);
-        }
-
-        yield return StartCoroutine(SafeShowDialogue(
-            introLines,
-            hasChoice: true,
-            dialogueColor: Color.white,
-            dialogueFont: null
-        ));
-
-        int choice = NpcDialogueManager.Instance != null ? NpcDialogueManager.Instance.lastChoiceIndex : 0;
-        Debug.Log($"[MetroStory] Player chose Truth or Dare: {choice} (0=Truth, 1=Dare)");
-
-        if (choice == 0)
-        {
-            yield return StartCoroutine(TruthBranchRoutine());
-        }
-        else
-        {
-            yield return StartCoroutine(DareBranchRoutine());
-        }
-    }
-
-    private IEnumerator TruthBranchRoutine()
-    {
-        currentPhase = StoryPhase.Floor3_TruthResolution;
-
-        string[] truthLines = new string[] {
-            GetLoc("truth_01"),
-            GetLoc("truth_02")
-        };
-
-        yield return StartCoroutine(SafeShowDialogue(
-            truthLines,
-            hasChoice: false,
-            dialogueColor: Color.white,
-            dialogueFont: null
-        ));
-
-        if (objectiveText != null)
-        {
-            objectiveText.gameObject.SetActive(true);
-            objectiveText.text = "Inspect the paper on the back table...";
-        }
-
-        if (fpsController != null) fpsController.SetControlLocked(false);
-        sequenceBusy = false;
-        Debug.Log("[MetroStory] Truth branch started. Objective: find truth paper on the back table.");
-    }
-
-    private IEnumerator DareBranchRoutine()
-    {
-        currentPhase = StoryPhase.Floor3_DareObjective;
-
-        if (platformEndTrigger != null)
-            platformEndTrigger.SetActive(false);
-
-        string[] dareLines = new string[] {
-            GetLoc("dare_01"),
-            GetLoc("dare_02")
-        };
-
-        yield return StartCoroutine(SafeShowDialogue(
-            dareLines,
-            hasChoice: false,
-            dialogueColor: Color.white,
-            dialogueFont: null
-        ));
-
-        if (objectiveText != null)
-        {
-            objectiveText.gameObject.SetActive(true);
-            objectiveText.text = "Solve math paper on the back table...";
-        }
-
-        if (fpsController != null) fpsController.SetControlLocked(false);
-        sequenceBusy = false;
-        Debug.Log("[MetroStory] Dare branch started. Objective: solve math paper on the back table.");
-    }
-
-    public void OnPlatformEndReached()
-    {
-        if (platformEndTrigger != null)
-            platformEndTrigger.SetActive(false);
-    }
-
-    public void OnPaperInspectionFinished(PaperInspectController.PaperMode mode)
-    {
-        paperObjectiveCompleted = true;
-        dareObjectiveCompleted = true;
-        StartCoroutine(PaperCompletedRoutine(mode));
-    }
-
-    private IEnumerator PaperCompletedRoutine(PaperInspectController.PaperMode mode)
-    {
-        sequenceBusy = true;
-        if (fpsController != null) fpsController.SetControlLocked(true);
-        if (objectiveText != null) objectiveText.gameObject.SetActive(false);
-
-        string[] reactLines = (mode == PaperInspectController.PaperMode.Dare_Math)
-            ? new string[] { GetLoc("dare_solving_01"), GetLoc("dare_complete_01") }
-            : new string[] { GetLoc("truth_03"), GetLoc("truth_04"), GetLoc("truth_complete_01") };
-
-        yield return StartCoroutine(SafeShowDialogue(
-            reactLines,
-            hasChoice: false,
-            dialogueColor: Color.white,
-            dialogueFont: null
-        ));
-
-        yield return new WaitForSeconds(0.6f);
-
-        yield return StartCoroutine(TeddyTurnRoutine());
-    }
-
-    private IEnumerator TeddyTurnRoutine()
-    {
-        currentPhase = StoryPhase.TeddyTurn;
-        sequenceBusy = true;
-        if (fpsController != null) fpsController.SetControlLocked(true);
-
         string[] turnLines = new string[] {
-            GetLoc("turn_01"),
+            GetLoc("teddy_met_people_01"),
             GetLoc("turn_02"),
             GetLoc("turn_03"),
             GetLoc("turn_04"),
@@ -1475,18 +1311,11 @@ public class MetroStorySequenceController : MonoBehaviour
         Debug.Log("[MetroStory DEBUG] All NPCs marked spoken.");
     }
 
-    [ContextMenu("Debug: Trigger Truth Branch")]
-    public void DebugTriggerTruthBranch()
+    [ContextMenu("Debug: Trigger Teddy Turn Routine")]
+    public void DebugTriggerTeddyTurn()
     {
         DebugMarkAllNpcsSpoken();
-        StartCoroutine(TruthBranchRoutine());
-    }
-
-    [ContextMenu("Debug: Trigger Dare Branch")]
-    public void DebugTriggerDareBranch()
-    {
-        DebugMarkAllNpcsSpoken();
-        StartCoroutine(DareBranchRoutine());
+        StartCoroutine(TeddyTurnRoutine());
     }
 
     [ContextMenu("Debug: Trigger Behind Door Cinematic")]
