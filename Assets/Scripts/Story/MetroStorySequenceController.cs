@@ -207,6 +207,11 @@ public class MetroStorySequenceController : MonoBehaviour
             return;
         }
         Instance = this;
+        currentPhase = StoryPhase.Floor1_Exploration;
+        bullySpoken = false;
+        neighborSpoken = false;
+        shopOwnerSpoken = false;
+        sequenceBusy = false;
 
         if (!transitPassCollected)
         {

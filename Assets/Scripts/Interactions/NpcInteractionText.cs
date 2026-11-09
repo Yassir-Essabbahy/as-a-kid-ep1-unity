@@ -525,6 +525,28 @@ public class NpcInteractionText : MonoBehaviour
         if (!Application.isMobilePlatform) Cursor.lockState = CursorLockMode.Locked;
         if (!Application.isMobilePlatform) Cursor.visible = false;
 
+        // Teddy bear interaction: NO camera zoom or pitch snap to ground
+        bool isTeddyConv = currentIsTeddy || (conv != null && conv.gameObject.name.IndexOf("Teddy", System.StringComparison.OrdinalIgnoreCase) >= 0);
+        if (isTeddyConv)
+        {
+            yield return StartCoroutine(conv.Play());
+
+            if (look != null) look.IKActive = false;
+            if (!Application.isMobilePlatform) Cursor.lockState = CursorLockMode.Locked;
+            if (!Application.isMobilePlatform) Cursor.visible = false;
+
+            if (_fpsController != null)
+            {
+                _fpsController.SetControlLocked(false);
+            }
+            else if (playerController != null)
+            {
+                playerController.enabled = true;
+            }
+
+            CanInteract = true;
+            yield break;
+        }
         // 3. Direct smooth camera zoom and look rotation
         Camera cam = playerCamera != null ? playerCamera.GetComponent<Camera>() : null;
         float startFov = cam != null ? cam.fieldOfView : (_fpsController != null ? _fpsController.fov : 60f);

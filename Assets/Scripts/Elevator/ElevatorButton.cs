@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using UnityEngine;
 
 public class ElevatorButton : MonoBehaviour
@@ -33,8 +33,8 @@ public class ElevatorButton : MonoBehaviour
 
     [Header("Train Visuals and Movement")]
     public Transform voidTrainObject;
-    public Vector3 trainStartPosition = new Vector3(-5.1f, 11.25f, 95.14f);
-    public Vector3 trainEndPosition = new Vector3(-45.6f, 11.25f, 95.14f);
+    public Vector3 trainStartPosition = new Vector3(-10.0f, 11.25f, 103.04f);
+    public Vector3 trainEndPosition = new Vector3(-37.5f, 11.25f, 103.04f);
     public float trainApproachDuration = 2.2f;
     public Light[] trainHeadlights;
     public BoxCollider elevatorDoorBarrier;
@@ -222,6 +222,7 @@ public class ElevatorButton : MonoBehaviour
         if (voidTrainObject != null)
         {
             voidTrainObject.position = trainStartPosition;
+            voidTrainObject.rotation = Quaternion.Euler(0f, -90f, 0f);
             voidTrainObject.gameObject.SetActive(true);
         }
         SetTrainHeadlights(false, 0f);
@@ -415,6 +416,8 @@ public class ElevatorButton : MonoBehaviour
             if (train != null)
             {
                 voidTrainObject = train;
+                voidTrainObject.position = trainStartPosition;
+                voidTrainObject.rotation = Quaternion.Euler(0f, -90f, 0f);
             }
             else
             {
@@ -425,7 +428,7 @@ public class ElevatorButton : MonoBehaviour
                     var instance = Instantiate(prefab, voidTrackScene.transform);
                     instance.name = "VoidTrain";
                     instance.transform.position = trainStartPosition;
-                    instance.transform.rotation = Quaternion.Euler(0f, 90f, 0f);
+                    instance.transform.rotation = Quaternion.Euler(0f, -90f, 0f);
                     voidTrainObject = instance.transform;
 
                     foreach (var c in instance.GetComponentsInChildren<Collider>(true))
@@ -448,8 +451,8 @@ public class ElevatorButton : MonoBehaviour
             {
                 var hlObj = new GameObject("Headlights");
                 hlObj.transform.SetParent(voidTrainObject, false);
-                hlObj.transform.localPosition = new Vector3(1.55f, 2.2f, -8.5f);
-                hlObj.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
+                hlObj.transform.localPosition = new Vector3(0f, 2.0f, 13.5f);
+                hlObj.transform.localRotation = Quaternion.identity;
                 hlObj.layer = 3;
 
                 var leftObj = new GameObject("LeftLight");
@@ -477,8 +480,8 @@ public class ElevatorButton : MonoBehaviour
                 rightL.enabled = false;
 
                 var glowObj = new GameObject("CabinGlow");
-                glowObj.transform.SetParent(hlObj.transform, false);
-                glowObj.transform.localPosition = new Vector3(0f, 0.5f, 2f);
+                glowObj.transform.SetParent(voidTrainObject, false);
+                glowObj.transform.localPosition = new Vector3(0f, 2.0f, 2.0f);
                 glowObj.layer = 3;
                 var glowL = glowObj.AddComponent<Light>();
                 glowL.type = LightType.Point;
