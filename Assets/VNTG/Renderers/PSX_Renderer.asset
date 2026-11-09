@@ -53,6 +53,7 @@ MonoBehaviour:
   m_RendererFeatures:
   - {fileID: -3904872614339783205}
   - {fileID: 5075489610307778329}
+  - {fileID: 1558336089405688881}
   m_RendererFeatureMap: db5520d10b1bcfc919b794d3e8c26f46
   m_UseNativeRenderPass: 0
   xrSystemData: {fileID: 0}
@@ -82,6 +83,23 @@ MonoBehaviour:
   m_DepthTextureFormat: 0
   m_AccurateGbufferNormals: 0
   m_IntermediateTextureMode: 1
+--- !u!114 &1558336089405688881
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0ef9b1e773afa5149bbad0e59571f499, type: 3}
+  m_Name: PSXRenderFeature
+  m_EditorClassIdentifier: Assembly-CSharp::PSXRetro.PSXRenderFeature
+  m_Active: 1
+  settings:
+    renderPassEvent: 550
+    applyInSceneView: 1
+    postProcessShader: {fileID: 4800000, guid: 97974b55b853626429be9b7944789867, type: 3}
 --- !u!114 &5075489610307778329
 MonoBehaviour:
   m_ObjectHideFlags: 0

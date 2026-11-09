@@ -5131,7 +5131,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 180912511}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 1415018874}
+  m_Script: {fileID: 11500000, guid: c6a5535f8e2626741964035084035163, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ModularFirstPersonController.MobileLookZone
   controls: {fileID: 1408039110}
@@ -6492,6 +6492,7 @@ MonoBehaviour:
   playerTag: Player
   questGiver: {fileID: 410821863}
   requireQuestActive: 0
+  hasTicket: 0
   isSearched: 0
   playerPrefsKey: Metro_TicketFound
   ticketIcon: {fileID: 21300000, guid: 37c2b33c429648642a720475f770a322, type: 3}
@@ -9809,7 +9810,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &350214159
 RectTransform:
   m_ObjectHideFlags: 0
@@ -13241,7 +13242,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 450546166}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 2142268032}
+  m_Script: {fileID: 11500000, guid: bda17ad5cac29f5479c21aaba976d5bd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ModularFirstPersonController.MobileJoystickZone
   controls: {fileID: 1408039110}
@@ -20423,6 +20424,30 @@ Transform:
   - {fileID: 1084956400}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &750220677
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 19cfced71e38e2544aee00299a92a141, type: 3}
+  m_Name: RuntimePSXSettings
+  m_EditorClassIdentifier: Assembly-CSharp::PSXRetro.PSXSettings
+  preset: 0
+  targetVerticalResolution: 270
+  colorPrecision: 32
+  ditherEnabled: 1
+  ditherStrength: 1
+  vertexPrecision: 180
+  affineStrength: 0.25
+  fogEnabled: 1
+  fogColor: {r: 0.08, g: 0.08, b: 0.1, a: 1}
+  fogDensity: 1
+  fogStart: 3
+  fogEnd: 40
 --- !u!1 &757984979
 GameObject:
   m_ObjectHideFlags: 0
@@ -21238,6 +21263,8 @@ MonoBehaviour:
   slideDuration: 0.45
   continueButton: {fileID: 1657727567}
   charactersPerSecond: 25
+  typingSound: {fileID: 0}
+  typingSource: {fileID: 0}
   lastChoiceIndex: 0
 --- !u!4 &835160607 stripped
 Transform:
@@ -22631,6 +22658,7 @@ MonoBehaviour:
   InteractText: {fileID: 350214160}
   promptBox: {fileID: 0}
   promptBoxRect: {fileID: 0}
+  promptBoxText: {fileID: 0}
   promptButton: {fileID: 0}
   InteractionDistance: 5
   playerCamera: {fileID: 1676752290}
@@ -35297,21 +35325,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1412980616}
   m_CullTransparentMesh: 1
---- !u!115 &1415018874
-MonoScript:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: 
-  serializedVersion: 7
-  m_DefaultReferences: {}
-  m_Icon: {fileID: 0}
-  m_Type: 0
-  m_ExecutionOrder: 0
-  m_ClassName: MobileLookZone
-  m_Namespace: ModularFirstPersonController
-  m_AssemblyName: Assembly-CSharp
 --- !u!1 &1416105037
 GameObject:
   m_ObjectHideFlags: 0
@@ -37991,6 +38004,63 @@ Light:
   m_LightUnit: 1
   m_LuxAtDistance: 1
   m_EnableSpotReflector: 1
+--- !u!1 &1521956401
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1521956403}
+  - component: {fileID: 1521956402}
+  m_Layer: 0
+  m_Name: '[PSX_System]'
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1521956402
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1521956401}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 41b06d2ad64cac84cac410b81e8a5b67, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PSXRetro.PSXSystem
+  _settings: {fileID: 750220677}
+  currentPreset: 0
+  targetVerticalResolution: 270
+  colorPrecision: 32
+  ditherEnabled: 1
+  ditherStrength: 1
+  vertexPrecision: 180
+  affineStrength: 0.25
+  fogEnabled: 1
+  fogColor: {r: 0.08, g: 0.08, b: 0.1, a: 1}
+  fogDensity: 1
+  fogStart: 3
+  fogEnd: 40
+--- !u!4 &1521956403
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1521956401}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1525442291
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -40163,6 +40233,7 @@ MonoBehaviour:
   playerTag: Player
   questGiver: {fileID: 410821863}
   requireQuestActive: 0
+  hasTicket: 0
   isSearched: 0
   playerPrefsKey: Metro_TicketFound
   ticketIcon: {fileID: 21300000, guid: 37c2b33c429648642a720475f770a322, type: 3}
@@ -46406,6 +46477,7 @@ MonoBehaviour:
   playerTag: Player
   questGiver: {fileID: 410821863}
   requireQuestActive: 0
+  hasTicket: 0
   isSearched: 0
   playerPrefsKey: Metro_TicketFound
   ticketIcon: {fileID: 21300000, guid: 37c2b33c429648642a720475f770a322, type: 3}
@@ -47792,6 +47864,7 @@ MonoBehaviour:
   playerTag: Player
   questGiver: {fileID: 410821863}
   requireQuestActive: 0
+  hasTicket: 0
   isSearched: 0
   playerPrefsKey: Metro_TicketFound
   ticketIcon: {fileID: 21300000, guid: 37c2b33c429648642a720475f770a322, type: 3}
@@ -49462,6 +49535,7 @@ MonoBehaviour:
   playerTag: Player
   questGiver: {fileID: 410821863}
   requireQuestActive: 0
+  hasTicket: 0
   isSearched: 0
   playerPrefsKey: Metro_TicketFound
   ticketIcon: {fileID: 21300000, guid: 37c2b33c429648642a720475f770a322, type: 3}
@@ -55152,21 +55226,6 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
---- !u!115 &2142268032
-MonoScript:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: 
-  serializedVersion: 7
-  m_DefaultReferences: {}
-  m_Icon: {fileID: 0}
-  m_Type: 0
-  m_ExecutionOrder: 0
-  m_ClassName: MobileJoystickZone
-  m_Namespace: ModularFirstPersonController
-  m_AssemblyName: Assembly-CSharp
 --- !u!1 &2146992192
 GameObject:
   m_ObjectHideFlags: 0
@@ -60444,3 +60503,4 @@ SceneRoots:
   - {fileID: 1416105038}
   - {fileID: 749691747}
   - {fileID: 1672162133}
+  - {fileID: 1521956403}

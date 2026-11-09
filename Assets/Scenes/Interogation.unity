@@ -2490,6 +2490,63 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1326039708
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1326039710}
+  - component: {fileID: 1326039709}
+  m_Layer: 0
+  m_Name: '[PSX_System]'
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1326039709
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1326039708}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 41b06d2ad64cac84cac410b81e8a5b67, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PSXRetro.PSXSystem
+  _settings: {fileID: 1344471379}
+  currentPreset: 0
+  targetVerticalResolution: 270
+  colorPrecision: 32
+  ditherEnabled: 1
+  ditherStrength: 1
+  vertexPrecision: 180
+  affineStrength: 0.25
+  fogEnabled: 1
+  fogColor: {r: 0.08, g: 0.08, b: 0.1, a: 1}
+  fogDensity: 1
+  fogStart: 3
+  fogEnd: 40
+--- !u!4 &1326039710
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1326039708}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1337587370
 GameObject:
   m_ObjectHideFlags: 0
@@ -2580,6 +2637,30 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1337587370}
   m_Mesh: {fileID: 802800178907378768, guid: a49bcae4d0376e5449f7cc314d76a454, type: 3}
+--- !u!114 &1344471379
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 19cfced71e38e2544aee00299a92a141, type: 3}
+  m_Name: RuntimePSXSettings
+  m_EditorClassIdentifier: Assembly-CSharp::PSXRetro.PSXSettings
+  preset: 0
+  targetVerticalResolution: 270
+  colorPrecision: 32
+  ditherEnabled: 1
+  ditherStrength: 1
+  vertexPrecision: 180
+  affineStrength: 0.25
+  fogEnabled: 1
+  fogColor: {r: 0.08, g: 0.08, b: 0.1, a: 1}
+  fogDensity: 1
+  fogStart: 3
+  fogEnd: 40
 --- !u!1 &1367528725
 GameObject:
   m_ObjectHideFlags: 0
@@ -4292,3 +4373,4 @@ SceneRoots:
   - {fileID: 1546939241}
   - {fileID: 210793001}
   - {fileID: 1233867338}
+  - {fileID: 1326039710}

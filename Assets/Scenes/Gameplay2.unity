@@ -3715,7 +3715,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &350214159
 RectTransform:
   m_ObjectHideFlags: 0
@@ -5020,7 +5020,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 490487908}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 1341239675}
+  m_Script: {fileID: 11500000, guid: bda17ad5cac29f5479c21aaba976d5bd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ModularFirstPersonController.MobileJoystickZone
   controls: {fileID: 2108891135}
@@ -7348,12 +7348,71 @@ MonoBehaviour:
   slideDuration: 0.45
   continueButton: {fileID: 0}
   charactersPerSecond: 25
+  typingSound: {fileID: 0}
+  typingSource: {fileID: 0}
   lastChoiceIndex: 0
 --- !u!4 &865671349 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 079b03025f504d54eab24310644da1f9, type: 3}
   m_PrefabInstance: {fileID: 1210491879}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &880543558
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 880543560}
+  - component: {fileID: 880543559}
+  m_Layer: 0
+  m_Name: '[PSX_System]'
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &880543559
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 880543558}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 41b06d2ad64cac84cac410b81e8a5b67, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PSXRetro.PSXSystem
+  _settings: {fileID: 900081234}
+  currentPreset: 0
+  targetVerticalResolution: 270
+  colorPrecision: 32
+  ditherEnabled: 1
+  ditherStrength: 1
+  vertexPrecision: 180
+  affineStrength: 0.25
+  fogEnabled: 1
+  fogColor: {r: 0.08, g: 0.08, b: 0.1, a: 1}
+  fogDensity: 1
+  fogStart: 3
+  fogEnd: 40
+--- !u!4 &880543560
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 880543558}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &886719516
 GameObject:
   m_ObjectHideFlags: 0
@@ -7889,6 +7948,7 @@ MonoBehaviour:
   InteractText: {fileID: 350214160}
   promptBox: {fileID: 0}
   promptBoxRect: {fileID: 0}
+  promptBoxText: {fileID: 0}
   promptButton: {fileID: 0}
   InteractionDistance: 5
   playerCamera: {fileID: 1676752290}
@@ -7945,6 +8005,30 @@ MonoBehaviour:
   minPitch: 0.94
   maxPitch: 1.06
   audioSource: {fileID: 0}
+--- !u!114 &900081234
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 19cfced71e38e2544aee00299a92a141, type: 3}
+  m_Name: RuntimePSXSettings
+  m_EditorClassIdentifier: Assembly-CSharp::PSXRetro.PSXSettings
+  preset: 0
+  targetVerticalResolution: 270
+  colorPrecision: 32
+  ditherEnabled: 1
+  ditherStrength: 1
+  vertexPrecision: 180
+  affineStrength: 0.25
+  fogEnabled: 1
+  fogColor: {r: 0.08, g: 0.08, b: 0.1, a: 1}
+  fogDensity: 1
+  fogStart: 3
+  fogEnd: 40
 --- !u!1 &906001516
 GameObject:
   m_ObjectHideFlags: 0
@@ -11340,21 +11424,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4572832078516975529, guid: eae8b18d6f43ba540a10017e11402ff2, type: 3}
   m_PrefabInstance: {fileID: 1340519034}
   m_PrefabAsset: {fileID: 0}
---- !u!115 &1341239675
-MonoScript:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: 
-  serializedVersion: 7
-  m_DefaultReferences: {}
-  m_Icon: {fileID: 0}
-  m_Type: 0
-  m_ExecutionOrder: 0
-  m_ClassName: MobileJoystickZone
-  m_Namespace: ModularFirstPersonController
-  m_AssemblyName: Assembly-CSharp
 --- !u!115 &1369806262
 MonoScript:
   m_ObjectHideFlags: 0
@@ -23199,3 +23268,4 @@ SceneRoots:
   - {fileID: 1234278880}
   - {fileID: 29797604}
   - {fileID: 1672162133}
+  - {fileID: 880543560}

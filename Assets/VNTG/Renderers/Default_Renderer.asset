@@ -1,5 +1,22 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-8549811415057476564
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0ef9b1e773afa5149bbad0e59571f499, type: 3}
+  m_Name: PSXRenderFeature
+  m_EditorClassIdentifier: Assembly-CSharp::PSXRetro.PSXRenderFeature
+  m_Active: 1
+  settings:
+    renderPassEvent: 550
+    applyInSceneView: 1
+    postProcessShader: {fileID: 4800000, guid: 97974b55b853626429be9b7944789867, type: 3}
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -26,6 +43,7 @@ MonoBehaviour:
     probeVolumeBlendStatesCS: {fileID: 0}
   m_RendererFeatures:
   - {fileID: 7704927588454551938}
+  - {fileID: -8549811415057476564}
   m_RendererFeatureMap: 82d1f0b9d166ed6a
   m_UseNativeRenderPass: 0
   xrSystemData: {fileID: 0}
