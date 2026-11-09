@@ -73,6 +73,55 @@ public class NpcDialogueManager : MonoBehaviour
         }
     }
 
+    private static AudioClip _defaultTypingSound;
+    public static AudioClip DefaultTypingSound
+    {
+        get
+        {
+            if (_defaultTypingSound == null)
+            {
+                _defaultTypingSound = Resources.Load<AudioClip>("Sounds/TypingSound");
+#if UNITY_EDITOR
+                if (_defaultTypingSound == null)
+                {
+                    _defaultTypingSound = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Sounds/TypingSound.wav");
+                }
+#endif
+                if (_defaultTypingSound == null)
+                {
+                    _defaultTypingSound = CreateFallbackTypingSound();
+                }
+            }
+            return _defaultTypingSound;
+        }
+    }
+
+    private static AudioClip CreateFallbackTypingSound()
+    {
+        int sampleRate = 44100;
+        float duration = 0.055f;
+        int samples = (int)(sampleRate * duration);
+        float[] data = new float[samples];
+        for (int i = 0; i < samples; i++)
+        {
+            float t = (float)i / sampleRate;
+            float normT = (float)i / samples;
+            if (normT < 0.35f)
+            {
+                float env = Mathf.Exp(-normT * 28f);
+                float tone = Mathf.Sin(2f * Mathf.PI * 680f * t) * 0.6f + Mathf.Sin(2f * Mathf.PI * 1360f * t) * 0.25f;
+                data[i] = tone * env * 0.45f;
+            }
+            else
+            {
+                data[i] = 0f;
+            }
+        }
+        var clip = AudioClip.Create("PSX_TypingTick", samples, 1, sampleRate, false);
+        clip.SetData(data, 0);
+        return clip;
+    }
+
     private Color currentDialogueColor = Color.white;
 
     /// <summary>
@@ -191,12 +240,10 @@ public class NpcDialogueManager : MonoBehaviour
             typingSource.volume = 0.35f;
         }
 
-#if UNITY_EDITOR
         if (typingSound == null)
         {
-            typingSound = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Sounds/TypingSound.wav");
+            typingSound = DefaultTypingSound;
         }
-#endif
 
         EnsureBandsBound();
         ResetBandsOffscreen();
@@ -767,6 +814,7 @@ public class NpcDialogueManager : MonoBehaviour
         int totalChars = (dialogueText != null && dialogueText.textInfo != null) ? dialogueText.textInfo.characterCount : displayLine.Length;
 
         // Play typing audio
+        if (typingSound == null) typingSound = DefaultTypingSound;
         if (typingSource != null && typingSound != null)
         {
             typingSource.clip = typingSound;

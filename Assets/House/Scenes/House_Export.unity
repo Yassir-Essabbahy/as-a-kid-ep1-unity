@@ -7202,7 +7202,7 @@ MonoBehaviour:
   slideDuration: 0.45
   continueButton: {fileID: 1156497325}
   charactersPerSecond: 25
-  typingSound: {fileID: 0}
+  typingSound: {fileID: 8300000, guid: 98eb4b57593803048b3d3626936acdac, type: 3}
   typingSource: {fileID: 0}
   lastChoiceIndex: 0
 --- !u!4 &874983704
@@ -9073,6 +9073,7 @@ MonoBehaviour:
   - teddy_metro_05
   - teddy_metro_06
   needsChoiceAtEnd: 0
+  playOnce: 1
   dialogueColor: {r: 1, g: 0.65, b: 0.3, a: 1}
   dialogueFont: {fileID: 11400000, guid: 9760074bf33164947ad4a08727dee0a4, type: 2}
   voiceSource: {fileID: 0}
@@ -13296,6 +13297,7 @@ MonoBehaviour:
   - teddy_metro_01
   - teddy_metro_02
   needsChoiceAtEnd: 0
+  playOnce: 1
   dialogueColor: {r: 1, g: 0.65, b: 0.3, a: 1}
   dialogueFont: {fileID: 11400000, guid: 9760074bf33164947ad4a08727dee0a4, type: 2}
   voiceSource: {fileID: 0}
@@ -18649,6 +18651,7 @@ MonoBehaviour:
   - teddy_metro_03
   - teddy_metro_04
   needsChoiceAtEnd: 0
+  playOnce: 1
   dialogueColor: {r: 1, g: 0.65, b: 0.3, a: 1}
   dialogueFont: {fileID: 11400000, guid: 9760074bf33164947ad4a08727dee0a4, type: 2}
   voiceSource: {fileID: 0}
@@ -31516,7 +31519,6 @@ MonoBehaviour:
   audioSource: {fileID: 7598457411747714127}
   waterSplashSound: {fileID: 8300000, guid: 4576ca4a5bb002e4b868ff7421e9a711, type: 3}
   breathSound: {fileID: 8300000, guid: 3298dbf20f248d34c8df6d0a72b7071f, type: 3}
-  interactionDuration: 2.5
   cameraDipAngle: 22
   promptMessage: Wash Face
   localizationKey: prompt_wash_face

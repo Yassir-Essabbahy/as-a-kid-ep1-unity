@@ -4118,6 +4118,8 @@ MonoBehaviour:
   slideDuration: 0.45
   continueButton: {fileID: 545496099}
   charactersPerSecond: 28
+  typingSound: {fileID: 8300000, guid: 98eb4b57593803048b3d3626936acdac, type: 3}
+  typingSource: {fileID: 0}
   lastChoiceIndex: 0
 --- !u!4 &1009237170
 Transform:

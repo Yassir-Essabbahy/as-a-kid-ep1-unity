@@ -285,7 +285,7 @@ public class ClassroomEndingController : MonoBehaviour
             // Line 1
             if (s1Diag.bodyText != null)
             {
-                s1Diag.bodyText.text = LocalizationManager.FixRTL(cleanLine1);
+                s1Diag.TypeCustomLine(cleanLine1, teacherColor);
             }
 
             yield return new WaitForSeconds(3.2f);
@@ -293,7 +293,7 @@ public class ClassroomEndingController : MonoBehaviour
             // Line 2
             if (s1Diag.bodyText != null)
             {
-                s1Diag.bodyText.text = LocalizationManager.FixRTL(cleanLine2);
+                s1Diag.TypeCustomLine(cleanLine2, teacherColor);
             }
 
             yield return new WaitForSeconds(3.5f);

@@ -126,9 +126,29 @@ public class UIManager : MonoBehaviour
     {
         messagePanel.SetActive(true);
 
-        messageText.text = message;
+        if (messageText != null)
+        {
+            messageText.text = message;
+            messageText.maxVisibleCharacters = 0;
+            messageText.ForceMeshUpdate();
+            int totalChars = messageText.textInfo != null && messageText.textInfo.characterCount > 0
+                ? messageText.textInfo.characterCount
+                : message.Length;
 
-        yield return new WaitForSeconds(duration);
+            float elapsed = 0f;
+            for (int i = 1; i <= totalChars; i++)
+            {
+                messageText.maxVisibleCharacters = i;
+                yield return new WaitForSeconds(typewriterSpeed);
+                elapsed += typewriterSpeed;
+            }
+            messageText.maxVisibleCharacters = int.MaxValue;
+            yield return new WaitForSeconds(Mathf.Max(0.2f, duration - elapsed));
+        }
+        else
+        {
+            yield return new WaitForSeconds(duration);
+        }
 
         messagePanel.SetActive(false);
     }

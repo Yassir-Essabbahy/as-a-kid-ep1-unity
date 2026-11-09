@@ -1340,6 +1340,9 @@ MonoBehaviour:
   speakerText: {fileID: 1159847375}
   bodyText: {fileID: 469709505}
   voiceSource: {fileID: 1997375280}
+  charactersPerSecond: 25
+  typingSound: {fileID: 8300000, guid: 98eb4b57593803048b3d3626936acdac, type: 3}
+  typingSource: {fileID: 0}
   topBand: {fileID: 997283004}
   bottomBand: {fileID: 1791426512}
   topBandHeight: 140
