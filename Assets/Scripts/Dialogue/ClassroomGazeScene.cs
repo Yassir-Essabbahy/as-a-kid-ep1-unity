@@ -105,6 +105,7 @@ public class ClassroomGazeScene : MonoBehaviour
         }
         Instance = this;
 
+        if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "Ending" || ClassroomEndingController.IsEndingActive) { enabled = false; return; }
         ResolveReferences();
     }
 

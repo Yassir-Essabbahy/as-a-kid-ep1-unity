@@ -39,6 +39,9 @@ public class ClassroomEndingController : MonoBehaviour
 
     private void Awake()
     {
+        string sceneName = SceneManager.GetActiveScene().name;
+        if (sceneName == "Ending") IsEndingActive = true;
+        else if (sceneName == "Start") IsEndingActive = false;
         ResolveReferences();
     }
 

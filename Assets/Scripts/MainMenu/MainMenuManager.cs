@@ -122,6 +122,9 @@ public class MainMenuManager : MonoBehaviour
     {
         if (CanInteract == false) return;
         CanInteract = false;
+        ClassroomEndingController.IsEndingActive = false;
+        HouseWakingCinematic.HasSeenIntroThisSession = false;
+        DialogueTrigger.isDialogueActive = false;
         PlayerPrefs.DeleteKey("Metro_TicketFound");
         PlayerPrefs.Save();
         string sceneToLoad = !string.IsNullOrEmpty(firstSceneName) ? firstSceneName : "Start";
