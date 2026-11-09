@@ -934,7 +934,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 24a169137338a2f47986f6bc8e00dfe8, type: 3}
   m_Name: CRTSettings
   m_EditorClassIdentifier: ColbyO.VNTG::ColbyO.VNTG.CRT.CRTSettings
-  active: 1
+  active: 0
   Enabled:
     m_OverrideState: 1
     m_Value: 0
