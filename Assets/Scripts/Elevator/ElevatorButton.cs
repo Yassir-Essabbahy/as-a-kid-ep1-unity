@@ -33,9 +33,9 @@ public class ElevatorButton : MonoBehaviour
 
     [Header("Train Visuals and Movement")]
     public Transform voidTrainObject;
-    public Vector3 trainStartPosition = new Vector3(-10.0f, 11.25f, 103.04f);
-    public Vector3 trainEndPosition = new Vector3(-37.5f, 11.25f, 103.04f);
-    public float trainApproachDuration = 2.2f;
+    public Vector3 trainStartPosition = new Vector3(-8.0f, 11.25f, 101.94f);
+    public Vector3 trainEndPosition = new Vector3(-38.2f, 11.25f, 101.94f);
+    public float trainApproachDuration = 2.4f;
     public Light[] trainHeadlights;
     public BoxCollider elevatorDoorBarrier;
 
@@ -231,23 +231,38 @@ public class ElevatorButton : MonoBehaviour
         SetDoors(true);
         yield return new WaitForSeconds(doorOpenTime);
 
-        // Distant rumble begins as player looks out into the dark tracks
-        PlayTrainApproach();
-        yield return new WaitForSeconds(0.4f);
+        // 1. Suspense pause as player looks out into the quiet, dark void tracks
+        yield return new WaitForSeconds(1.0f);
 
-        // Sudden headlight flare in the distance and horn blast!
-        SetTrainHeadlights(true, 15f);
+        // 2. Distant low rumble begins, headlights flicker faintly in the darkness
+        PlayTrainApproach();
+        SetTrainHeadlights(true, 6f);
+        yield return new WaitForSeconds(0.6f);
+
+        // 3. Horn blares loudly and headlights flash to full intensity!
+        SetTrainHeadlights(true, 30f);
         PlayOneShot(trainAudioSource != null ? trainAudioSource : audioSource, trainHornSound);
 
-        // Train charges down the tunnel directly towards the elevator!
+        // 4. Train charges down the tunnel directly towards the elevator!
         // Camera shake builds violently as train approaches
         shake = StartCoroutine(ShakeRamp(trainApproachDuration, 0.02f, 0.09f, 35f));
-        yield return StartCoroutine(MoveTrainRoutine(trainApproachDuration));
+        Coroutine trainMove = StartCoroutine(MoveTrainRoutine(trainApproachDuration));
 
-        // When train reaches doorway near-miss threshold, doors slam shut just in time!
+        // 5. In panic, elevator doors start closing so they slam shut right at near-miss impact!
+        float waitBeforeDoorClose = Mathf.Max(0.1f, trainApproachDuration - doorCloseTime);
+        yield return new WaitForSeconds(waitBeforeDoorClose);
+
         SetDoors(false);
+
+        // Wait for the rushing train to reach the doorway right as doors seal
+        yield return trainMove;
+
+        // Finish remaining door close time if any
+        float remainingDoorTime = doorCloseTime - (trainApproachDuration - waitBeforeDoorClose);
+        if (remainingDoorTime > 0f)
+            yield return new WaitForSeconds(remainingDoorTime);
+
         FadeOutTrain();
-        yield return new WaitForSeconds(doorCloseTime);
 
         if (shake != null) StopCoroutine(shake);
         ResetShakeTarget();
@@ -256,8 +271,8 @@ public class ElevatorButton : MonoBehaviour
         if (voidTrackScene != null) voidTrackScene.SetActive(false);
         if (elevatorDoorBarrier != null) elevatorDoorBarrier.gameObject.SetActive(false);
 
-        // Brief silence for tension
-        yield return new WaitForSeconds(0.5f);
+        // 6. Brief breathless silence for tension
+        yield return new WaitForSeconds(0.8f);
 
         // 4. Teddy & Child dialogue reaction (reflecting trauma and mental haven)
         if (teddyReactionConversation != null)
@@ -394,11 +409,11 @@ public class ElevatorButton : MonoBehaviour
         while (elapsed < duration)
         {
             float t = elapsed / duration;
-            // Smooth acceleration down the tunnel
-            float smoothT = Mathf.SmoothStep(0f, 1f, t);
+            // Accelerate down the tunnel towards the elevator
+            float smoothT = Mathf.Lerp(t, t * t, 0.5f);
             voidTrainObject.position = Vector3.Lerp(trainStartPosition, trainEndPosition, smoothT);
 
-            float intensity = Mathf.Lerp(12f, 35f, smoothT);
+            float intensity = Mathf.Lerp(15f, 40f, smoothT);
             UpdateHeadlightsIntensity(intensity);
 
             elapsed += Time.deltaTime;
@@ -418,6 +433,10 @@ public class ElevatorButton : MonoBehaviour
                 voidTrainObject = train;
                 voidTrainObject.position = trainStartPosition;
                 voidTrainObject.rotation = Quaternion.Euler(0f, -90f, 0f);
+                var hl = voidTrainObject.Find("Headlights");
+                if (hl != null) { hl.localPosition = new Vector3(1.166f, 2.0f, 13.85f); hl.localRotation = Quaternion.identity; }
+                var cg = voidTrainObject.Find("CabinGlow");
+                if (cg != null) { cg.localPosition = new Vector3(1.166f, 2.2f, 2.0f); }
             }
             else
             {
@@ -451,7 +470,7 @@ public class ElevatorButton : MonoBehaviour
             {
                 var hlObj = new GameObject("Headlights");
                 hlObj.transform.SetParent(voidTrainObject, false);
-                hlObj.transform.localPosition = new Vector3(0f, 2.0f, 13.5f);
+                hlObj.transform.localPosition = new Vector3(1.166f, 2.0f, 13.85f);
                 hlObj.transform.localRotation = Quaternion.identity;
                 hlObj.layer = 3;
 
@@ -481,7 +500,7 @@ public class ElevatorButton : MonoBehaviour
 
                 var glowObj = new GameObject("CabinGlow");
                 glowObj.transform.SetParent(voidTrainObject, false);
-                glowObj.transform.localPosition = new Vector3(0f, 2.0f, 2.0f);
+                glowObj.transform.localPosition = new Vector3(1.166f, 2.2f, 2.0f);
                 glowObj.layer = 3;
                 var glowL = glowObj.AddComponent<Light>();
                 glowL.type = LightType.Point;
