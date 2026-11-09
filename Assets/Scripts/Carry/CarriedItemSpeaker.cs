@@ -5,8 +5,8 @@ public class CarriedItemSpeaker : MonoBehaviour
 {
     [Header("Dialogue")]
     public NpcConversation conversation; // reuse your existing NpcConversation on this object
-    public bool triggerByKeyPress = true;
-    public KeyCode talkKey = KeyCode.F;
+    public bool triggerByKeyPress = false;
+    public KeyCode talkKey = KeyCode.None;
 
     [Header("Trigger Zone Option")]
     public bool triggerByZone = false;
@@ -25,25 +25,7 @@ public class CarriedItemSpeaker : MonoBehaviour
 
     void Update()
     {
-        if (!triggerByKeyPress) return;
-
-        if (Input.GetKeyDown(talkKey))
-        {
-            if (MetroStorySequenceController.Instance != null && MetroStorySequenceController.Instance.TryHandleTeddyInteraction())
-            {
-                return;
-            }
-
-            if (carryable != null && !carryable.IsBeingCarried) return;
-
-            if (conversation == null)
-                conversation = GetComponent<NpcConversation>();
-
-            if (conversation != null)
-            {
-                StartCoroutine(conversation.Play());
-            }
-        }
+        // Key-press dialogue trigger disabled so pressing F does not trigger or repeat Teddy dialogue.
     }
 
     // Only relevant if triggerByZone is true and this object (or a child)

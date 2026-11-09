@@ -27,6 +27,7 @@ public class NpcInteractionText : MonoBehaviour
     private Vector3 currentHitPoint;
     private string currentPromptString = "";
     private IInteractable currentInteractable;
+    private int lastDialogueFrame = -100;
 
     [Header("Cameras & Cinemachine")]
     public Transform playerCamera;
@@ -254,6 +255,12 @@ public class NpcInteractionText : MonoBehaviour
 
         if (currentNpcConv != null)
         {
+            if (!currentNpcConv.CanPlay)
+            {
+                ClearPrompt();
+                return;
+            }
+
             if (currentIsTeddy)
             {
                 if (currentCarryable != null && !currentCarryable.IsBeingCarried)
@@ -283,6 +290,13 @@ public class NpcInteractionText : MonoBehaviour
     {
         // Keep the prompt box hidden whenever any dialogue is running
         if (NpcDialogueManager.Instance != null && NpcDialogueManager.Instance.IsDialogueRunning)
+        {
+            lastDialogueFrame = Time.frameCount;
+            ClearPrompt();
+            return;
+        }
+
+        if (Time.frameCount <= lastDialogueFrame + 2)
         {
             ClearPrompt();
             return;
@@ -360,24 +374,30 @@ public class NpcInteractionText : MonoBehaviour
 
             if (hit.collider.CompareTag("InteractNPC"))
             {
-                currentPlaceholder = null;
-                currentHitCol = hit.collider;
-                currentHitPoint = hit.point;
-                currentIsTeddy = hit.collider.gameObject.name.Contains("Teddy") || (MetroStorySequenceController.Instance != null && hit.collider.gameObject == MetroStorySequenceController.Instance.teddyBearObject);
-                currentCarryable = currentIsTeddy ? hit.collider.GetComponent<CarryableItem>() : null;
-                bool isCarried = currentCarryable != null && currentCarryable.IsBeingCarried;
+                var npcConv = hit.collider.GetComponent<NpcConversation>();
+                bool isTeddyObj = hit.collider.gameObject.name.Contains("Teddy") || (MetroStorySequenceController.Instance != null && hit.collider.gameObject == MetroStorySequenceController.Instance.teddyBearObject);
+                var carryableObj = isTeddyObj ? hit.collider.GetComponent<CarryableItem>() : null;
+                bool isCarried = carryableObj != null && carryableObj.IsBeingCarried;
 
-                currentNpcConv = hit.collider.GetComponent<NpcConversation>();
-                currentNpcLook = hit.collider.GetComponent<NpcLookAt>();
-
-                string prompt = (currentIsTeddy && !isCarried) ? "tap to interact" : "tap to talk";
-                SetPrompt(prompt);
-
-                if (Input.GetKeyDown(KeyCode.E) || ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame)
+                if (npcConv != null && npcConv.CanPlay && !(isTeddyObj && isCarried))
                 {
-                    TriggerCurrentInteraction();
+                    currentPlaceholder = null;
+                    currentHitCol = hit.collider;
+                    currentHitPoint = hit.point;
+                    currentIsTeddy = isTeddyObj;
+                    currentCarryable = carryableObj;
+                    currentNpcConv = npcConv;
+                    currentNpcLook = hit.collider.GetComponent<NpcLookAt>();
+
+                    string prompt = (currentIsTeddy && !isCarried) ? "tap to interact" : "tap to talk";
+                    SetPrompt(prompt);
+
+                    if (Input.GetKeyDown(KeyCode.E) || ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame)
+                    {
+                        TriggerCurrentInteraction();
+                    }
+                    return;
                 }
-                return;
             }
         }
 

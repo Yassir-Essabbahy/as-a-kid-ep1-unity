@@ -7,6 +7,7 @@ public class NpcConversation : MonoBehaviour
     [Header("Dialogue")]
     public string[] lineKeys;
     public bool needsChoiceAtEnd;
+    public bool playOnce = true;
 
     [Header("Presentation")]
     public Color dialogueColor = Color.white;
@@ -23,16 +24,24 @@ public class NpcConversation : MonoBehaviour
     public event Action OnConversationFinished;
 
     private bool isPlaying;
+    private bool hasPlayed;
 
     public bool IsPlaying => isPlaying;
+    public bool HasPlayed
+    {
+        get => hasPlayed;
+        set => hasPlayed = value;
+    }
 
+    public bool CanPlay => !isPlaying && (!playOnce || !hasPlayed);
 
     public IEnumerator Play()
     {
-        if (isPlaying)
+        if (isPlaying || (playOnce && hasPlayed))
             yield break;
 
         isPlaying = true;
+        hasPlayed = true;
 
         try
         {
@@ -87,19 +96,12 @@ public class NpcConversation : MonoBehaviour
             if (voiceSource == null)
                 voiceSource = GetComponentInChildren<AudioSource>(true);
 
-            if (voiceClips == null || voiceClips.Length == 0)
-            {
-                Debug.LogWarning(
-                    $"[{name}] No voice clips are assigned. The dialogue will be text-only.",
-                    this
-                );
-            }
-
             // ----------------------------------------------------
             // VOICE VALIDATION
             // ----------------------------------------------------
 
             if (voiceClips != null &&
+                voiceClips.Length > 0 &&
                 voiceClips.Length != resolvedLines.Length)
             {
                 Debug.LogWarning(

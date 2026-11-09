@@ -24,6 +24,11 @@ public class DialogueTriggerZone : MonoBehaviour
 
     public bool HasTriggered => hasTriggered;
 
+    public void MarkTriggered()
+    {
+        hasTriggered = true;
+    }
+
     private void OnTriggerEnter(Collider other)
     {
         if (triggerOnce && hasTriggered) return;

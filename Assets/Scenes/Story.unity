@@ -1558,6 +1558,7 @@ MonoBehaviour:
   - teddy_metro_03
   - teddy_metro_04
   needsChoiceAtEnd: 0
+  playOnce: 1
   dialogueColor: {r: 1, g: 0.65, b: 0.3, a: 1}
   dialogueFont: {fileID: 11400000, guid: 9760074bf33164947ad4a08727dee0a4, type: 2}
   voiceSource: {fileID: 0}
@@ -1741,6 +1742,7 @@ MonoBehaviour:
   - begger_metro_03
   - begger_metro_04
   needsChoiceAtEnd: 0
+  playOnce: 1
   dialogueColor: {r: 1, g: 0, b: 0.18564284, a: 1}
   dialogueFont: {fileID: 11400000, guid: 2e498d1c8094910479dc3e1b768306a4, type: 2}
   voiceSource: {fileID: 1909918065}
@@ -8241,7 +8243,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MetroStorySequenceController
   teddyName: Mistfox
   childName: Yassir
-  currentPhase: 0
+  currentPhase: 10
   transitPassCollected: 0
   vendingMachineInspected: 0
   intercomInspected: 0
@@ -9952,7 +9954,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 410821862}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4c91b94f0099f594b9f852929501afb6, type: 3}
   m_Name: 
@@ -15340,6 +15342,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::NpcConversation
   lineKeys: []
   needsChoiceAtEnd: 0
+  playOnce: 1
   dialogueColor: {r: 1, g: 1, b: 1, a: 1}
   dialogueFont: {fileID: 0}
   voiceSource: {fileID: 0}
@@ -15804,6 +15807,7 @@ MonoBehaviour:
   - Hi
   - How Are You
   needsChoiceAtEnd: 0
+  playOnce: 1
   dialogueColor: {r: 1, g: 0, b: 0, a: 1}
   dialogueFont: {fileID: 0}
   voiceSource: {fileID: 0}
@@ -18796,6 +18800,7 @@ MonoBehaviour:
   - Hi
   - How Are You
   needsChoiceAtEnd: 0
+  playOnce: 1
   dialogueColor: {r: 1, g: 0, b: 0, a: 1}
   dialogueFont: {fileID: 0}
   voiceSource: {fileID: 0}
@@ -18878,7 +18883,7 @@ MonoBehaviour:
   playerCamera: {fileID: 1676752293}
   fov: 60
   invertCamera: 0
-  cameraCanMove: 0
+  cameraCanMove: 1
   mouseSensitivity: 2
   maxLookAngle: 50
   lockCursor: 1
@@ -18893,7 +18898,7 @@ MonoBehaviour:
   zoomKey: 324
   zoomFOV: 30
   zoomStepTime: 5
-  playerCanMove: 0
+  playerCanMove: 1
   walkSpeed: 3
   maxVelocityChange: 10
   enableSprint: 1
@@ -19806,6 +19811,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::NpcConversation
   lineKeys: []
   needsChoiceAtEnd: 0
+  playOnce: 1
   dialogueColor: {r: 1, g: 1, b: 1, a: 1}
   dialogueFont: {fileID: 0}
   voiceSource: {fileID: 0}
@@ -20456,7 +20462,7 @@ BoxCollider:
   m_LayerOverridePriority: 0
   m_IsTrigger: 1
   m_ProvidesContacts: 0
-  m_Enabled: 0
+  m_Enabled: 1
   serializedVersion: 3
   m_Size: {x: 3.5, y: 3.5, z: 3.5}
   m_Center: {x: 0, y: 1.5, z: 1.5}
@@ -20937,9 +20943,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NpcConversation
   lineKeys:
-  - teddy_greet_01
-  - teddy_greet_02
+  - teddy_metro_01
+  - teddy_metro_02
   needsChoiceAtEnd: 0
+  playOnce: 1
   dialogueColor: {r: 1, g: 0.65, b: 0.3, a: 1}
   dialogueFont: {fileID: 11400000, guid: 9760074bf33164947ad4a08727dee0a4, type: 2}
   voiceSource: {fileID: 0}
@@ -21055,8 +21062,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CarriedItemSpeaker
   conversation: {fileID: 981896449}
-  triggerByKeyPress: 1
-  talkKey: 102
+  triggerByKeyPress: 0
+  talkKey: 0
   triggerByZone: 0
   playerTag: Player
 --- !u!1 &990393077
@@ -30299,7 +30306,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: '[2]  NO'
+  m_text: OPTION_B
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 9760074bf33164947ad4a08727dee0a4, type: 2}
   m_sharedMaterial: {fileID: 6179473881242153786, guid: 9760074bf33164947ad4a08727dee0a4, type: 2}
@@ -33288,6 +33295,7 @@ MonoBehaviour:
   - teddy_metro_01
   - teddy_metro_02
   needsChoiceAtEnd: 0
+  playOnce: 1
   dialogueColor: {r: 1, g: 0.65, b: 0.3, a: 1}
   dialogueFont: {fileID: 11400000, guid: 9760074bf33164947ad4a08727dee0a4, type: 2}
   voiceSource: {fileID: 0}
@@ -35576,7 +35584,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: '[1]  YES'
+  m_text: OPTION_A
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 9760074bf33164947ad4a08727dee0a4, type: 2}
   m_sharedMaterial: {fileID: 6179473881242153786, guid: 9760074bf33164947ad4a08727dee0a4, type: 2}
@@ -37376,6 +37384,7 @@ MonoBehaviour:
   - begger_metro_03
   - begger_metro_04
   needsChoiceAtEnd: 0
+  playOnce: 1
   dialogueColor: {r: 1, g: 0, b: 0.18564284, a: 1}
   dialogueFont: {fileID: 11400000, guid: 2e498d1c8094910479dc3e1b768306a4, type: 2}
   voiceSource: {fileID: 128256006}
@@ -39528,7 +39537,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1819719020}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4c91b94f0099f594b9f852929501afb6, type: 3}
   m_Name: 
@@ -40004,6 +40013,7 @@ MonoBehaviour:
   - shop_04
   - shop_05
   needsChoiceAtEnd: 0
+  playOnce: 1
   dialogueColor: {r: 1, g: 0.55, b: 0.4, a: 1}
   dialogueFont: {fileID: 11400000, guid: 9760074bf33164947ad4a08727dee0a4, type: 2}
   voiceSource: {fileID: 0}
@@ -42333,6 +42343,7 @@ MonoBehaviour:
   - neighbor_04
   - neighbor_05
   needsChoiceAtEnd: 0
+  playOnce: 1
   dialogueColor: {r: 0.48, g: 0.89, b: 0.58, a: 1}
   dialogueFont: {fileID: 11400000, guid: 9760074bf33164947ad4a08727dee0a4, type: 2}
   voiceSource: {fileID: 0}
@@ -44748,7 +44759,7 @@ MonoBehaviour:
   audioSource: {fileID: 0}
   interactAudioClip: {fileID: 0}
   isCollectible: 0
-  oneTimeOnly: 0
+  oneTimeOnly: 1
   interactionDistance: 3.5
   hasBeenInteracted: 0
 --- !u!65 &2019558062
@@ -45622,6 +45633,7 @@ MonoBehaviour:
   - teddy_metro_05
   - teddy_metro_06
   needsChoiceAtEnd: 0
+  playOnce: 1
   dialogueColor: {r: 1, g: 0.65, b: 0.3, a: 1}
   dialogueFont: {fileID: 11400000, guid: 9760074bf33164947ad4a08727dee0a4, type: 2}
   voiceSource: {fileID: 0}
@@ -46843,7 +46855,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: ...
+  m_text: Behind the door...
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 9760074bf33164947ad4a08727dee0a4, type: 2}
   m_sharedMaterial: {fileID: 6179473881242153786, guid: 9760074bf33164947ad4a08727dee0a4, type: 2}
@@ -49220,6 +49232,7 @@ MonoBehaviour:
   - bully_floor3_04
   - bully_floor3_05
   needsChoiceAtEnd: 0
+  playOnce: 1
   dialogueColor: {r: 1, g: 0.6, b: 0.6, a: 1}
   dialogueFont: {fileID: 0}
   voiceSource: {fileID: 0}
