@@ -1,9 +1,16 @@
 Library/
 Temp/
 Obj/
+[Oo]bj/
 Build/
+[Bb]uild/
 Builds/
+[Bb]uilds/
 Logs/
+MemoryCaptures/
+*.unitypackage
 House_Export.unitypackage
+HouseExport*
+*HouseExport*
 HANDOFF.md
 FILES.txt

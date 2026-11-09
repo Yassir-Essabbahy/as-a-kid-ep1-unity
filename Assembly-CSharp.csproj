@@ -1,4 +1,4 @@
-<Project>
+﻿<Project>
   <!-- Generated file, do not modify, your changes will be overwritten (use AssetPostprocessor.OnGeneratedCSProject) -->
   <PropertyGroup>
     <BaseIntermediateOutputPath>Temp\obj\$(MSBuildProjectName)</BaseIntermediateOutputPath>
@@ -43,26 +43,42 @@
     <UnityVersion>6000.4.4f1</UnityVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Analyzer Include="C:\Users\moroc\.vscode\extensions\visualstudiotoolsforunity.vstuc-1.3.1\Analyzers\Microsoft.Unity.Analyzers.dll" />
+    <Analyzer Include="C:\Users\moroc\.vscode\extensions\visualstudiotoolsforunity.vstuc-1.3.2\Analyzers\Microsoft.Unity.Analyzers.dll" />
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.4.4f1\Editor\Data\Tools\BuildPipeline\Unity.SourceGenerators\Unity.SourceGenerators.dll" />
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.4.4f1\Editor\Data\Tools\BuildPipeline\Unity.SourceGenerators\Unity.Properties.SourceGenerator.dll" />
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.4.4f1\Editor\Data\Tools\BuildPipeline\Unity.SourceGenerators\Unity.UIToolkit.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Scripts\Screen\ScreenFader.cs" />
+    <Compile Include="Assets\Scripts\Settings\GameSettingsManager.cs" />
+    <Compile Include="Assets\House\Scripts\SceneFadeIn.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_TextEventHandler.cs" />
     <Compile Include="Assets\Scripts\Dialogue\DialogueManager.cs" />
+    <Compile Include="Assets\Scripts\Dialogue\ClassroomLifeIsStrangeUI.cs" />
+    <Compile Include="Assets\House\Scripts\Radio.cs" />
     <Compile Include="Assets\Scripts\Story\DoorInteractable.cs" />
+    <Compile Include="Assets\Scripts\Settings\MainMenuSettingsUI.cs" />
     <Compile Include="Assets\Scripts\Dialogue\CameraCutsceneController.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\EnvMapAnimator.cs" />
     <Compile Include="Assets\Scripts\Dialogue\DialogueLine.cs" />
+    <Compile Include="Assets\House\Scripts\DrawerController.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_TextSelector_A.cs" />
     <Compile Include="Assets\Fears to Fathom Vhs for URP\VHSPostProcessFeature.cs" />
+    <Compile Include="Assets\House\Scripts\HouseOutsideDoor.cs" />
+    <Compile Include="Assets\Scripts\UI\MobileUIAdapter.cs" />
+    <Compile Include="Assets\Scripts\Story\TimingMinigameUI.cs" />
+    <Compile Include="Assets\House\Scripts\HouseUIBridge.cs" />
+    <Compile Include="Assets\House\Scripts\IInteractable.cs" />
+    <Compile Include="Assets\Scripts\Sounds\PlayerFootsteps.cs" />
     <Compile Include="Assets\Assets\Backrooms\Characters\Cow\BusMouvement.cs" />
+    <Compile Include="Assets\House\Scripts\Interactable.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\Benchmark02.cs" />
     <Compile Include="Assets\Scripts\Elevator\MetroFuseBoxPuzzle.cs" />
+    <Compile Include="Assets\House\Scripts\HouseMamaDialogue.cs" />
     <Compile Include="Assets\Scripts\Raft\RaftPiece.cs" />
+    <Compile Include="Assets\House\Scripts\HouseStoryVerificationTest.cs" />
     <Compile Include="Assets\Scripts\Dialogue\DialogueFadeScreen.cs" />
+    <Compile Include="Assets\House\Scripts\ObjectiveUI.cs" />
     <Compile Include="Assets\Scripts\Map\MapCollapseSequence.cs" />
     <Compile Include="Assets\Scripts\Dialogue\DialogueEvents.cs" />
     <Compile Include="Assets\Scripts\Backrooms\InvestigationLookController.cs" />
@@ -73,16 +89,23 @@
     <Compile Include="Assets\Scripts\Story\MetroStoryVerificationTest.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\VertexShakeB.cs" />
     <Compile Include="Assets\Scripts\Dialogue\ClassroomGazeScene.cs" />
+    <Compile Include="Assets\House\Scripts\HouseBackpackInteractable.cs" />
+    <Compile Include="Assets\House\Scripts\HouseCinematicVerificationRunner.cs" />
+    <Compile Include="Assets\House\Scripts\GameManager.cs" />
     <Compile Include="Assets\Scripts\Interactions\NpcDialogueManager.cs" />
     <Compile Include="Assets\Scripts\Carry\FindableItem.cs" />
+    <Compile Include="Assets\House\Scripts\NPCLookAt.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\VertexJitter.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_UiFrameRateCounter.cs" />
+    <Compile Include="Assets\House\Scripts\DoorController.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\VertexZoom.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_TextSelector_B.cs" />
     <Compile Include="Assets\Scripts\Credits\CreditsRaftBobber.cs" />
     <Compile Include="Assets\Scripts\Story\InteractivePlaceholderItem.cs" />
+    <Compile Include="Assets\House\Scripts\UIManager.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\SkewTextExample.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\WarpTextExample.cs" />
+    <Compile Include="Assets\House\Scripts\MessageTrigger.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\ShaderPropAnimator.cs" />
     <Compile Include="Assets\Scripts\Dialogue\DialogueInputAdvancer.cs" />
     <Compile Include="Assets\Scripts\Credits\CreditsMusicController.cs" />
@@ -90,8 +113,11 @@
     <Compile Include="Assets\Scripts\Sounds\RandomMetroSound.cs" />
     <Compile Include="Assets\MoroccanBeach\Scripts\PSXWaterSurface.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\VertexShakeA.cs" />
+    <Compile Include="Assets\ModularFirstPersonController\FirstPersonController\MobileLookZone.cs" />
     <Compile Include="Assets\Scripts\Credits\CreditsSequenceController.cs" />
     <Compile Include="Assets\Scripts\Carry\TeddyFindQuest.cs" />
+    <Compile Include="Assets\Scripts\Story\PaperInspectController.cs" />
+    <Compile Include="Assets\House\Scripts\DoorToHome.cs" />
     <Compile Include="Assets\Scripts\Story\MetroStorySequenceController.cs" />
     <Compile Include="Assets\Scripts\Carry\CarryableItem.cs" />
     <Compile Include="Assets\Scripts\Story\ClassroomClock.cs" />
@@ -99,15 +125,20 @@
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\SimpleScript.cs" />
     <Compile Include="Assets\Scripts\MainMenu\MainMenuManager.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\Benchmark04.cs" />
+    <Compile Include="Assets\House\Scripts\HouseObjectiveController.cs" />
     <Compile Include="Assets\Scripts\NPCFollow.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\ChatController.cs" />
     <Compile Include="Assets\Scripts\Train\TrainArrivalSequence.cs" />
+    <Compile Include="Assets\Scripts\UI\MobilePauseMenu.cs" />
+    <Compile Include="Assets\House\Scripts\HouseWashBasinInteractable.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_DigitValidator.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_FrameRateCounter.cs" />
     <Compile Include="Assets\TutorialInfo\Scripts\Readme.cs" />
+    <Compile Include="Assets\House\Scripts\HouseWardrobeInteractable.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\Benchmark01.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TextMeshSpawner.cs" />
     <Compile Include="Assets\Scripts\Elevator\ElevatorZone.cs" />
+    <Compile Include="Assets\Scripts\Story\Floor3PaperInteractable.cs" />
     <Compile Include="Assets\Scripts\Story\PlatformEndTrigger.cs" />
     <Compile Include="Assets\Scripts\Story\ClassroomEndingController.cs" />
     <Compile Include="Assets\Scripts\Backrooms\DiscoColor.cs" />
@@ -116,29 +147,46 @@
     <Compile Include="Assets\ModularFirstPersonController\FirstPersonController\FirstPersonController.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\Benchmark03.cs" />
     <Compile Include="Assets\Scripts\Carry\CarriedItemSpeaker.cs" />
+    <Compile Include="Assets\Scripts\MainMenu\LanguageDropdownHandler.cs" />
     <Compile Include="Assets\Assets\Backrooms\Characters\Cow\CowMove.cs" />
+    <Compile Include="Assets\Scripts\UI\SafeAreaHandler.cs" />
+    <Compile Include="Assets\House\Scripts\WindowController.cs" />
+    <Compile Include="Assets\House\Scripts\EyelidBlink.cs" />
+    <Compile Include="Assets\House\Scripts\CabinetDoorController.cs" />
+    <Compile Include="Assets\ModularFirstPersonController\FirstPersonController\MobileJoystickZone.cs" />
     <Compile Include="Assets\Scripts\Elevator\FloorManager.cs" />
     <Compile Include="Assets\Scripts\Elevator\ElevatorButton.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\DropdownSample.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\VertexColorCycler.cs" />
     <Compile Include="Assets\Scripts\Raft\BeachIntroController.cs" />
+    <Compile Include="Assets\House\Scripts\HouseWakingCinematic.cs" />
+    <Compile Include="Assets\House\Scripts\LocationChooser.cs" />
     <Compile Include="Assets\Scripts\Raft\BeachEndingController.cs" />
     <Compile Include="Assets\Scripts\Credits\CreditsTrainMover.cs" />
+    <Compile Include="Assets\House\Scripts\DialogueTrigger.cs" />
     <Compile Include="Assets\MoroccanBeach\Scripts\PSXSceneController.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\ObjectSpin.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_PhoneNumberValidator.cs" />
     <Compile Include="Assets\Scripts\Dialogue\LocalizationManager.cs" />
+    <Compile Include="Assets\House\Scripts\PickupObject.cs" />
     <Compile Include="Assets\Scripts\Carry\DialogueTriggerZone.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TextConsoleSimulator.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TeleType.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_TextEventCheck.cs" />
     <Compile Include="Assets\Scripts\Interactions\BeggarInteraction.cs" />
+    <Compile Include="Assets\Scripts\Dialogue\ClassroomDeskInteractable.cs" />
     <Compile Include="Assets\Scripts\Dialogue\DialogueSequence.cs" />
     <Compile Include="Assets\Scripts\Interactions\NpcLookAt.cs" />
+    <Compile Include="Assets\Scripts\Story\TrashTicketSource.cs" />
     <Compile Include="Assets\Scripts\ActivateOnTrigger.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TextMeshProFloatingText.cs" />
+    <Compile Include="Assets\ModularFirstPersonController\FirstPersonController\MobileTouchControls.cs" />
+    <Compile Include="Assets\Scripts\Story\ItemPickupToast.cs" />
+    <Compile Include="Assets\Scripts\Raft\InteractInput.cs" />
     <Compile Include="Assets\Scripts\Interactions\NpcInteractionText.cs" />
+    <Compile Include="Assets\Scripts\Sounds\MetroSoundSystem.cs" />
     <Compile Include="Assets\Scripts\Raft\RaftPlayerInteraction.cs" />
+    <Compile Include="Assets\House\Scripts\HouseBabaDialogue.cs" />
     <Compile Include="Assets\Scripts\Interactions\NpcConversation.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -153,6 +201,7 @@
     <None Include="Assets\TextMesh Pro\Examples &amp; Extras\Fonts\Unity - OFL.txt" />
     <None Include="Assets\TextMesh Pro\Shaders\TMP_Bitmap.shader" />
     <None Include="Assets\VNTG\Shaders\ShaderLab\CRTFilter_URP.shader" />
+    <None Include="Assets\House_Verification_Report.txt" />
     <None Include="Assets\TextMesh Pro\Examples &amp; Extras\Fonts\Oswald-Bold - OFL.txt" />
     <None Include="Assets\TextMesh Pro\Examples &amp; Extras\Fonts\Roboto-Bold - AFL.txt" />
     <None Include="Assets\TextMesh Pro\Examples &amp; Extras\Fonts\Anton OFL.txt" />
@@ -766,6 +815,14 @@
     </Reference>
     <Reference Include="Mono.Cecil">
       <HintPath>Library\PackageCache\com.unity.nuget.mono-cecil@ecb9724e46ff\Mono.Cecil.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.Android.Types">
+      <HintPath>C:\Program Files\Unity\Hub\Editor\6000.4.4f1\Editor\Data\PlaybackEngines\AndroidPlayer\Unity.Android.Types.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.Android.Gradle">
+      <HintPath>C:\Program Files\Unity\Hub\Editor\6000.4.4f1\Editor\Data\PlaybackEngines\AndroidPlayer\Unity.Android.Gradle.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="netstandard">
