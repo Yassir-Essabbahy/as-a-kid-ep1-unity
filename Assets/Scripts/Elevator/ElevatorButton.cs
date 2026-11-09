@@ -29,7 +29,15 @@ public class ElevatorButton : MonoBehaviour
     [Header("False Stop — Train Track")]
     public GameObject voidTrackScene;
     public float falseStopDuration = 3f;
-    public float hornDelay = 1.2f;
+    public float hornDelay = 0.5f;
+
+    [Header("Train Visuals and Movement")]
+    public Transform voidTrainObject;
+    public Vector3 trainStartPosition = new Vector3(-5.1f, 11.25f, 95.14f);
+    public Vector3 trainEndPosition = new Vector3(-45.6f, 11.25f, 95.14f);
+    public float trainApproachDuration = 2.2f;
+    public Light[] trainHeadlights;
+    public BoxCollider elevatorDoorBarrier;
 
     [Header("Train Audio")]
     public AudioSource trainAudioSource;
@@ -186,12 +194,12 @@ public class ElevatorButton : MonoBehaviour
         if (MetroStorySequenceController.Instance != null)
             MetroStorySequenceController.Instance.OnElevatorStarted();
 
-        // 1. Close doors, travel
+        // 1. Close doors, travel from Floor 1
         SetDoors(false);
         yield return new WaitForSeconds(doorCloseTime);
 
         PlayOneShot(audioSource, elevatorSong);
-        Coroutine shake = StartCoroutine(Shake(elevatorTravelTime));
+        Coroutine shake = StartCoroutine(Shake(elevatorTravelTime, shakeIntensity, shakeSpeed));
         yield return new WaitForSeconds(elevatorTravelTime);
         if (shake != null) StopCoroutine(shake);
         ResetShakeTarget();
@@ -201,34 +209,56 @@ public class ElevatorButton : MonoBehaviour
         if (MetroStorySequenceController.Instance != null)
             MetroStorySequenceController.Instance.OnElevatorFalseStop();
 
+        // Temporarily hide Floor 1 so the void track / dark tunnel is isolated
+        if (FloorManager.Instance != null && FloorManager.Instance.floors != null && FloorManager.Instance.floors.Length > 0)
+        {
+            if (FloorManager.Instance.floors[0] != null && FloorManager.Instance.floors[0].floorRoot != null)
+                FloorManager.Instance.floors[0].floorRoot.SetActive(false);
+        }
+
+        ResolveVoidTrainReferences();
+        if (elevatorDoorBarrier != null) elevatorDoorBarrier.gameObject.SetActive(true);
+
+        if (voidTrainObject != null)
+        {
+            voidTrainObject.position = trainStartPosition;
+            voidTrainObject.gameObject.SetActive(true);
+        }
+        SetTrainHeadlights(false, 0f);
+
         if (voidTrackScene != null) voidTrackScene.SetActive(true);
         SetDoors(true);
         yield return new WaitForSeconds(doorOpenTime);
 
-        shake = StartCoroutine(Shake(falseStopDuration));
+        // Distant rumble begins as player looks out into the dark tracks
         PlayTrainApproach();
+        yield return new WaitForSeconds(0.4f);
 
-        float safeHornDelay = Mathf.Clamp(hornDelay, 0f, falseStopDuration);
-        yield return new WaitForSeconds(safeHornDelay);
-
+        // Sudden headlight flare in the distance and horn blast!
+        SetTrainHeadlights(true, 15f);
         PlayOneShot(trainAudioSource != null ? trainAudioSource : audioSource, trainHornSound);
-        StartCoroutine(MoveTrainLight());
 
-        float remaining = falseStopDuration - safeHornDelay;
-        if (remaining > 0f) yield return new WaitForSeconds(remaining);
+        // Train charges down the tunnel directly towards the elevator!
+        // Camera shake builds violently as train approaches
+        shake = StartCoroutine(ShakeRamp(trainApproachDuration, 0.02f, 0.09f, 35f));
+        yield return StartCoroutine(MoveTrainRoutine(trainApproachDuration));
 
-        if (shake != null) StopCoroutine(shake);
-        ResetShakeTarget();
-
-        // 3. Close doors again, fade train sound, hide void
+        // When train reaches doorway near-miss threshold, doors slam shut just in time!
         SetDoors(false);
         FadeOutTrain();
         yield return new WaitForSeconds(doorCloseTime);
 
-        StopTrainLight();
-        if (voidTrackScene != null) voidTrackScene.SetActive(false);
+        if (shake != null) StopCoroutine(shake);
+        ResetShakeTarget();
+        SetTrainHeadlights(false, 0f);
 
-        // 4. Teddy reacts
+        if (voidTrackScene != null) voidTrackScene.SetActive(false);
+        if (elevatorDoorBarrier != null) elevatorDoorBarrier.gameObject.SetActive(false);
+
+        // Brief silence for tension
+        yield return new WaitForSeconds(0.5f);
+
+        // 4. Teddy & Child dialogue reaction (reflecting trauma and mental haven)
         if (teddyReactionConversation != null)
         {
             yield return StartCoroutine(teddyReactionConversation.Play());
@@ -237,7 +267,8 @@ public class ElevatorButton : MonoBehaviour
         {
             string[] trainReaction = new string[] {
                 MetroStorySequenceController.GetLoc("elevator_train_reaction_01"),
-                MetroStorySequenceController.GetLoc("elevator_train_reaction_02")
+                MetroStorySequenceController.GetLoc("elevator_train_reaction_02"),
+                MetroStorySequenceController.GetLoc("elevator_train_reaction_03")
             };
             var dm = NpcDialogueManager.Instance;
             if (dm != null && Application.isPlaying)
@@ -246,14 +277,18 @@ public class ElevatorButton : MonoBehaviour
             }
         }
 
-        // 5. Real arrival travel + floor swap
-        shake = StartCoroutine(Shake(elevatorTravelTime));
+        // 5. Real arrival travel + floor swap to Floor 3
+        PlayOneShot(audioSource, elevatorSong);
+        shake = StartCoroutine(Shake(elevatorTravelTime, shakeIntensity, shakeSpeed));
         yield return new WaitForSeconds(elevatorTravelTime);
         if (shake != null) StopCoroutine(shake);
         ResetShakeTarget();
 
-        int nextFloor = FloorManager.Instance.currentFloorIndex + 1;
-        FloorManager.Instance.ActivateFloor(nextFloor);
+        int nextFloor = FloorManager.Instance != null ? FloorManager.Instance.currentFloorIndex + 1 : 1;
+        if (FloorManager.Instance != null)
+        {
+            FloorManager.Instance.ActivateFloor(nextFloor);
+        }
 
         SetDoors(true);
         yield return new WaitForSeconds(doorOpenTime);
@@ -346,7 +381,88 @@ public class ElevatorButton : MonoBehaviour
         }
     }
 
+    IEnumerator MoveTrainRoutine(float duration)
+    {
+        if (voidTrainObject == null)
+        {
+            yield return StartCoroutine(MoveTrainLight());
+            yield break;
+        }
+
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            float t = elapsed / duration;
+            // Smooth acceleration down the tunnel
+            float smoothT = Mathf.SmoothStep(0f, 1f, t);
+            voidTrainObject.position = Vector3.Lerp(trainStartPosition, trainEndPosition, smoothT);
+
+            float intensity = Mathf.Lerp(12f, 35f, smoothT);
+            UpdateHeadlightsIntensity(intensity);
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        voidTrainObject.position = trainEndPosition;
+    }
+
+    void ResolveVoidTrainReferences()
+    {
+        if (voidTrainObject == null && voidTrackScene != null)
+        {
+            var train = voidTrackScene.transform.Find("VoidTrain");
+            if (train != null) voidTrainObject = train;
+        }
+
+        if (trainHeadlights == null || trainHeadlights.Length == 0)
+        {
+            if (voidTrainObject != null)
+            {
+                trainHeadlights = voidTrainObject.GetComponentsInChildren<Light>(true);
+            }
+        }
+
+        if (elevatorDoorBarrier == null)
+        {
+            var elev = transform.parent != null ? transform.parent : transform;
+            var b = elev.Find("ElevatorDoorBarrier");
+            if (b != null) elevatorDoorBarrier = b.GetComponent<BoxCollider>();
+        }
+    }
+
+    void SetTrainHeadlights(bool enable, float intensity)
+    {
+        if (trainHeadlights != null)
+        {
+            foreach (var l in trainHeadlights)
+            {
+                if (l != null)
+                {
+                    l.enabled = enable;
+                    l.intensity = intensity;
+                }
+            }
+        }
+    }
+
+    void UpdateHeadlightsIntensity(float intensity)
+    {
+        if (trainHeadlights != null)
+        {
+            foreach (var l in trainHeadlights)
+            {
+                if (l != null) l.intensity = intensity;
+            }
+        }
+    }
+
     IEnumerator Shake(float duration)
+    {
+        yield return StartCoroutine(Shake(duration, shakeIntensity, shakeSpeed));
+    }
+
+    IEnumerator Shake(float duration, float intensity, float speed)
     {
         if (shakeTarget == null)
         {
@@ -359,8 +475,33 @@ public class ElevatorButton : MonoBehaviour
 
         while (elapsed < duration)
         {
-            float x = (Mathf.PerlinNoise(Time.time * shakeSpeed, 0f) - 0.5f) * shakeIntensity;
-            float y = (Mathf.PerlinNoise(0f, Time.time * shakeSpeed) - 0.5f) * shakeIntensity;
+            float x = (Mathf.PerlinNoise(Time.time * speed, 0f) - 0.5f) * intensity;
+            float y = (Mathf.PerlinNoise(0f, Time.time * speed) - 0.5f) * intensity;
+            shakeTarget.localPosition = original + new Vector3(x, y, 0f);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        shakeTarget.localPosition = original;
+    }
+
+    IEnumerator ShakeRamp(float duration, float startIntensity, float endIntensity, float speed)
+    {
+        if (shakeTarget == null)
+        {
+            yield return new WaitForSeconds(duration);
+            yield break;
+        }
+
+        Vector3 original = shakeTarget.localPosition;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            float t = elapsed / duration;
+            float currentIntensity = Mathf.Lerp(startIntensity, endIntensity, t);
+            float x = (Mathf.PerlinNoise(Time.time * speed, 0f) - 0.5f) * currentIntensity;
+            float y = (Mathf.PerlinNoise(0f, Time.time * speed) - 0.5f) * currentIntensity;
             shakeTarget.localPosition = original + new Vector3(x, y, 0f);
             elapsed += Time.deltaTime;
             yield return null;
