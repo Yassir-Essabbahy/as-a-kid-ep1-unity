@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using UnityEngine;
 
 public class ElevatorButton : MonoBehaviour
@@ -412,14 +412,82 @@ public class ElevatorButton : MonoBehaviour
         if (voidTrainObject == null && voidTrackScene != null)
         {
             var train = voidTrackScene.transform.Find("VoidTrain");
-            if (train != null) voidTrainObject = train;
+            if (train != null)
+            {
+                voidTrainObject = train;
+            }
+            else
+            {
+                var prefab = Resources.Load<GameObject>("Prefabs/VoidTrain");
+                if (prefab == null) prefab = Resources.Load<GameObject>("VoidTrain");
+                if (prefab != null)
+                {
+                    var instance = Instantiate(prefab, voidTrackScene.transform);
+                    instance.name = "VoidTrain";
+                    instance.transform.position = trainStartPosition;
+                    instance.transform.rotation = Quaternion.Euler(0f, 90f, 0f);
+                    voidTrainObject = instance.transform;
+
+                    foreach (var c in instance.GetComponentsInChildren<Collider>(true))
+                    {
+                        c.isTrigger = true;
+                    }
+                    SetLayerRecursively(instance, 3);
+                }
+            }
         }
 
-        if (trainHeadlights == null || trainHeadlights.Length == 0)
+        if (voidTrainObject != null && (trainHeadlights == null || trainHeadlights.Length == 0))
         {
-            if (voidTrainObject != null)
+            var existingLights = voidTrainObject.GetComponentsInChildren<Light>(true);
+            if (existingLights != null && existingLights.Length > 0)
             {
-                trainHeadlights = voidTrainObject.GetComponentsInChildren<Light>(true);
+                trainHeadlights = existingLights;
+            }
+            else
+            {
+                var hlObj = new GameObject("Headlights");
+                hlObj.transform.SetParent(voidTrainObject, false);
+                hlObj.transform.localPosition = new Vector3(1.55f, 2.2f, -8.5f);
+                hlObj.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
+                hlObj.layer = 3;
+
+                var leftObj = new GameObject("LeftLight");
+                leftObj.transform.SetParent(hlObj.transform, false);
+                leftObj.transform.localPosition = new Vector3(-0.9f, 0f, 0f);
+                leftObj.layer = 3;
+                var leftL = leftObj.AddComponent<Light>();
+                leftL.type = LightType.Spot;
+                leftL.range = 40f;
+                leftL.spotAngle = 65f;
+                leftL.color = new Color(1f, 0.95f, 0.8f);
+                leftL.intensity = 0f;
+                leftL.enabled = false;
+
+                var rightObj = new GameObject("RightLight");
+                rightObj.transform.SetParent(hlObj.transform, false);
+                rightObj.transform.localPosition = new Vector3(0.9f, 0f, 0f);
+                rightObj.layer = 3;
+                var rightL = rightObj.AddComponent<Light>();
+                rightL.type = LightType.Spot;
+                rightL.range = 40f;
+                rightL.spotAngle = 65f;
+                rightL.color = new Color(1f, 0.95f, 0.8f);
+                rightL.intensity = 0f;
+                rightL.enabled = false;
+
+                var glowObj = new GameObject("CabinGlow");
+                glowObj.transform.SetParent(hlObj.transform, false);
+                glowObj.transform.localPosition = new Vector3(0f, 0.5f, 2f);
+                glowObj.layer = 3;
+                var glowL = glowObj.AddComponent<Light>();
+                glowL.type = LightType.Point;
+                glowL.range = 15f;
+                glowL.color = new Color(1f, 0.72f, 0.38f);
+                glowL.intensity = 2.5f;
+                glowL.enabled = true;
+
+                trainHeadlights = new Light[] { leftL, rightL };
             }
         }
 
@@ -427,7 +495,30 @@ public class ElevatorButton : MonoBehaviour
         {
             var elev = transform.parent != null ? transform.parent : transform;
             var b = elev.Find("ElevatorDoorBarrier");
-            if (b != null) elevatorDoorBarrier = b.GetComponent<BoxCollider>();
+            if (b != null)
+            {
+                elevatorDoorBarrier = b.GetComponent<BoxCollider>();
+            }
+            else
+            {
+                var barrierObj = new GameObject("ElevatorDoorBarrier");
+                barrierObj.transform.SetParent(elev, false);
+                barrierObj.transform.localPosition = new Vector3(1.56f, 0.58f, 0f);
+                barrierObj.layer = 3;
+                elevatorDoorBarrier = barrierObj.AddComponent<BoxCollider>();
+                elevatorDoorBarrier.size = new Vector3(0.3f, 3.0f, 3.0f);
+                elevatorDoorBarrier.isTrigger = false;
+                barrierObj.SetActive(false);
+            }
+        }
+    }
+
+    private static void SetLayerRecursively(GameObject obj, int layer)
+    {
+        obj.layer = layer;
+        foreach (Transform child in obj.transform)
+        {
+            SetLayerRecursively(child.gameObject, layer);
         }
     }
 
