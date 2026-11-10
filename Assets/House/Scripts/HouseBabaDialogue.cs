@@ -14,7 +14,7 @@ public class HouseBabaDialogue : MonoBehaviour, IInteractable
     [Header("Repeat Dialogue Key")]
     public string repeatDialogueKey = "baba_house_reminder";
 
-    public string PromptMessage => "tap to talk";
+    public string PromptMessage => LocalizationManager.Resolve("prompt_tap_talk", "Tap to talk");
 
     private bool hasSpoken = false;
     private NPCLookAt lookAt;
@@ -78,7 +78,8 @@ public class HouseBabaDialogue : MonoBehaviour, IInteractable
             if (!string.IsNullOrEmpty(loc) && !loc.StartsWith("[")) line = loc;
         }
 
-        string formattedLine = $"{speakerName}: {line}";
+        string localizedSpeaker = LocalizationManager.Resolve("speaker_baba", speakerName);
+        string formattedLine = $"{localizedSpeaker}: {line}";
         Color speakerColor = NpcDialogueManager.GetSpeakerColor(speakerName);
         var font = NpcDialogueManager.DefaultDialogueFont;
 

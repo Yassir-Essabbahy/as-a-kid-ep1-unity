@@ -52,14 +52,30 @@ public class InteractivePlaceholderItem : MonoBehaviour
         if (audioSource == null)
             audioSource = GetComponent<AudioSource>();
 
-        if (!string.IsNullOrEmpty(promptLocalizationKey))
+        if (string.IsNullOrEmpty(promptLocalizationKey))
         {
-            string loc = MetroStorySequenceController.GetLoc(promptLocalizationKey);
-            if (!string.IsNullOrEmpty(loc) && loc != promptLocalizationKey)
-            {
-                promptText = loc;
-            }
+            promptLocalizationKey = GetDefaultPromptKey();
         }
+    }
+
+    private string GetDefaultPromptKey()
+    {
+        switch (itemType)
+        {
+            case PlaceholderType.Floor1_TransitCard: return "prompt_take_keycard";
+            case PlaceholderType.Floor1_VendingMachine: return "prompt_inspect_vending";
+            case PlaceholderType.Floor1_Intercom: return "prompt_listen_intercom";
+            case PlaceholderType.Floor1_TicketBooth: return "ticket_booth_inspect_prompt";
+            case PlaceholderType.Floor3_DepartureBoard: return "prompt_read_departure_board";
+            case PlaceholderType.Floor3_LostTeddyPiece: return "prompt_take_teddy_ribbon";
+            default: return "prompt_tap_interact";
+        }
+    }
+
+    private string GetResolvedPrompt()
+    {
+        string k = !string.IsNullOrEmpty(promptLocalizationKey) ? promptLocalizationKey : GetDefaultPromptKey();
+        return LocalizationManager.Resolve(k, promptText);
     }
 
     private void Update()
@@ -67,6 +83,7 @@ public class InteractivePlaceholderItem : MonoBehaviour
         if (oneTimeOnly && hasBeenInteracted && isCollectible) return;
         if (playerTransform == null) return;
 
+        string currentPrompt = GetResolvedPrompt();
         float dist = Vector3.Distance(transform.position, playerTransform.position);
         if (dist <= interactionDistance)
         {
@@ -74,11 +91,11 @@ public class InteractivePlaceholderItem : MonoBehaviour
             {
                 if (NpcInteractionText.Instance != null && (!oneTimeOnly || !hasBeenInteracted))
                 {
-                    NpcInteractionText.Instance.SetPrompt(promptText);
+                    NpcInteractionText.Instance.SetPrompt(currentPrompt);
                 }
                 else if (interactUI != null && (!oneTimeOnly || !hasBeenInteracted))
                 {
-                    interactUI.text = promptText;
+                    LocalizationManager.ApplyText(interactUI, currentPrompt, preserveAlignment: true);
                 }
 
                 if (Input.GetKeyDown(KeyCode.E))
@@ -89,11 +106,12 @@ public class InteractivePlaceholderItem : MonoBehaviour
         }
         else
         {
-            if (NpcInteractionText.Instance != null && NpcInteractionText.Instance.GetCurrentPrompt() == promptText)
+            if (NpcInteractionText.Instance != null &&
+                (NpcInteractionText.Instance.GetCurrentPrompt() == currentPrompt || NpcInteractionText.Instance.GetCurrentPrompt() == promptText))
             {
                 NpcInteractionText.Instance.ClearPrompt();
             }
-            else if (interactUI != null && interactUI.text == promptText)
+            else if (interactUI != null && (interactUI.text == currentPrompt || interactUI.text == promptText))
             {
                 interactUI.text = "";
             }

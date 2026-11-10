@@ -6,7 +6,7 @@ public class MessageTrigger : MonoBehaviour, IInteractable
     public string message = "Hello!";
     public float duration = 2f;
 
-    public string PromptMessage => "Interact";
+    public string PromptMessage => LocalizationManager.Resolve("prompt_tap_interact", "Tap to interact");
 
     public void Interact()
     {

@@ -156,14 +156,18 @@ public class ItemPickupToast : MonoBehaviour
             // Setup Label Text
             if (labelText != null)
             {
+                string formattedLabel;
                 if (item.amount > 0)
                 {
-                    labelText.text = $"x{item.amount} {item.label}";
+                    bool rtl = LocalizationManager.ContainsArabic(item.label) ||
+                               (LocalizationManager.Instance != null && LocalizationManager.Instance.IsCurrentLanguageRTL);
+                    formattedLabel = rtl ? $"{item.amount} {item.label}" : $"x{item.amount} {item.label}";
                 }
                 else
                 {
-                    labelText.text = item.label ?? "";
+                    formattedLabel = item.label ?? "";
                 }
+                LocalizationManager.ApplyText(labelText, formattedLabel, preserveAlignment: true);
             }
 
             // Play Chime

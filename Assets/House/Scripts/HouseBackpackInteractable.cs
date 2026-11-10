@@ -11,7 +11,7 @@ public class HouseBackpackInteractable : MonoBehaviour, IInteractable
     [Header("Transition Settings")]
     public float dipDuration = 0.45f;
 
-    public string PromptMessage => collected ? "" : "Take Backpack";
+    public string PromptMessage => collected ? "" : LocalizationManager.Resolve("prompt_take_backpack", "Take Backpack");
 
     private bool collected = false;
     private Coroutine activeRoutine;

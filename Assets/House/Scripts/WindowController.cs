@@ -8,7 +8,7 @@ public class WindowController : MonoBehaviour, IInteractable
     public bool isLocked = false;
     public string lockedMessage = "النافذة مسدودة";
 
-    public string PromptMessage => isOpen ? "Close Window" : "Open Window";
+    public string PromptMessage => isOpen ? LocalizationManager.Resolve("prompt_close_window", "Close Window") : LocalizationManager.Resolve("prompt_open_window", "Open Window");
 
     private bool isOpen = false;
     private Vector3 closedPosition;

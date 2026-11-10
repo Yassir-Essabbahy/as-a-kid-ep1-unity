@@ -3,12 +3,16 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
 
 public class DialogueWorkflowEditorWindow : EditorWindow
 {
     private const string CsvAssetPath = "Assets/Resources/Localization/dialogue.csv";
+
+    private static readonly Regex PlaceholderOrEscapeRegex = new Regex(@"\{[A-Za-z0-9_]+\}|\\n", RegexOptions.Compiled);
+    private static readonly Regex LatinLetterRegex = new Regex(@"[A-Za-z]", RegexOptions.Compiled);
 
     public enum WorkflowStage
     {
@@ -19,7 +23,8 @@ public class DialogueWorkflowEditorWindow : EditorWindow
         Scene4_MetroFloor3AndDarkRoom = 4,
         Scene5_MoroccanBeach = 5,
         Scene6_ClassroomEnding = 6,
-        OtherOrPrompts = 7
+        Scene7_MenusCanvasesAndPrompts = 7,
+        OtherOrPrompts = 8
     }
 
     [Serializable]
@@ -29,6 +34,7 @@ public class DialogueWorkflowEditorWindow : EditorWindow
         public string en = "";
         public string fr = "";
         public string ar = "";
+        public string darija = "";
         public WorkflowStage stage;
         public string subSection = "";
         public int workflowOrder = 9999;
@@ -50,6 +56,7 @@ public class DialogueWorkflowEditorWindow : EditorWindow
     private string _newEn = "";
     private string _newFr = "";
     private string _newAr = "";
+    private string _newDarija = "";
 
     private static readonly string[] StageTabLabels = new string[]
     {
@@ -60,7 +67,8 @@ public class DialogueWorkflowEditorWindow : EditorWindow
         "4. Metro Floor 3 & Dark Room",
         "5. Moroccan Beach",
         "6. Classroom Ending",
-        "Other / Prompts"
+        "7. Menus, Canvases & Prompts",
+        "8. Other / Misc"
     };
 
     private static readonly string[] SpeakerOptions = new string[]
@@ -187,6 +195,18 @@ public class DialogueWorkflowEditorWindow : EditorWindow
         // --- SCENE 6: ENDING (CLASSROOM RETURN) ---
         ("teacher_ending_01", true, WorkflowStage.Scene6_ClassroomEnding, "6.1 Classroom Awakening Ending", 600),
         ("teacher_ending_02", true, WorkflowStage.Scene6_ClassroomEnding, "6.1 Classroom Awakening Ending", 601),
+
+        // --- STAGE 7: MENUS, CANVASES, SPEAKERS & PROMPTS ---
+        ("lang_", false, WorkflowStage.Scene7_MenusCanvasesAndPrompts, "7.1 Languages & System UI", 700),
+        ("ui_", false, WorkflowStage.Scene7_MenusCanvasesAndPrompts, "7.1 Languages & System UI", 705),
+        ("speaker_", false, WorkflowStage.Scene7_MenusCanvasesAndPrompts, "7.2 Speaker Labels", 710),
+        ("prompt_", false, WorkflowStage.Scene7_MenusCanvasesAndPrompts, "7.3 Interaction & Tap Prompts", 720),
+        ("item_", false, WorkflowStage.Scene7_MenusCanvasesAndPrompts, "7.4 Items, Objectives & Signs", 730),
+        ("obj_", false, WorkflowStage.Scene7_MenusCanvasesAndPrompts, "7.4 Items, Objectives & Signs", 735),
+        ("door_sign_", false, WorkflowStage.Scene7_MenusCanvasesAndPrompts, "7.4 Items, Objectives & Signs", 738),
+        ("raft_", false, WorkflowStage.Scene7_MenusCanvasesAndPrompts, "7.5 Beach Raft Prompts & Tracker", 740),
+        ("beach_tracker_", false, WorkflowStage.Scene7_MenusCanvasesAndPrompts, "7.5 Beach Raft Prompts & Tracker", 745),
+        ("credits_", false, WorkflowStage.Scene7_MenusCanvasesAndPrompts, "7.6 Credits Scene", 750),
     };
 
     [MenuItem("Tools/Dialogue & Translation Manager", false, 10)]
@@ -242,9 +262,10 @@ public class DialogueWorkflowEditorWindow : EditorWindow
                 var row = new DialogueRow
                 {
                     key = key,
-                    en = fields.Length > 1 ? fields[1].Trim() : "",
-                    fr = fields.Length > 2 ? fields[2].Trim() : "",
-                    ar = fields.Length > 3 ? fields[3].Trim() : ""
+                    en = fields.Length > 1 ? UnescapeCsvNewlines(fields[1].Trim()) : "",
+                    fr = fields.Length > 2 ? UnescapeCsvNewlines(fields[2].Trim()) : "",
+                    ar = fields.Length > 3 ? UnescapeCsvNewlines(fields[3].Trim()) : "",
+                    darija = fields.Length > 4 ? UnescapeCsvNewlines(fields[4].Trim()) : ""
                 };
 
                 ClassifyRow(row, lineIndex);
@@ -260,7 +281,7 @@ public class DialogueWorkflowEditorWindow : EditorWindow
             return string.Compare(a.key, b.key, StringComparison.Ordinal);
         });
 
-        SetStatus($"Loaded {_rows.Count} dialogue keys across 6 workflow stages.");
+        SetStatus($"Loaded {_rows.Count} dialogue keys across 7 workflow stages (4 languages).");
     }
 
     public void SaveToCsv(bool sortChronologically = false)
@@ -278,7 +299,7 @@ public class DialogueWorkflowEditorWindow : EditorWindow
         }
 
         StringBuilder sb = new StringBuilder();
-        sb.AppendLine("key,en,fr,ar");
+        sb.AppendLine("key,en,fr,ar,darija");
 
         foreach (var row in rowsToWrite)
         {
@@ -286,7 +307,8 @@ public class DialogueWorkflowEditorWindow : EditorWindow
             sb.Append(EscapeCsvField(row.key.Trim())).Append(',');
             sb.Append(EscapeCsvField(row.en ?? "")).Append(',');
             sb.Append(EscapeCsvField(row.fr ?? "")).Append(',');
-            sb.Append(EscapeCsvField(row.ar ?? ""));
+            sb.Append(EscapeCsvField(row.ar ?? "")).Append(',');
+            sb.Append(EscapeCsvField(row.darija ?? ""));
             sb.AppendLine();
         }
 
@@ -321,7 +343,7 @@ public class DialogueWorkflowEditorWindow : EditorWindow
         }
 
         row.stage = WorkflowStage.OtherOrPrompts;
-        row.subSection = "7.1 General / Misc Keys";
+        row.subSection = "8.1 General / Misc Keys";
         row.workflowOrder = 900000 + fallbackIndex;
     }
 
@@ -393,7 +415,7 @@ public class DialogueWorkflowEditorWindow : EditorWindow
         EditorGUILayout.EndHorizontal();
 
         EditorGUILayout.LabelField(
-            "Workflow Order: 1. House (Morning)  →  2. Classroom Intro  →  3. Metro Floor 1 & Elevator  →  4. Metro Floor 3 & Dark Room  →  5. Moroccan Beach  →  6. Classroom Ending   |   Placeholders: {TEDDY_NAME}",
+            "Workflow Order: 1. House → 2. Classroom Intro → 3. Metro F1 → 4. Metro F3/Dark → 5. Beach → 6. Ending → 7. Menus & Prompts   |   Tokens: {TEDDY_NAME}, {CHILD_NAME}, {0}, {1}",
             EditorStyles.wordWrappedMiniLabel
         );
 
@@ -404,7 +426,7 @@ public class DialogueWorkflowEditorWindow : EditorWindow
     {
         EditorGUILayout.Space(2f);
         int currentTab = (int)_selectedStage;
-        int newTab = GUILayout.SelectionGrid(currentTab, StageTabLabels, 4, GUILayout.Height(46f));
+        int newTab = GUILayout.SelectionGrid(currentTab, StageTabLabels, 3, GUILayout.Height(66f));
         if (newTab != currentTab)
         {
             _selectedStage = (WorkflowStage)newTab;
@@ -458,6 +480,7 @@ public class DialogueWorkflowEditorWindow : EditorWindow
         _newEn = EditorGUILayout.TextField("English (en)", _newEn);
         _newFr = EditorGUILayout.TextField("French (fr)", _newFr);
         _newAr = EditorGUILayout.TextField("Arabic (ar)", _newAr);
+        _newDarija = EditorGUILayout.TextField("Darija (darija)", _newDarija);
 
         EditorGUILayout.BeginHorizontal();
         GUILayout.FlexibleSpace();
@@ -483,7 +506,8 @@ public class DialogueWorkflowEditorWindow : EditorWindow
                     key = trimmedKey,
                     en = _newEn ?? "",
                     fr = _newFr ?? "",
-                    ar = _newAr ?? ""
+                    ar = _newAr ?? "",
+                    darija = _newDarija ?? ""
                 };
                 ClassifyRow(newRow, _rows.Count);
                 _rows.Add(newRow);
@@ -492,6 +516,7 @@ public class DialogueWorkflowEditorWindow : EditorWindow
                 _newEn = "";
                 _newFr = "";
                 _newAr = "";
+                _newDarija = "";
                 _showAddKeyPanel = false;
                 SetStatus($"Added key '{trimmedKey}'. Remember to click 'Save All to CSV'.");
             }
@@ -571,12 +596,22 @@ public class DialogueWorkflowEditorWindow : EditorWindow
 
         EditorGUILayout.SelectableLabel(row.key, EditorStyles.boldLabel, GUILayout.Height(18f), GUILayout.MinWidth(200f));
 
-        bool missingAny = string.IsNullOrWhiteSpace(row.en) || string.IsNullOrWhiteSpace(row.fr) || string.IsNullOrWhiteSpace(row.ar);
+        bool missingAny = string.IsNullOrWhiteSpace(row.en) ||
+                          string.IsNullOrWhiteSpace(row.fr) ||
+                          string.IsNullOrWhiteSpace(row.ar) ||
+                          string.IsNullOrWhiteSpace(row.darija);
         if (missingAny)
         {
             GUIStyle warnStyle = new GUIStyle(EditorStyles.miniLabel);
             warnStyle.normal.textColor = new Color(1f, 0.45f, 0.35f);
-            GUILayout.Label("⚠ Missing translation", warnStyle, GUILayout.Width(130f));
+            GUILayout.Label("⚠ Missing translation", warnStyle, GUILayout.Width(135f));
+        }
+
+        if (ContainsLatinOutsidePlaceholders(row.ar) || ContainsLatinOutsidePlaceholders(row.darija))
+        {
+            GUIStyle latinWarnStyle = new GUIStyle(EditorStyles.miniLabel);
+            latinWarnStyle.normal.textColor = new Color(1f, 0.72f, 0.2f);
+            GUILayout.Label("⚠ Latin text in AR/Darija", latinWarnStyle, GUILayout.Width(155f));
         }
 
         GUILayout.FlexibleSpace();
@@ -597,22 +632,27 @@ public class DialogueWorkflowEditorWindow : EditorWindow
 
         EditorGUILayout.EndHorizontal();
 
-        // 3 Language TextAreas side-by-side or stacked cleanly
+        // 4 Language TextAreas stacked cleanly
         EditorGUI.BeginChangeCheck();
 
         EditorGUILayout.BeginHorizontal();
-        GUILayout.Label("EN (English)", EditorStyles.miniBoldLabel, GUILayout.Width(95f));
+        GUILayout.Label("EN (English)", EditorStyles.miniBoldLabel, GUILayout.Width(112f));
         string newEn = EditorGUILayout.TextArea(row.en, EditorStyles.textArea, GUILayout.MinHeight(36f));
         EditorGUILayout.EndHorizontal();
 
         EditorGUILayout.BeginHorizontal();
-        GUILayout.Label("FR (Français)", EditorStyles.miniBoldLabel, GUILayout.Width(95f));
+        GUILayout.Label("FR (Français)", EditorStyles.miniBoldLabel, GUILayout.Width(112f));
         string newFr = EditorGUILayout.TextArea(row.fr, EditorStyles.textArea, GUILayout.MinHeight(36f));
         EditorGUILayout.EndHorizontal();
 
         EditorGUILayout.BeginHorizontal();
-        GUILayout.Label("AR (العربية)", EditorStyles.miniBoldLabel, GUILayout.Width(95f));
+        GUILayout.Label("AR (العربية)", EditorStyles.miniBoldLabel, GUILayout.Width(112f));
         string newAr = EditorGUILayout.TextArea(row.ar, EditorStyles.textArea, GUILayout.MinHeight(36f));
+        EditorGUILayout.EndHorizontal();
+
+        EditorGUILayout.BeginHorizontal();
+        GUILayout.Label("DARIJA (الدارجة)", EditorStyles.miniBoldLabel, GUILayout.Width(112f));
+        string newDarija = EditorGUILayout.TextArea(row.darija, EditorStyles.textArea, GUILayout.MinHeight(36f));
         EditorGUILayout.EndHorizontal();
 
         if (EditorGUI.EndChangeCheck())
@@ -620,6 +660,7 @@ public class DialogueWorkflowEditorWindow : EditorWindow
             row.en = newEn;
             row.fr = newFr;
             row.ar = newAr;
+            row.darija = newDarija;
             _isDirty = true;
         }
 
@@ -656,6 +697,10 @@ public class DialogueWorkflowEditorWindow : EditorWindow
             {
                 LocalizationManager.Instance?.SetLanguage("ar");
             }
+            if (GUILayout.Button("Live Switch: DARIJA", EditorStyles.toolbarButton, GUILayout.Width(120f)))
+            {
+                LocalizationManager.Instance?.SetLanguage("darija");
+            }
         }
 
         EditorGUILayout.EndHorizontal();
@@ -675,7 +720,8 @@ public class DialogueWorkflowEditorWindow : EditorWindow
             {
                 bool missing = string.IsNullOrWhiteSpace(row.en) ||
                                string.IsNullOrWhiteSpace(row.fr) ||
-                               string.IsNullOrWhiteSpace(row.ar);
+                               string.IsNullOrWhiteSpace(row.ar) ||
+                               string.IsNullOrWhiteSpace(row.darija);
                 if (!missing) continue;
             }
 
@@ -692,6 +738,7 @@ public class DialogueWorkflowEditorWindow : EditorWindow
                              (row.en != null && row.en.ToLowerInvariant().Contains(q)) ||
                              (row.fr != null && row.fr.ToLowerInvariant().Contains(q)) ||
                              (row.ar != null && row.ar.ToLowerInvariant().Contains(q)) ||
+                             (row.darija != null && row.darija.ToLowerInvariant().Contains(q)) ||
                              (row.subSection != null && row.subSection.ToLowerInvariant().Contains(q));
                 if (!match) continue;
             }
@@ -748,10 +795,23 @@ public class DialogueWorkflowEditorWindow : EditorWindow
         }
     }
 
+    private static bool ContainsLatinOutsidePlaceholders(string value)
+    {
+        if (string.IsNullOrEmpty(value)) return false;
+        string cleaned = PlaceholderOrEscapeRegex.Replace(value, string.Empty);
+        return LatinLetterRegex.IsMatch(cleaned);
+    }
+
+    private static string UnescapeCsvNewlines(string field)
+    {
+        if (string.IsNullOrEmpty(field)) return "";
+        return field.Replace("\\n", "\n");
+    }
+
     private static string EscapeCsvField(string field)
     {
         if (string.IsNullOrEmpty(field)) return "";
-        string cleaned = field.Replace("\r\n", " ").Replace("\n", " ").Replace("\r", " ");
+        string cleaned = field.Replace("\r\n", "\\n").Replace("\n", "\\n").Replace("\r", "\\n");
         bool needsQuotes = cleaned.Contains(',') || cleaned.Contains('"');
         if (!needsQuotes) return cleaned;
         return "\"" + cleaned.Replace("\"", "\"\"") + "\"";

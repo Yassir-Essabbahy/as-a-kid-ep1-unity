@@ -45,6 +45,24 @@ public class HouseObjectiveController : MonoBehaviour
             var go = GameObject.Find("StoryObjectiveText");
             if (go != null) objectiveText = go.GetComponent<TextMeshProUGUI>();
         }
+        if (LocalizationManager.Instance != null)
+        {
+            LocalizationManager.Instance.OnLanguageChanged -= HandleLanguageChanged;
+            LocalizationManager.Instance.OnLanguageChanged += HandleLanguageChanged;
+        }
+        UpdateObjectiveUI();
+    }
+
+    private void OnDestroy()
+    {
+        if (LocalizationManager.Instance != null)
+        {
+            LocalizationManager.Instance.OnLanguageChanged -= HandleLanguageChanged;
+        }
+    }
+
+    private void HandleLanguageChanged(string _)
+    {
         UpdateObjectiveUI();
     }
 
@@ -126,14 +144,8 @@ public class HouseObjectiveController : MonoBehaviour
             fallback = "Head out to school";
         }
 
-        string text = fallback;
-        if (LocalizationManager.Instance != null)
-        {
-            string loc = LocalizationManager.Instance.Get(key);
-            if (!string.IsNullOrEmpty(loc) && !loc.StartsWith("[")) text = loc;
-        }
-
-        objectiveText.text = text;
+        string text = LocalizationManager.Resolve(key, fallback);
+        LocalizationManager.ApplyText(objectiveText, text, preserveAlignment: true);
         objectiveText.gameObject.SetActive(true);
     }
 }

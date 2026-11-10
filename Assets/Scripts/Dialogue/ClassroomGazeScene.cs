@@ -696,7 +696,14 @@ public class ClassroomGazeScene : MonoBehaviour
             string loc = LocalizationManager.Instance.Get(key);
             if (!string.IsNullOrEmpty(loc) && loc != key)
             {
-                if (loc.StartsWith("Child: ")) loc = loc.Substring(7);
+                foreach (string prefix in new[] { "Child: ", "Enfant : ", "Enfant: ", "الطفل: ", "الطفل :", "الدري: ", "الدري :" })
+                {
+                    if (loc.StartsWith(prefix, System.StringComparison.OrdinalIgnoreCase))
+                    {
+                        loc = loc.Substring(prefix.Length).TrimStart();
+                        break;
+                    }
+                }
                 return loc;
             }
         }

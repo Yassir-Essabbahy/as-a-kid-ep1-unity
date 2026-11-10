@@ -11,7 +11,7 @@ public class CabinetDoorController : MonoBehaviour, IInteractable
     [Header("Sound")]
     public AudioClip openCloseSound;
 
-    public string PromptMessage => isOpen ? "Close Cabinet" : "Open Cabinet";
+    public string PromptMessage => isOpen ? LocalizationManager.Resolve("prompt_close_cabinet", "Close Cabinet") : LocalizationManager.Resolve("prompt_open_cabinet", "Open Cabinet");
 
     private AudioSource audioSource;
     private bool isOpen = false;

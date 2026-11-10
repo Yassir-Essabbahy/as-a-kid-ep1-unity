@@ -14,7 +14,7 @@ public class DoorController : MonoBehaviour, IInteractable
     public AudioClip closeSound;
     public AudioClip lockedSound;
 
-    public string PromptMessage => isOpen ? "Close Door" : "Open Door";
+    public string PromptMessage => isOpen ? LocalizationManager.Resolve("prompt_close_door", "Close Door") : LocalizationManager.Resolve("prompt_open_door", "Open Door");
 
     public bool IsOpen => isOpen;
     public bool isCinematicControlled = false;

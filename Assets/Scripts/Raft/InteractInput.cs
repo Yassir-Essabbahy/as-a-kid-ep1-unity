@@ -47,7 +47,7 @@ public class InteractInput : MonoBehaviour
         isInteractionAvailable = available;
         if (!string.IsNullOrEmpty(promptText) && mobileButtonLabel != null)
         {
-            mobileButtonLabel.text = promptText;
+            LocalizationManager.ApplyText(mobileButtonLabel, promptText, preserveAlignment: true);
         }
         UpdateMobileButtonVisibility();
     }

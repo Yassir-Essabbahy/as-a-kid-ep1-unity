@@ -31,11 +31,25 @@ public class MainMenuSettingsUI : MonoBehaviour
         AutoResolveReferences();
         SyncFromSettings();
         BindListeners();
+        if (LocalizationManager.Instance != null)
+        {
+            LocalizationManager.Instance.OnLanguageChanged -= HandleLanguageChanged;
+            LocalizationManager.Instance.OnLanguageChanged += HandleLanguageChanged;
+        }
     }
 
     private void OnDisable()
     {
         UnbindListeners();
+        if (LocalizationManager.Instance != null)
+        {
+            LocalizationManager.Instance.OnLanguageChanged -= HandleLanguageChanged;
+        }
+    }
+
+    private void HandleLanguageChanged(string _)
+    {
+        SyncFromSettings();
     }
 
     public void AutoResolveReferences()
@@ -220,7 +234,8 @@ public class MainMenuSettingsUI : MonoBehaviour
     {
         if (sensitivityLabel != null)
         {
-            sensitivityLabel.text = $"Sensitivity: {Mathf.RoundToInt(value)}";
+            string formatted = LocalizationManager.Format("ui_settings_sensitivity", "Sensitivity: {0}", Mathf.RoundToInt(value));
+            LocalizationManager.ApplyText(sensitivityLabel, formatted, preserveAlignment: true);
         }
     }
 
@@ -228,7 +243,8 @@ public class MainMenuSettingsUI : MonoBehaviour
     {
         if (soundLabel != null)
         {
-            soundLabel.text = $"Sound: {Mathf.RoundToInt(value)}%";
+            string formatted = LocalizationManager.Format("ui_settings_sound", "Sound: {0}%", Mathf.RoundToInt(value));
+            LocalizationManager.ApplyText(soundLabel, formatted, preserveAlignment: true);
         }
     }
 }

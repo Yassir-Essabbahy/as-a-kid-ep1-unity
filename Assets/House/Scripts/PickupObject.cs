@@ -11,7 +11,7 @@ public class PickupObject : MonoBehaviour, IInteractable
     [Header("Player State")]
     public bool hasMoney = false;
 
-    public string PromptMessage => CompareTag("Money") ? "Pick up Money" : "Pick up Object";
+    public string PromptMessage => CompareTag("Money") ? LocalizationManager.Resolve("prompt_pickup_money", "Pick up Money") : LocalizationManager.Resolve("prompt_pickup_object", "Pick up Object");
 
     void Start()
     {
@@ -38,7 +38,7 @@ public class PickupObject : MonoBehaviour, IInteractable
 
             if (ItemPickupToast.Instance != null)
             {
-                ItemPickupToast.Instance.Show(null, "200 DH");
+                ItemPickupToast.Instance.Show(null, LocalizationManager.Resolve("item_200_dh", "200 DH"));
             }
 
             if (pickupSound != null)

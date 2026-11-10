@@ -19,7 +19,7 @@ public class HouseMamaDialogue : MonoBehaviour, IInteractable
     [SerializeField] private string talkAnimBool = "IsTalking";
     [SerializeField] private string talkAnimTrigger = "TalkToPlayer";
 
-    public string PromptMessage => "tap to talk";
+    public string PromptMessage => LocalizationManager.Resolve("prompt_tap_talk", "Tap to talk");
 
     private bool hasSpoken = false;
     private NPCLookAt lookAt;
@@ -96,7 +96,8 @@ public class HouseMamaDialogue : MonoBehaviour, IInteractable
                 if (!string.IsNullOrEmpty(loc) && !loc.StartsWith("[")) reminderLine = loc;
             }
 
-            string formattedReminder = $"{speakerName}: {reminderLine}";
+            string localizedSpeaker = LocalizationManager.Resolve("speaker_mama", speakerName);
+            string formattedReminder = $"{localizedSpeaker}: {reminderLine}";
             Color sColor = NpcDialogueManager.GetSpeakerColor(speakerName);
             var f = NpcDialogueManager.DefaultDialogueFont;
 
@@ -132,7 +133,8 @@ public class HouseMamaDialogue : MonoBehaviour, IInteractable
             if (!string.IsNullOrEmpty(loc) && !loc.StartsWith("[")) line = loc;
         }
 
-        string formattedLine = $"{speakerName}: {line}";
+        string localizedSpeakerName = LocalizationManager.Resolve("speaker_mama", speakerName);
+        string formattedLine = $"{localizedSpeakerName}: {line}";
         Color speakerColor = NpcDialogueManager.GetSpeakerColor(speakerName);
         var font = NpcDialogueManager.DefaultDialogueFont;
 

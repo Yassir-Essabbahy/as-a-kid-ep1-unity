@@ -68,6 +68,7 @@ public class GameSettingsManager : MonoBehaviour
     private RectTransform _fpsTextRect;
     private float _fpsAccumulator = 0f;
     private int _fpsFrames = 0;
+    private int _lastDisplayedFps = 60;
     private float _fpsTimeLeft = 0.35f;
     private const float FPS_UPDATE_INTERVAL = 0.35f;
 
@@ -157,11 +158,25 @@ public class GameSettingsManager : MonoBehaviour
         CreateFPSCounterUI();
 
         SceneManager.sceneLoaded += OnSceneLoaded;
+        if (LocalizationManager.Instance != null)
+        {
+            LocalizationManager.Instance.OnLanguageChanged -= HandleLanguageChanged;
+            LocalizationManager.Instance.OnLanguageChanged += HandleLanguageChanged;
+        }
     }
 
     private void OnDestroy()
     {
         SceneManager.sceneLoaded -= OnSceneLoaded;
+        if (LocalizationManager.Instance != null)
+        {
+            LocalizationManager.Instance.OnLanguageChanged -= HandleLanguageChanged;
+        }
+    }
+
+    private void HandleLanguageChanged(string _)
+    {
+        ApplyFPSText(_lastDisplayedFps);
     }
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -254,10 +269,18 @@ public class GameSettingsManager : MonoBehaviour
         _fpsText.color = new Color(0.35f, 1.0f, 0.45f, 1.0f); // Retro phosphor green
         _fpsText.alignment = TextAlignmentOptions.Center;
         _fpsText.raycastTarget = false;
-        _fpsText.text = "60 FPS";
+        ApplyFPSText(60);
 
         UpdateFPSCounterLayoutForScene(SceneManager.GetActiveScene().name);
         ApplyFPSCounterVisibility();
+    }
+
+    private void ApplyFPSText(int fpsValue)
+    {
+        if (_fpsText == null) return;
+        _lastDisplayedFps = fpsValue;
+        string text = LocalizationManager.Format("ui_fps_format", "{0} FPS", fpsValue);
+        LocalizationManager.ApplyText(_fpsText, text, preserveAlignment: true);
     }
 
     private void UpdateFPSCounterLayoutForScene(string sceneName)
@@ -288,7 +311,7 @@ public class GameSettingsManager : MonoBehaviour
         {
             float fps = _fpsAccumulator / _fpsFrames;
             int roundedFps = Mathf.RoundToInt(fps);
-            _fpsText.text = $"{roundedFps} FPS";
+            ApplyFPSText(roundedFps);
 
             // Color-code FPS smoothly: Green (55+), Yellow (30-54), Red (<30)
             if (roundedFps >= 55)

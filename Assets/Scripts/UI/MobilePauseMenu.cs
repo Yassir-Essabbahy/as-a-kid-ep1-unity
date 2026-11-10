@@ -36,6 +36,9 @@ namespace Story
 
         private float _previousTimeScale = 1f;
         private List<GameObject> _indicators = new List<GameObject>();
+        private TextMeshProUGUI _titleTmp;
+        private TextMeshProUGUI _subtitleTmp;
+        private readonly List<(TextMeshProUGUI tmp, string locKey, string fallback, RectTransform cubeRt)> _localizedButtons = new List<(TextMeshProUGUI, string, string, RectTransform)>();
 
         private void Awake()
         {
@@ -50,6 +53,11 @@ namespace Story
             }
 
             EnsureUIHierarchy();
+            if (LocalizationManager.Instance != null)
+            {
+                LocalizationManager.Instance.OnLanguageChanged -= HandleLanguageChanged;
+                LocalizationManager.Instance.OnLanguageChanged += HandleLanguageChanged;
+            }
         }
 
         private void Start()
@@ -58,6 +66,7 @@ namespace Story
             {
                 pausePanelObj.SetActive(false);
             }
+            RefreshLocalizedLabels();
             UpdatePauseButtonVisibility();
         }
 
@@ -79,10 +88,46 @@ namespace Story
 
         private void OnDestroy()
         {
+            if (LocalizationManager.Instance != null)
+            {
+                LocalizationManager.Instance.OnLanguageChanged -= HandleLanguageChanged;
+            }
             if (Instance == this) Instance = null;
             if (isPaused)
             {
                 Time.timeScale = 1f;
+            }
+        }
+
+        private void HandleLanguageChanged(string _)
+        {
+            RefreshLocalizedLabels();
+        }
+
+        public void RefreshLocalizedLabels()
+        {
+            if (_titleTmp != null)
+            {
+                LocalizationManager.ApplyText(_titleTmp, LocalizationManager.Resolve("ui_game_title", "As A Kid"), preserveAlignment: true);
+            }
+            if (_subtitleTmp != null)
+            {
+                string sub = LocalizationManager.Resolve("ui_pause_title", "PAUSED");
+                LocalizationManager.ApplyText(_subtitleTmp, sub, preserveAlignment: true);
+                _subtitleTmp.characterSpacing = LocalizationManager.ContainsArabic(sub) ? 0f : 8f;
+            }
+            foreach (var item in _localizedButtons)
+            {
+                if (item.tmp != null)
+                {
+                    LocalizationManager.ApplyText(item.tmp, LocalizationManager.Resolve(item.locKey, item.fallback), preserveAlignment: true);
+                    item.tmp.ForceMeshUpdate();
+                    if (item.cubeRt != null)
+                    {
+                        float textWidth = item.tmp.preferredWidth > 10f ? item.tmp.preferredWidth : 220f;
+                        item.cubeRt.anchoredPosition = new Vector2(textWidth + 20f, -4f);
+                    }
+                }
             }
         }
 
@@ -99,6 +144,8 @@ namespace Story
             isPaused = true;
             _previousTimeScale = Time.timeScale;
             Time.timeScale = 0f;
+
+            RefreshLocalizedLabels();
 
             if (pausePanelObj != null)
             {
@@ -282,6 +329,7 @@ namespace Story
             }
 
             _indicators.Clear();
+            _localizedButtons.Clear();
 
             pausePanelObj = new GameObject("PausePanel", typeof(RectTransform));
             pausePanelObj.transform.SetParent(transform, false);
@@ -326,14 +374,14 @@ namespace Story
             titleRt.anchoredPosition = new Vector2(133f, 210f); // Exact MainMenu X & Y alignment
             titleRt.sizeDelta = new Vector2(650f, 150f);
 
-            var titleTmp = titleObj.AddComponent<TextMeshProUGUI>();
-            if (font != null) titleTmp.font = font;
-            titleTmp.text = "As A Kid";
-            titleTmp.fontSize = 105f;
-            titleTmp.fontStyle = FontStyles.Bold;
-            titleTmp.color = new Color(1.0f, 0.0f, 0.0f, 1.0f); // Pure Red (#FF0000)
-            titleTmp.alignment = TextAlignmentOptions.Left;
-            titleTmp.raycastTarget = false;
+            _titleTmp = titleObj.AddComponent<TextMeshProUGUI>();
+            if (font != null) _titleTmp.font = font;
+            _titleTmp.fontSize = 105f;
+            _titleTmp.fontStyle = FontStyles.Bold;
+            _titleTmp.color = new Color(1.0f, 0.0f, 0.0f, 1.0f); // Pure Red (#FF0000)
+            _titleTmp.alignment = TextAlignmentOptions.Left;
+            _titleTmp.raycastTarget = false;
+            LocalizationManager.ApplyText(_titleTmp, LocalizationManager.Resolve("ui_game_title", "As A Kid"), preserveAlignment: true);
 
             // Subtitle: "PAUSED"
             var subTitleObj = new GameObject("SubtitleText", typeof(RectTransform));
@@ -343,17 +391,18 @@ namespace Story
             subTitleRt.anchorMax = new Vector2(0f, 0.5f);
             subTitleRt.pivot = new Vector2(0f, 0.5f);
             subTitleRt.anchoredPosition = new Vector2(135f, 120f);
-            subTitleRt.sizeDelta = new Vector2(400f, 50f);
+            subTitleRt.sizeDelta = new Vector2(450f, 50f);
 
-            var subTitleTmp = subTitleObj.AddComponent<TextMeshProUGUI>();
-            if (font != null) subTitleTmp.font = font;
-            subTitleTmp.text = "PAUSED";
-            subTitleTmp.fontSize = 36f;
-            subTitleTmp.fontStyle = FontStyles.Bold;
-            subTitleTmp.color = new Color(1.0f, 0.25f, 0.25f, 0.9f); // Subtle horror red accent
-            subTitleTmp.alignment = TextAlignmentOptions.Left;
-            subTitleTmp.characterSpacing = 8f;
-            subTitleTmp.raycastTarget = false;
+            _subtitleTmp = subTitleObj.AddComponent<TextMeshProUGUI>();
+            if (font != null) _subtitleTmp.font = font;
+            _subtitleTmp.fontSize = 36f;
+            _subtitleTmp.fontStyle = FontStyles.Bold;
+            _subtitleTmp.color = new Color(1.0f, 0.25f, 0.25f, 0.9f); // Subtle horror red accent
+            _subtitleTmp.alignment = TextAlignmentOptions.Left;
+            string pauseSub = LocalizationManager.Resolve("ui_pause_title", "PAUSED");
+            _subtitleTmp.characterSpacing = LocalizationManager.ContainsArabic(pauseSub) ? 0f : 8f;
+            _subtitleTmp.raycastTarget = false;
+            LocalizationManager.ApplyText(_subtitleTmp, pauseSub, preserveAlignment: true);
 
             // Buttons Vertical Pack (matches MainMenu pos.x = 133, pivot=(0, 0.5), anchor=(0, 0.5))
             var buttonsPack = new GameObject("Buttons_Pack", typeof(RectTransform));
@@ -366,22 +415,22 @@ namespace Story
             packRt.sizeDelta = new Vector2(450f, 400f);
 
             // 1. Resume Button (pos.y = 15f)
-            resumeButton = CreateThemedMenuButton(buttonsPack.transform, "ResumeButton", "Resume", 15f, 0, font);
+            resumeButton = CreateThemedMenuButton(buttonsPack.transform, "ResumeButton", "ui_pause_resume", "Resume", 15f, 0, font);
             resumeButton.onClick.AddListener(ResumeGame);
 
             // 2. Restart Button (pos.y = -100f)
-            restartButton = CreateThemedMenuButton(buttonsPack.transform, "RestartButton", "Restart", -100f, 1, font);
+            restartButton = CreateThemedMenuButton(buttonsPack.transform, "RestartButton", "ui_pause_restart", "Restart", -100f, 1, font);
             restartButton.onClick.AddListener(RestartCurrentScene);
 
             // 3. Main Menu Button (pos.y = -215f)
-            mainMenuButton = CreateThemedMenuButton(buttonsPack.transform, "MainMenuButton", "Main Menu", -215f, 2, font);
+            mainMenuButton = CreateThemedMenuButton(buttonsPack.transform, "MainMenuButton", "ui_pause_main_menu", "Main Menu", -215f, 2, font);
             mainMenuButton.onClick.AddListener(LoadMainMenu);
 
             // Initially highlight Resume
             HighlightIndicator(0);
         }
 
-        private Button CreateThemedMenuButton(Transform parent, string name, string label, float yPos, int index, TMP_FontAsset font)
+        private Button CreateThemedMenuButton(Transform parent, string name, string locKey, string fallbackLabel, float yPos, int index, TMP_FontAsset font)
         {
             var btnObj = new GameObject(name, typeof(RectTransform));
             btnObj.transform.SetParent(parent, false);
@@ -419,15 +468,19 @@ namespace Story
 
             var tmp = textObj.AddComponent<TextMeshProUGUI>();
             if (font != null) tmp.font = font;
-            tmp.text = label;
+            string resolvedLabel = LocalizationManager.Resolve(locKey, fallbackLabel);
             tmp.fontSize = 65.7f; // Exact MainMenu font size
+            tmp.enableAutoSizing = true;
+            tmp.fontSizeMin = 30f;
+            tmp.fontSizeMax = 65.7f;
             tmp.color = Color.white;
             tmp.alignment = TextAlignmentOptions.Left;
             tmp.raycastTarget = false;
+            LocalizationManager.ApplyText(tmp, resolvedLabel, preserveAlignment: true);
 
             // Force mesh generation to calculate preferredWidth accurately
             tmp.ForceMeshUpdate();
-            float textWidth = tmp.preferredWidth > 10f ? tmp.preferredWidth : (label.Length * 36f);
+            float textWidth = tmp.preferredWidth > 10f ? tmp.preferredWidth : (fallbackLabel.Length * 36f);
 
             // Signature Selection Cube Image (◼)
             var cubeObj = new GameObject("CubeImage", typeof(RectTransform));
@@ -445,6 +498,7 @@ namespace Story
             cubeObj.SetActive(index == 0);
 
             _indicators.Add(cubeObj);
+            _localizedButtons.Add((tmp, locKey, fallbackLabel, cubeRt));
 
             // Wire selection trigger to illuminate indicator on touch / hover / select
             var trigger = btnObj.AddComponent<EventTrigger>();

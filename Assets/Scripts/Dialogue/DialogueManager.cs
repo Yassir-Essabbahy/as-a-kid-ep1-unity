@@ -75,6 +75,11 @@ public class DialogueManager : MonoBehaviour
         {
             continueButton.onClick.RemoveListener(Advance);
             continueButton.onClick.AddListener(Advance);
+            var btnTxt = continueButton.GetComponentInChildren<TMP_Text>(true);
+            if (btnTxt != null)
+            {
+                LocalizationManager.ApplyText(btnTxt, LocalizationManager.Resolve("ui_continue", "CONTINUE >"), preserveAlignment: true);
+            }
         }
 
         ResetBandsOffscreen();
@@ -185,7 +190,8 @@ public class DialogueManager : MonoBehaviour
             {
                 speakerText.font = font;
             }
-            speakerText.text = DialogueTypewriterUtility.PrepareDisplayText(speakerText, line.speakerName, preserveAlignment: true);
+            string localizedSpeaker = LocalizeSpeakerName(line.speakerName);
+            speakerText.text = DialogueTypewriterUtility.PrepareDisplayText(speakerText, localizedSpeaker, preserveAlignment: true);
         }
 
         if (bodyText != null)
@@ -196,7 +202,7 @@ public class DialogueManager : MonoBehaviour
             {
                 bodyText.font = font;
             }
-            string rawLine = LocalizationManager.Instance != null ? LocalizationManager.Instance.Get(line.key) : line.key;
+            string rawLine = LocalizationManager.Resolve(line.key, line.key);
             if (typeCoroutine != null) StopCoroutine(typeCoroutine);
             typeCoroutine = StartCoroutine(TypeBodyTextRoutine(rawLine));
         }
@@ -282,5 +288,15 @@ public class DialogueManager : MonoBehaviour
         string finishedId = currentSequence.sequenceId;
         currentSequence = null;
         DialogueEvents.RaiseSequenceComplete(finishedId);
+    }
+
+    private static string LocalizeSpeakerName(string rawSpeaker)
+    {
+        if (string.IsNullOrEmpty(rawSpeaker)) return "";
+        string lower = rawSpeaker.Trim().ToLowerInvariant();
+        if (lower == "teacher") return LocalizationManager.Resolve("speaker_teacher", rawSpeaker);
+        if (lower == "child" || lower == "kid" || lower == "player") return LocalizationManager.Resolve("speaker_child", rawSpeaker);
+        if (lower.Contains("teddy") || lower.Contains("doudou") || lower.Contains("mistfox")) return MetroStorySequenceController.TeddyName;
+        return rawSpeaker;
     }
 }

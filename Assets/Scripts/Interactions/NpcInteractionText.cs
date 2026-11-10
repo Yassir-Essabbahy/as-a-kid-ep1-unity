@@ -198,11 +198,12 @@ public class NpcInteractionText : MonoBehaviour
             if (promptBoxText != null)
             {
                 promptBoxText.gameObject.SetActive(true);
-                promptBoxText.text = currentPromptString;
+                LocalizationManager.ApplyText(promptBoxText, currentPromptString, preserveAlignment: true);
             }
             if (promptBoxRect != null)
             {
-                float targetWidth = Mathf.Max(160f, currentPromptString.Length * 9.5f + 36f);
+                float preferred = promptBoxText != null ? promptBoxText.GetPreferredValues(promptBoxText.text).x : (currentPromptString.Length * 9.5f);
+                float targetWidth = Mathf.Max(160f, preferred + 40f);
                 promptBoxRect.sizeDelta = new Vector2(targetWidth, 44f);
             }
         }
@@ -328,7 +329,7 @@ public class NpcInteractionText : MonoBehaviour
                 currentPlaceholder = null;
                 currentNpcConv = null;
  currentInteractable = null;
-                SetPrompt("tap to interact");
+                SetPrompt(LocalizationManager.Resolve("prompt_tap_interact", "Tap to interact"));
 
                 if (Input.GetKeyDown(KeyCode.E) || ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame)
                 {
@@ -343,7 +344,7 @@ public class NpcInteractionText : MonoBehaviour
                 currentPlaceholder = placeholder;
                 currentNpcConv = null;
  currentInteractable = null;
-                SetPrompt("tap to interact");
+                SetPrompt(LocalizationManager.Resolve("prompt_tap_interact", "Tap to interact"));
 
                 if (Input.GetKeyDown(KeyCode.E) || ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame)
                 {
@@ -389,7 +390,7 @@ public class NpcInteractionText : MonoBehaviour
                     currentNpcConv = npcConv;
                     currentNpcLook = hit.collider.GetComponent<NpcLookAt>();
 
-                    string prompt = (currentIsTeddy && !isCarried) ? "tap to interact" : "tap to talk";
+                    string prompt = (currentIsTeddy && !isCarried) ? LocalizationManager.Resolve("prompt_tap_interact", "Tap to interact") : LocalizationManager.Resolve("prompt_tap_talk", "Tap to talk");
                     SetPrompt(prompt);
 
                     if (Input.GetKeyDown(KeyCode.E) || ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame)

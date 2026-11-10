@@ -19,9 +19,9 @@ public class HouseOutsideDoor : MonoBehaviour, IInteractable
             if (HouseObjectiveController.Instance != null &&
                 HouseObjectiveController.Instance.hasTalkedToMama)
             {
-                return "Leave for School";
+                return LocalizationManager.Resolve("prompt_leave_school", "Leave for School");
             }
-            return "Front Door";
+            return LocalizationManager.Resolve("prompt_front_door", "Front Door");
         }
     }
 

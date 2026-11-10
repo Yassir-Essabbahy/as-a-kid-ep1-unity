@@ -13,7 +13,7 @@ public class DoorToHome : MonoBehaviour, IInteractable
     public AudioClip doorSound;
     public AudioSource audioSource;
 
-    public string PromptMessage => "Enter Door";
+    public string PromptMessage => LocalizationManager.Resolve("prompt_enter_door", "Enter Door");
 
     void Start()
     {

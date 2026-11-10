@@ -348,7 +348,7 @@ public static class MetroStoryVerificationTest
         bool allLanguagesOk = true;
         List<string> missingDetails = new List<string>();
 
-        foreach (var lang in new string[] { "en", "fr", "ar" })
+        foreach (var lang in new string[] { "en", "fr", "ar", "darija" })
         {
             loc.CurrentLanguage = lang;
             if (loadMethod != null) loadMethod.Invoke(loc, null);

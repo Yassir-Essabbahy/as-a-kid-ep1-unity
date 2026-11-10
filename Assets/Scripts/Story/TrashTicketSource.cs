@@ -592,7 +592,10 @@ public class TrashTicketSource : MonoBehaviour
         if (NpcInteractionText.Instance != null)
         {
             string cur = NpcInteractionText.Instance.GetCurrentPrompt();
-            if (cur == GetPromptString() || cur.Contains("Search") || cur.Contains("Trash"))
+            string mine = GetPromptString();
+            string emptyPrompt = LocalizationManager.Resolve(promptSearchedKey, "Trash Can (Empty)");
+            string searchPrompt = LocalizationManager.Resolve(promptSearchKey, "Tap to Search Trash");
+            if (cur == mine || cur == emptyPrompt || cur == searchPrompt)
             {
                 NpcInteractionText.Instance.ClearPrompt();
             }

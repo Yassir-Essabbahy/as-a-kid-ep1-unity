@@ -168,14 +168,14 @@ public class TimingMinigameUI : MonoBehaviour
         // Localized Header
         if (titleText != null)
         {
-            string t = LocalizationManager.Instance != null ? LocalizationManager.Instance.Get("trash_searching_title") : "Searching the trash...";
-            titleText.text = t;
+            string t = LocalizationManager.Resolve("trash_searching_title", "Searching the trash...");
+            LocalizationManager.ApplyText(titleText, t, preserveAlignment: true);
         }
 
         if (hintText != null)
         {
-            string h = LocalizationManager.Instance != null ? LocalizationManager.Instance.Get("trash_searching_hint") : "Stop the marker in the green zone!";
-            hintText.text = h;
+            string h = LocalizationManager.Resolve("trash_searching_hint", "Stop the marker in the green zone!");
+            LocalizationManager.ApplyText(hintText, h, preserveAlignment: true);
         }
 
         // Lock Player Movement and Camera
@@ -301,8 +301,8 @@ public class TimingMinigameUI : MonoBehaviour
 
             if (hintText != null)
             {
-                string s = LocalizationManager.Instance != null ? LocalizationManager.Instance.Get("trash_searching_success") : "Found a train ticket!";
-                hintText.text = s;
+                string s = LocalizationManager.Resolve("trash_searching_success", "Found a train ticket!");
+                LocalizationManager.ApplyText(hintText, s, preserveAlignment: true);
             }
 
             // Brief freeze to show successful timing
@@ -322,12 +322,8 @@ public class TimingMinigameUI : MonoBehaviour
 
             if (hintText != null)
             {
-                string emptyStr = LocalizationManager.Instance != null ? LocalizationManager.Instance.Get("trash_searching_empty") : null;
-                if (string.IsNullOrEmpty(emptyStr) || emptyStr.StartsWith("["))
-                {
-                    emptyStr = "Nothing here but old trash... Try another trash can!";
-                }
-                hintText.text = emptyStr;
+                string emptyStr = LocalizationManager.Resolve("trash_searching_empty", "Nothing here but old trash... Try another trash can!");
+                LocalizationManager.ApplyText(hintText, emptyStr, preserveAlignment: true);
             }
 
             yield return new WaitForSecondsRealtime(0.85f);
@@ -347,8 +343,8 @@ public class TimingMinigameUI : MonoBehaviour
 
         if (hintText != null)
         {
-            string f = LocalizationManager.Instance != null ? LocalizationManager.Instance.Get("trash_searching_failed") : "Nothing found! Try again...";
-            hintText.text = f;
+            string f = LocalizationManager.Resolve("trash_searching_failed", "Nothing found! Try again...");
+            LocalizationManager.ApplyText(hintText, f, preserveAlignment: true);
         }
 
         // Increase speed slightly on failure

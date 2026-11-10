@@ -42,9 +42,9 @@ public class HouseWardrobeInteractable : MonoBehaviour, IInteractable
             switch (currentState)
             {
                 case WardrobeState.Closed:
-                    return "Open wardrobe";
+                    return LocalizationManager.Resolve("prompt_open_wardrobe", "Open wardrobe");
                 case WardrobeState.OpenNotDressed:
-                    return "Put on clothes";
+                    return LocalizationManager.Resolve("prompt_put_on_clothes", "Put on clothes");
                 default:
                     return ""; // consumed
             }

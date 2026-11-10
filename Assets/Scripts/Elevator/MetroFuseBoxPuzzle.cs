@@ -106,6 +106,13 @@ public class MetroFuseBoxPuzzle : MonoBehaviour
         [HideInInspector] public Coroutine rotateRoutine;
     }
 
+    private string GetLocalizedPrompt()
+    {
+        return isPowerRestored
+            ? LocalizationManager.Resolve("prompt_fusebox_powered", promptPoweredText)
+            : LocalizationManager.Resolve("prompt_open_fusebox", promptOpenText);
+    }
+
     private void Awake()
     {
         if (_instance != null && _instance != this)
@@ -288,6 +295,11 @@ public class MetroFuseBoxPuzzle : MonoBehaviour
         {
             mobileCloseButton.onClick.RemoveAllListeners();
             mobileCloseButton.onClick.AddListener(CloseInspection);
+            var closeLbl = mobileCloseButton.GetComponentInChildren<TextMeshProUGUI>(true);
+            if (closeLbl != null)
+            {
+                LocalizationManager.ApplyText(closeLbl, LocalizationManager.Resolve("ui_close", "[ CLOSE ]"), preserveAlignment: true);
+            }
         }
     }
 
@@ -312,14 +324,14 @@ public class MetroFuseBoxPuzzle : MonoBehaviour
         {
             if (NpcDialogueManager.Instance == null || !NpcDialogueManager.Instance.IsDialogueRunning)
             {
-                string prompt = isPowerRestored ? promptPoweredText : promptOpenText;
+                string prompt = GetLocalizedPrompt();
                 if (NpcInteractionText.Instance != null)
                 {
                     NpcInteractionText.Instance.SetPrompt(prompt);
                 }
                 else if (interactUI != null)
                 {
-                    interactUI.text = prompt;
+                    LocalizationManager.ApplyText(interactUI, prompt, preserveAlignment: true);
                 }
 
                 if (Input.GetKeyDown(KeyCode.E))
@@ -337,10 +349,15 @@ public class MetroFuseBoxPuzzle : MonoBehaviour
         }
         else
         {
-            if (NpcInteractionText.Instance != null && 
-                (NpcInteractionText.Instance.GetCurrentPrompt() == promptOpenText || NpcInteractionText.Instance.GetCurrentPrompt() == promptPoweredText))
+            string openPrompt = LocalizationManager.Resolve("prompt_open_fusebox", promptOpenText);
+            string poweredPrompt = LocalizationManager.Resolve("prompt_fusebox_powered", promptPoweredText);
+            if (NpcInteractionText.Instance != null)
             {
-                NpcInteractionText.Instance.ClearPrompt();
+                string cur = NpcInteractionText.Instance.GetCurrentPrompt();
+                if (cur == openPrompt || cur == poweredPrompt || cur == promptOpenText || cur == promptPoweredText)
+                {
+                    NpcInteractionText.Instance.ClearPrompt();
+                }
             }
             else if (interactUI != null && (interactUI.text == promptOpenText || interactUI.text == promptPoweredText))
             {

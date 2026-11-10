@@ -62,14 +62,36 @@ namespace Story
 
         /// <summary>
         /// Converts keyboard/mouse prompt strings to mobile touch equivalents.
-        /// Handles English, French, and Arabic string variants.
+        /// Handles English, French, Arabic, and Darija string variants without leaving Latin in RTL languages.
         /// </summary>
         public static string AdaptPrompt(string original)
         {
             if (string.IsNullOrEmpty(original)) return original;
+
+            bool isRtl = LocalizationManager.Instance != null && LocalizationManager.Instance.IsCurrentLanguageRTL;
+            if (isRtl)
+            {
+                if (string.Equals(original.Trim(), "tap to interact", System.StringComparison.OrdinalIgnoreCase))
+                    return LocalizationManager.Resolve("prompt_tap_interact", "المس للتفاعل");
+                if (string.Equals(original.Trim(), "tap to talk", System.StringComparison.OrdinalIgnoreCase))
+                    return LocalizationManager.Resolve("prompt_tap_talk", "المس للتحدث");
+            }
+
             if (!IsMobile) return original;
 
             string s = original;
+
+            // Arabic / Darija adaptations (ensure no Latin 'E' remains)
+            s = s.Replace("اضغط 'E' لـ", "المس لـ");
+            s = s.Replace("اضغط E لـ", "المس لـ");
+            s = s.Replace("اضغط 'E' ", "المس ");
+            s = s.Replace("اضغط E ", "المس ");
+            s = s.Replace("اضغط على E", "المس");
+
+            if (LocalizationManager.ContainsArabic(s))
+            {
+                return s.Trim();
+            }
 
             // English adaptations
             s = Regex.Replace(s, @"Press\s+['""]?E['""]?\s+To\s+", "Tap To ", RegexOptions.IgnoreCase);
@@ -87,12 +109,6 @@ namespace Story
             // French adaptations
             s = Regex.Replace(s, @"Appuie sur ['""]?E['""]? pour ", "Appuyez pour ", RegexOptions.IgnoreCase);
             s = Regex.Replace(s, @"Appuyez sur ['""]?E['""]? pour ", "Appuyez pour ", RegexOptions.IgnoreCase);
-
-            // Arabic adaptations
-            s = s.Replace("اضغط 'E' لـ", "المس لـ");
-            s = s.Replace("اضغط E لـ", "المس لـ");
-            s = s.Replace("اضغط 'E' لـ", "المس لـ");
-            s = s.Replace("اضغط على E", "المس");
 
             return s.Trim();
         }

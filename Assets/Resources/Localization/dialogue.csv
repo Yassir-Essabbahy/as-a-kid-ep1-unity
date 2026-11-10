@@ -1,176 +1,274 @@
-key,en,fr,ar
-mama_doorway_wake,"Mama: Yallah fyeq a wlidi, nod lmdrassa...","Maman : Allez réveille-toi mon chéri, c'est l'heure de l'école...",ماما: هيا استيقظ يا بني، حان وقت المدرسة...
-house_objective_wash_face,Go to the bathroom and wash your face,Va aux toilettes et lave-toi le visage,سير للطواليط وغسل وجهك
-prompt_wash_face,Wash Face,Se laver le visage,غسل وجهك
-house_need_wash_face,I should go to the bathroom and wash my face first.,Je devrais d'abord aller me laver le visage.,خاصني نمشي للطواليط نغسل وجهي بعدا.
-house_face_washed,Face washed. Feeling awake!,Visage lavé. Bien réveillé !,غسلت وجهي، دابا فقت مزيان!
-house_objective_get_dressed,Put on clothes and take your backpack,Mets tes vêtements et prends ton sac,لبس حوايجك وخد الكارطابل ديالك
-house_need_clothes_and_bag,I need to put on my clothes and take my backpack first.,Je dois mettre mes vêtements et prendre mon sac d'abord.,خاصني نلبس حوايجي وناخد الكارطابل ديالي بعدا.
-house_clothes_worn,School clothes worn.,Vêtements d'école enfilés.,لبست حوايج المدرسة.
-house_backpack_taken,School backpack collected.,Sac d'école récupéré.,خديت الكارطابل.
-mama_remind_wash_face,"Go to the bathroom and wash your face first, sleepyhead!","Va dans la salle de bain te laver le visage d'abord, petit dormeur !",اذهب إلى الحمام واغسل وجهك أولاً يا كسول!
-mama_remind_get_ready,Go put on your clothes and take your backpack!,Va mettre tes vêtements et prends ton cartable !,اذهب وارتدِ ملابسك وخذ حقيبتك المدرسية!
-house_objective_talk_mom,Talk to your mom in the kitchen,Parle à ta mère dans la cuisine,تكلم مع ماماك ف الكوزينة
-house_need_talk_mom,I should talk to Mom before leaving.,Je devrais parler à maman avant de partir.,خاصني نهضر مع ماما قبل ما نمشي.
-mama_house_envelope,Take this. Hand it directly to the headmaster (Al-Mudir). Don't lose it... we had a hard time convincing the doctor you were ready to go back.,Prends ceci. Donne-le directement au directeur (Al-Mudir). Ne le perds pas... on a eu du mal à convaincre le médecin que tu étais prêt à y retourner.,خذ هذه. سلمها مباشرة إلى المدير. لا تضعها... لقد عانينا لإقناع الطبيب بأنك مستعد للعودة.
-mama_house_reminder,Don't lose that certificate. Head straight to school!,Ne perds pas ce certificat. Va directement à l'école !,لا تضع تلك الشهادة. اذهب مباشرة إلى المدرسة!
-item_doctor_certificate,Doctor's Certificate,Certificat Médical,شهادة طبية
-item_medical_certificate,Medical Certificate,Certificat Médical,شهادة طبية
-mama_01,"Good morning, sweetheart. Put on your school clothes.",Bonjour mon chéri. Mets tes vêtements d'école.,Sbah lkhir a wlidi. Lbes 7wayjek dyal lmdrassa.
-mama_02,The doctor gave us your medical certificate. Give it to the headmaster.,Le médecin nous a donné ton certificat médical. Donne-le au directeur.,Tbib 3tana chahada tibbiya. 3tiha l modir.
-mama_03,You will find money for the ride in the kitchen drawer.,Tu trouveras de l'argent pour le trajet dans le tiroir.,Ghadi tl9a lflouss dyal tri9 flmjer fl couzina.
-mama_04,Don't be late... straight to school and watch the road.,Ne tarde pas... va tout droit à l'école et fais attention à la route.,Ou mat3ltch....nichan lmdrassa ou 3ndak tri9.
-baba_house_advice,"Watch the road. Straight to school, straight back home. No wandering off.","Fais attention à la route. Directement à l'école, directement à la maison. Pas de détours.",عندك الطريق. نيشان للمدرسة، نيشان للدار. بلا دوران.
-baba_house_reminder,"Straight to school, straight back home. Go on.","Directement à l'école, directement à la maison. Vas-y.",نيشان للمدرسة، نيشان للدار. سير دابا.
-baba_01,You just woke up...,Tu viens de te réveiller...,3ad f9ti................
-baba_02,Are you hungry?,Tu as faim ?,Fik Jo3 ?
-baba_03,Go check with your mother.,Va voir avec ta mère.,Sir Chouf M3a Mok
-baba_choice_yes,Yes.,Oui.,Ah.
-baba_choice_no,No.,Non.,La.
-house_objective_go_school,Head out to school,Va à l'école,سير للمدرسة
-door_cant_leave_no_papers,I can't leave yet. I need to talk to Mama first.,Je ne peux pas encore partir. Je dois d'abord parler à Maman.,Ma n9drch nmchi daba. Khassni nhdr m3a Mama lwl.
-door_cant_leave_no_money,I need to get the money from the drawer before leaving.,Je dois prendre l'argent dans le tiroir avant de partir.,Khassni nakhd lflouss mn lmjer 9bl ma nmchi.
-fridge_comment,The fridge is always empty...,Le frigo est toujours vide...,Dima telaja khawya
-cabinet_comment,I could hide here from mom.,Je pourrais me cacher ici de maman.,N9dr nt5ba hna 3la mama
-door_locked,Dad doesn't let me go in here.,Papa ne me laisse pas entrer ici.,Baba makay5linich nd5l hna
-drawer_locked,The drawer is locked.,Le tiroir est verrouillé.,المجر مقفول
-window_locked,The window is locked.,La fenêtre est fermée.,النافذة مقفولة
-cupboard_locked,The cabinet is locked.,Le placard est fermé.,الخزانة مقفولة
-house_objective_talk_parents,Talk to your parents,Parle à tes parents,تكلم مع والديك
-house_objective_get_money,Find money in the kitchen drawer,Trouve l'argent dans le tiroir de la cuisine,خد الفلوس من المجر
-house_objective_go_store,Head out to the store,Va à l'épicerie,سير للحانوت
-classroom_intro_01,"Teacher: Good morning, everyone... We have fallen far behind on this week's lessons.",Professeur : Bonjour à tous... Nous avons pris beaucoup de retard dans les leçons de cette semaine.,المعلم: صباح الخير جميعاً... تأخرنا كثيراً في دروس هذا الأسبوع.
-classroom_intro_02,Teacher: We'll begin immediately. Time moves faster than you think.,Professeur : Nous allons commencer immédiatement. Le temps passe plus vite que vous ne le pensez.,المعلم: سنبدأ فوراً. الوقت يمر أسرع مما تظنون.
-classroom_intro_03,Teacher: Let's start right away.,Professeur : Commençons sans plus attendre.,المعلم: لنبدأ فوراً.
-teacher_2_01,"Teacher: Pay attention to the board, please.","Professeur : Sois attentif au tableau, s'il te plaît.",المعلم: انتبه إلى السبورة من فضلك.
-desk_book_locked_01,I should listen to what the teacher is saying first.,Je devrais d'abord écouter ce que dit le professeur.,يجب أن أستمع إلى ما يقوله المعلم أولاً.
-desk_pen_01,My favorite pen... its plastic smells just like the hospital gift shop.,Mon stylo préféré... son odeur de plastique ressemble exactement à celle de la boutique de l'hôpital.,قلمي المفضل... رائحة البلاستيك فيه تشبه تماماً متجر المستشفى.
-desk_doodle_01,I drew a wooden boat sinking in grey waves...,J'ai dessiné un bateau en bois qui coule dans des vagues grises...,رسمتُ قارباً خشبياً يغرق في أمواج رمادية...
-desk_carving_01,Someone carved 'WAKE UP' here.,Quelqu'un a gravé 'RÉVEILLE-TOI' ici.,أحدهم حفر هنا 'استيقظ'.
-classroom_intro_04,Teacher: Could everyone please open page 54? Now.,Professeur : Pouvez-vous tous ouvrir la page 54 ? Maintenant.,المعلم: هل يمكنكم جميعاً فتح الصفحة 54؟ الآن.
-player_intro_01,Child: I have no energy left for this... Didn't we study this last week? Or did those days pass while I was gone?,Enfant : Je n'ai plus la force pour tout ça... N'avons-nous pas étudié cela la semaine dernière ? Ou ces jours sont-ils passés pendant mon absence ?,الطفل: لم يعد لدي طاقة لتحمل هذا... ألم ندرس هذا الأسبوع الماضي؟ أم أن تلك الأيام مرت وأنا غائب؟
-player_intro_02,Child: Wait... this dark illustration on the page was never here before.,Enfant : Attends... ce dessin sombre sur la page n'était pas là avant.,الطفل: انتظر... هذا الرسم الأسود في الصفحة لم يكن هنا من قبل.
-lookback_book_01,Child: Wait... this dark illustration on the page was never here before.,Enfant : Attends... ce dessin sombre sur la page n'était pas là avant.,الطفل: انتظر... هذا الرسم الأسود في الصفحة لم يكن هنا من قبل.
-lookback_book_02,Child: It feels as if... it is opening its mouth to call me.,Enfant : On dirait que... sa bouche s'ouvre pour m'appeler.,الطفل: يبدو وكأنه... يفتح فمه ليناديني.
-teddy_greet_01,"{TEDDY_NAME}: You're late today, little one...","{TEDDY_NAME} : Tu es en retard aujourd'hui, mon petit...",{TEDDY_NAME}: لقد تأخرت اليوم يا صغيري...
-teddy_greet_02,How are you?,Comment vas-tu ?,كيف حالك؟
-teddy_metro_01,"{TEDDY_NAME}: You're late today, little one... I was afraid you'd swallow all those colorful pills and forget my path.","{TEDDY_NAME} : Tu es en retard aujourd'hui, mon petit... J'avais peur que tu avales tous ces bonbons colorés et que tu oublies mon chemin.",{TEDDY_NAME}: لقد تأخرت اليوم يا صغيري... كنت أخشى أن تبتلع كل تلك الحلوى الملونة وتنسى طريقي.
-teddy_metro_02,Child: Why does the station feel so cold?,Enfant : Pourquoi la station est-elle si froide ?,الطفل: لماذا تبدو المحطة باردة هكذا؟
-neighbor_01,Neighbor: Ah... you're finally here.,Voisin : Ah... tu es enfin là.,الجار: آه... لقد وصلت أخيراً.
-neighbor_02,Child: Here?,Enfant : Ici ?,الطفل: هنا؟
-neighbor_03,Neighbor: We've been waiting for you.,Voisin : Nous t'attendions.,الجار: لقد كنا ننتظرك.
-neighbor_04,Child: For what?,Enfant : Pourquoi ?,الطفل: من أجل ماذا؟
-neighbor_05,Neighbor: ...,Voisin : ...,الجار: ...
-shop_01,Shop Owner: We thought you weren't coming.,Commerçant : On pensait que tu ne viendrais pas.,صاحب المتجر: ظننا أنك لن تأتي.
-shop_02,Child: Where are we going?,Enfant : Où allons-nous ?,الطفل: إلى أين نحن ذاهبون؟
-shop_03,Shop Owner: I don't know.,Commerçant : Je ne sais pas.,صاحب المتجر: لا أعلم.
-shop_04,Child: Then why are you waiting?,Enfant : Alors pourquoi m'attendez-vous ?,الطفل: إذن لماذا تنتظرني؟
-shop_05,Shop Owner: For you.,Commerçant : Pour toi.,صاحب المتجر: من أجلك.
-vending_machine_01,Child: It's broken... Someone stuck a torn note: 'Don't listen to the train.',Enfant : C'est en panne... Quelqu'un a collé un mot déchiré : 'N'écoute pas le train.',الطفل: إنها معطلة... شخص ما ألصق ورقة ممزقة: 'لا تستمع إلى القطار.'
-intercom_01,Intercom: *Static* ... Attention passengers... upper platform service is restricted...,Interphone : *Grésillements* ... Attention voyageurs... le service du quai supérieur est limité...,مكبر الصوت: *تشويش* ... انتباه للركاب... خدمة الرصيف العلوي مقيدة...
-ticket_booth_closed_01,Child: The ticket booth is closed... The metal shutter is locked tight.,Enfant : Le guichet est fermé... Le rideau métallique est verrouillé.,الطفل: شباك التذاكر مغلق... الستار الحديدي مقفل بإحكام.
-ticket_booth_closed_02,{TEDDY_NAME}: Looks like nobody's here. We'll have to search for a ticket on the platform.,{TEDDY_NAME} : On dirait qu'il n'y a personne. On va devoir chercher un billet sur le quai.,{TEDDY_NAME}: يبدو أنه لا يوجد أحد هنا. سيتعين علينا البحث عن تذكرة على الرصيف.
-ticket_booth_inspect_prompt,Press 'E' to inspect Ticket Booth,Appuie sur 'E' pour inspecter le guichet,اضغط 'E' لمعاينة شباك التذاكر
-transit_pass_01,Child: An old metro keycard... maybe this powers the elevator upstairs.,Enfant : Une vieille carte de métro... peut-être qu'elle active l'ascenseur en haut.,الطفل: بطاقة مترو قديمة... ربما تشغل المصعد في الأعلى.
-teddy_fuse_hint_01,{TEDDY_NAME}: The fuse box has no power... Remember our neighbor over on the platform? He always knew how to fix electrics. We should go ask him!,{TEDDY_NAME} : La boîte à fusibles n'a pas de courant... Tu te souviens du voisin sur le quai ? Il s'y connaît en électricité. Allons lui demander !,{TEDDY_NAME}: صندوق القواطع بدون كهرباء... هل تتذكر جارنا هناك على الرصيف؟ إنه ماهر في الكهرباء دائماً. فلنذهب ونسأله!
-teddy_fuse_hint_02,Child: Good idea. Let's go see what he says.,Enfant : Bonne idée. Allons voir ce qu'il dit.,الطفل: فكرة جيدة. لنذهب ونرى ما سيقوله.
-neighbor_fuse_advice_01,"Old Traveler: Ah, trying to power the elevator?","Vieux voyageur : Ah, tu essaies d'alimenter l'ascenseur ?",المسافر العجوز: آه، هل تحاول تزويد المصعد بالكهرباء؟
-neighbor_fuse_reminder_01,"Old Traveler: Invert switches 1, 2, 4, and 5 DOWN, but keep the center switch UP!","Vieux voyageur : Rappelle-toi : disjoncteurs 1, 2, 4 et 5 vers le BAS, mais laisse le central vers le HAUT !",المسافر العجوز: تذكر: اعكس القواطع 1 و 2 و 4 و 5 للأسفل، ودع القاطع الأوسط مرفوعاً!
-neighbor_fuse_advice_02,"Child: Yes, but the circuit won't turn on.","Enfant : Oui, mais le circuit ne s'allume pas.",الطفل: نعم، لكن الدائرة الكهربائية لا تعمل.
-neighbor_fuse_advice_03,"Old Traveler: Flip switches 1, 2, 4, and 5 DOWN, but leave the 3rd middle switch UP!","Vieux voyageur : Abaisse les disjoncteurs 1, 2, 4 et 5 vers le BAS, mais laisse le 3e au centre vers le HAUT !",المسافر العجوز: اعكس القواطع 1 و 2 و 4 و 5 للأسفل، ودع القاطع الثالث في المنتصف للأعلى!
-neighbor_fuse_advice_04,"Child: 1, 2, 4, and 5 DOWN, center UP... got it!","Enfant : 1, 2, 4 et 5 vers le bas, et le central vers le haut... compris !",الطفل: القواطع 1 و 2 و 4 و 5 للأسفل، والأوسط للأعلى... فهمت!
-neighbor_fuse_advice_05,"Old Traveler: Keep that pattern, or the power to this little mind trips forever.","Vieux voyageur : Garde ce schéma, sinon le courant de ce petit esprit sautera pour toujours.",المسافر العجوز: حافظ على هذا النمط، وإلا ستنقطع الكهرباء عن هذا العقل الصغير للأبد.
-begger_metro_01,"Old Traveler: Welcome, little one.","Vieux voyageur : Bienvenue, mon petit.",المسافر العجوز: أهلاً بالصغير.
-begger_metro_02,Child: I'm going home... I just want to turn on the elevator.,Enfant : Je rentre à la maison... je veux juste démarrer l'ascenseur.,الطفل: أنا ذاهب إلى البيت... أريد فقط تشغيل المصعد.
-begger_metro_03,"Old Traveler: The elevators here don't take you home, my child—they take you to what you fear to remember. The breakers in that box require someone who understands the wiring... flip breakers 1, 2, 4, and 5 DOWN, and leave the center breaker UP, or the power will cut from this little mind forever.","Vieux voyageur : Les ascenseurs ici ne te ramènent pas à la maison, mon enfant—ils te montent vers ce que tu as peur de te rappeler. Les disjoncteurs dans cette boîte demandent quelqu'un qui comprend le câblage... abaisse les disjoncteurs 1, 2, 4 et 5 vers le BAS, et laisse le central vers le HAUT, sinon le courant sera coupé de ce petit esprit pour toujours.",المسافر العجوز: المصاعد هنا لا تصعد بك إلى البيت يا بني، بل تصعد بك إلى ما تخاف تذكره. القواطع في تلك العلبة تحتاج لمن يفهم ترتيب الأسلاك... اعكس القواطع 1 و 2 و 4 و 5 للأسفل، ودع القاطع الأوسط مرفوعاً، وإلا ستنقطع الكهرباء عن هذا العقل الصغير للأبد.
-begger_metro_04,"Old Traveler: Remember: flip breakers 1, 2, 4, and 5 DOWN, and leave the center switch UP.","Vieux voyageur : Rappelle-toi : abaisse les 1, 2, 4 et 5 vers le BAS, et laisse le central vers le HAUT.",المسافر العجوز: تذكر: اعكس القواطع 1 و 2 و 4 و 5 للأسفل، ودع القاطع الأوسط مرفوعاً.
-teddy_metro_03,{TEDDY_NAME}: This is where you hide when their voices outside get louder than you can bear.,{TEDDY_NAME} : C'est ici que tu te caches quand leurs voix dehors deviennent plus fortes que ce que tu peux supporter.,{TEDDY_NAME}: هذا هو المكان الذي تختبئ فيه عندما تصبح أصواتهم في الخارج أعلى من تحملك.
-teddy_metro_04,Child: I feel dizzy... the smell here feels just like medical disinfectants.,Enfant : J'ai le vertige... l'odeur ici ressemble tellement à des désinfectants médicaux.,الطفل: أشعر بدوار... رائحة المكان تشبه المطهرات الطبية.
-objective_search_trash,Search the trash cans for a train ticket...,Fouille les poubelles pour trouver un ticket de train...,ابحث في سلات المهملات عن تذكرة قطار...
-trash_search_prompt,Press 'E' to Search Trash,Appuie sur 'E' pour fouiller la poubelle,اضغط 'E' لتفتيش سلة القمامة
-trash_searched_prompt,Trash Can (Empty),Poubelle (Vide),سلة القمامة (فارغة)
-trash_searching_title,Searching the trash...,Fouille des poubelles...,...جاري تفتيش القمامة
-trash_searching_hint,Stop marker in green zone!,Arrête le curseur dans la zone verte !,!أوقف المؤشر في المنطقة الخضراء
-trash_searching_failed,Nothing found! Try again...,Rien trouvé ! Réessaie...,...لم تجد شيئاً! حاول مجدداً
-trash_searching_success,Found a train ticket!,Tu as trouvé un billet de train !,!وجدت تذكرة قطار
-trash_searching_empty,Nothing here but old trash... Try another trash can!,Rien que de vieux déchets... Essaie une autre poubelle !,لا يوجد سوى نفايات قديمة هنا... جرب سلة أخرى!
-teddy_trash_empty_01,{TEDDY_NAME}: Nothing in this one... let's check another trash can!,{TEDDY_NAME} : Rien dans celle-là... vérifions une autre poubelle !,{TEDDY_NAME}: لا شيء في هذه السلة... لنبحث في سلة أخرى!
-ticket_toast_label,Ticket,Ticket,تذكرة
-ticket_item_name,Train Ticket,Billet de train,تذكرة قطار
-teddy_metro_05,"{TEDDY_NAME}: Well done... you have the ticket. Now let's go up, but promise me one thing: don't believe what they tell you up there.","{TEDDY_NAME} : Bien joué... tu as le billet. Maintenant montons, mais promets-moi une chose : ne crois pas ce qu'ils diront là-haut.",{TEDDY_NAME}: أحسنت... التذكرة معك. الآن فلنصعد، لكن عدني بشيء واحد: لا تصدق ما سيقولونه في الأعلى.
-teddy_metro_06,"{TEDDY_NAME}: Let's go, the elevator is ready for us!","{TEDDY_NAME} : Allons-y, l'ascenseur est prêt pour nous !",{TEDDY_NAME}: هيا بنا، المصعد جاهز لنا!
-elevator_door_no_power,Child: The elevator doors won't open. The power grid is offline.,Enfant : Les portes de l'ascenseur ne s'ouvrent pas. Le réseau électrique est hors tension.,الطفل: أبواب المصعد لا تفتح. شبكة الكهرباء مقطوعة.
-elevator_door_no_ticket,Child: The elevator requires a train ticket to open and operate.,Enfant : L'ascenseur a besoin d'un billet de train pour s'ouvrir et fonctionner.,الطفل: يحتاج المصعد إلى تذكرة قطار ليفتح ويعمل.
-elevator_btn_no_power,Child: The elevator power is completely offline. I need to restore it at the fuse box nearby.,Enfant : L'ascenseur est totalement hors tension. Je dois rétablir le courant au disjoncteur tout près.,الطفل: طاقة المصعد مقطوعة بالكامل. أحتاج لإعادتها من صندوق القواطع القريب.
-elevator_btn_no_ticket,"Child: The elevator has power now, but I can't ride it without a train ticket.","Enfant : L'ascenseur est alimenté maintenant, mais je ne peux pas monter sans billet de train.",الطفل: المصعد يعمل الآن، لكن لا يمكنني ركوبه دون تذكرة قطار.
-elevator_btn_no_teddy,Child: I can't leave without my teddy bear. He's somewhere on the platform.,Enfant : Je ne peux pas partir sans mon ours en peluche. Il est quelque part sur le quai.,الطفل: لا يمكنني المغادرة بدون دبي المحشو. إنه في مكان ما على الرصيف.
-elevator_train_reaction_01,Child: Doudou... it almost hit us! My head hurts... the noise was so loud...,Enfant : Doudou... il a failli nous percuter ! J'ai mal à la tête... le bruit était si fort...,الطفل: دودو... كاد يصطدم بنا! رأسي يؤلمني... الصوت كان عالياً جداً...
-elevator_train_reaction_02,"{TEDDY_NAME}: Shh... breathe, little one. It was just an echo from the outside trying to break into your thoughts.","{TEDDY_NAME} : Chut... respire, mon petit. Ce n'était qu'un écho du dehors qui essaie d'envahir tes pensées.",{TEDDY_NAME}: ششش... تنفس يا صغيري. لم يكن ذلك سوى صدى من الخارج يحاول اقتحام أفكارك.
-elevator_train_reaction_03,"{TEDDY_NAME}: Hold on to me tight. As long as you hold me, nothing here can hurt you. We're almost at Floor 3.","{TEDDY_NAME} : Serre-moi fort contre toi. Tant que tu me tiens, rien ici ne peut te faire de mal. Nous arrivons au 3ème étage.",{TEDDY_NAME}: تمسك بي جيداً. ما دمت ممسكاً بي، لن يؤذيك شيء هنا. لقد اقتربنا من الطابق الثالث.
-teddy_reaction_train_01,{TEDDY_NAME}: What happened?!,{TEDDY_NAME} : Qu'est-ce qui s'est passé ?!,{TEDDY_NAME}: ماذا حدث؟!
-departure_board_01,Child: The departure board is flickering... All destinations are erased except: 'ROOM 302'.,Enfant : Le tableau des départs clignote... Toutes les destinations sont effacées sauf : 'SALLE 302'.,الطفل: لوحة المغادرة تومض... تم مسح جميع الوجهات باستثناء: 'الغرفة 302'.
-teddy_lost_piece_01,{TEDDY_NAME}: You found my ribbon! You always remember where I leave my things.,{TEDDY_NAME} : Tu as trouvé mon ruban ! Tu te souviens toujours d'où je laisse mes affaires.,{TEDDY_NAME}: لقد وجدت شريطي! أنت تتذكر دائماً أين أترك أشيائي.
-teddy_floor3_hint_01,{TEDDY_NAME}: Someone is standing down this platform...,{TEDDY_NAME} : Quelqu'un se tient au bout de ce quai...,{TEDDY_NAME}: هناك شخص يقف في نهاية هذا الرصيف...
-teddy_floor3_hint_02,{TEDDY_NAME}: Go see who it is.,{TEDDY_NAME} : Va voir qui c'est.,{TEDDY_NAME}: اذهب وانظر من يكون.
-bully_floor3_01,"Bully: Do you really think you're special because you're sick? Look around... nobody plays with you because you talk to thin air. Even when you collapsed, we never wanted to see you return.","Harceleur : Tu crois vraiment que tu es spécial parce que tu es malade ? Regarde autour de toi... personne ne joue avec toi parce que tu parles dans le vide. Même quand tu t'es effondré, on ne voulait pas te voir revenir.",المتنمر: هل تعتقد حقاً أنك مميز لأنك مريض؟ انظر حولك... لا أحد يلعب معك لأنك تتحدث مع الهواء. حتى عندما سقطت، لم نكن نريد أن نراك تعود.
-bully_floor3_02,Child: But I always used to play with you...,Enfant : Mais je jouais toujours avec vous...,الطفل: لكنني كنت ألعب معكم دائماً...
-bully_floor3_03,Bully: That was before that day. You're nothing more than a blue folder in a doctor's drawer now.,Harceleur : C'était avant ce jour-là. Tu n'es plus qu'un dossier bleu dans le tiroir d'un médecin maintenant.,المتنمر: ذلك كان قبل ذلك اليوم. أنت الآن مجرد ملف أزرق في درج الطبيب.
-bully_floor3_04,Child: My teddy says you're wrong.,Enfant : Mon doudou dit que tu as tort.,الطفل: دبي يقول إنك مخطئ.
-bully_floor3_05,Bully: ... That thing is not your friend.,Harceleur : ... Cette chose n'est pas ton ami.,المتنمر: ... ذلك الشيء ليس صديقك.
-bully_01,"Bully: Do you really think you're special because you're sick? Look around... nobody plays with you because you talk to thin air. Even when you collapsed, we never wanted to see you return.","Harceleur : Tu crois vraiment que tu es spécial parce que tu es malade ? Regarde autour de toi... personne ne joue avec toi parce que tu parles dans le vide. Même quand tu t'es effondré, on ne voulait pas te voir revenir.",المتنمر: هل تعتقد حقاً أنك مميز لأنك مريض؟ انظر حولك... لا أحد يلعب معك لأنك تتحدث مع الهواء. حتى عندما سقطت، لم نكن نريد أن نراك تعود.
-bully_02,Child: But I always used to play with you...,Enfant : Mais je jouais toujours avec vous...,الطفل: لكنني كنت ألعب معكم دائماً...
-bully_03,Bully: That was before that day. You're nothing more than a blue folder in a doctor's drawer now.,Harceleur : C'était avant ce jour-là. Tu n'es plus qu'un dossier bleu dans le tiroir d'un médecin maintenant.,المتنمر: ذلك كان قبل ذلك اليوم. أنت الآن مجرد ملف أزرق في درج الطبيب.
-bully_04,Child: But you used to play with me.,Enfant : Mais tu jouais avec moi avant.,الطفل: لكنك كنت تلعب معي من قبل.
-bully_05,Bully: ...,Harceleur : ...,المتنمر: ...
-teddy_met_people_01,{TEDDY_NAME}: Don't look at him! His words are merely shards of what you overheard in the schoolyard after you returned... forget about him.,{TEDDY_NAME} : Ne le regarde pas ! Ses mots ne sont que des fragments de ce que tu as entendu dans la cour d'école après ton retour... oublie-le.,{TEDDY_NAME}: لا تنظر إليه! كلماته ليست سوى شظايا من كلام سمعته في فناء المدرسة بعد عودتك... انسَ أمره.
-turn_02,{TEDDY_NAME}: Wake up.,{TEDDY_NAME} : Réveille-toi.,{TEDDY_NAME}: استيقظ.
-turn_03,Child: What?,Enfant : Quoi ?,الطفل: ماذا؟
-turn_04,{TEDDY_NAME}: Wake up.,{TEDDY_NAME} : Réveille-toi.,{TEDDY_NAME}: استيقظ.
-turn_05,Child: But I am awake.,Enfant : Mais je suis réveillé.,الطفل: لكني مستيقظ.
-turn_06,{TEDDY_NAME}: No.,{TEDDY_NAME} : Non.,{TEDDY_NAME}: لا.
-cinematic_01,"Teacher: The situation is getting worse, ma'am... his grades have plummeted drastically, and today I found him staring into blank space for hours.","Professeur : La situation s'aggrave, madame... ses notes ont chuté de manière effrayante, et aujourd'hui je l'ai trouvé fixant le vide pendant des heures.",المعلم: الوضع يزداد سوءاً يا سيدتي... درجاته انحدرت بشكل مخيف، واليوم وجدته يحدق في الفراغ لساعات.
-cinematic_02,Father: The accident changed everything! He won't look us in the eyes anymore...,Père : L'accident a tout changé ! Il ne nous regarde plus dans les yeux...,الأب: الحادث غيّر كل شيء! لم يعد ينظر في أعيننا...
-cinematic_03,"Father: He talks to his stuffed toy as if it were a real human, and screams its name in the dead of night!","Père : Il parle à sa peluche comme à un être humain réel, et crie son nom en pleine nuit !",الأب: يتحدث مع لعبته المحشوة كأنها إنسان حقيقي، ويصرخ باسمها في الليل!
-cinematic_04,Teacher: He disconnects completely from reality inside the classroom.,Professeur : Il se déconnecte totalement de la réalité en classe.,المعلم: إنه ينفصل عن الواقع تماماً داخل الفصل.
-cinematic_05,"Teacher: I fear if this continues, we won't be able to keep him in regular school... he needs specialized care.","Professeur : J'ai peur que s'il continue ainsi, nous ne puissions pas le garder à l'école normale... il a besoin de soins spécialisés.",المعلم: أخشى أنه إذا استمر هكذا، فلن نتمكن من إبقائه في المدرسة العادية... يحتاج إلى رعاية متخصصة.
-cinematic_06,Child: No... please be quiet... I'm not crazy... I'm not crazy!,"Enfant : Non... taisez-vous, je vous en prie... je ne suis pas fou... je ne suis pas fou !",الطفل: لا... أرجوكم اصمتوا... لست مجنوناً... لست مجنوناً!
-cinematic_07,Child: Stop talking about me! Please stop!,Enfant : Arrêtez de parler de moi ! S'il vous plaît !,الطفل: توقفوا عن الحديث عني! أرجوكم توقفوا!
-cinematic_08,{TEDDY_NAME}: Hold on tight to me... don't let their words break you.,{TEDDY_NAME} : Accroche-toi fort à moi... ne laisse pas leurs mots te briser.,{TEDDY_NAME}: تمسك بي جيداً... لا تدع كلماتهم تحطمك.
-cinematic_09,Child: {TEDDY_NAME}... I can't breathe...,Enfant : {TEDDY_NAME}... je ne peux plus respirer...,الطفل: {TEDDY_NAME}... لا أستطيع التنفس...
-scream_01,Child: {TEDDY_NAME}!,Enfant : {TEDDY_NAME} !,الطفل: {TEDDY_NAME}!
-scream_02,Child: {TEDDY_NAME}!,Enfant : {TEDDY_NAME} !,الطفل: {TEDDY_NAME}!
-episode_01,Teacher: It's happening again!,Professeur : Ça recommence !,المعلم: لقد عاد الأمر مجدداً!
-episode_02,Mother: My son!,Mère : Mon fils !,الأم: ابني!
-episode_03,Father: Hold him!,Père : Retenez-le !,الأب: أمسكوا به!
-episode_04,Child: {TEDDY_NAME}!,Enfant : {TEDDY_NAME} !,الطفل: {TEDDY_NAME}!
-final_teddy_01,{TEDDY_NAME}: Don't let them take you.,{TEDDY_NAME} : Ne les laisse pas te prendre.,{TEDDY_NAME}: لا تدعهم يأخذونك.
-final_teddy_02,Child: {TEDDY_NAME}!,Enfant : {TEDDY_NAME} !,الطفل: {TEDDY_NAME}!
-darkroom_01,{TEDDY_NAME}: You've finally heard them... this is the heavy truth I've been carrying for you all these months.,{TEDDY_NAME} : Tu les as enfin entendus... c'est le lourd fardeau de la vérité que je portais pour toi pendant tous ces mois.,{TEDDY_NAME}: لقد سمعتهم أخيراً... هذا هو ثقل الحقيقة الذي كنت أحمله عنك كل هذه الشهور.
-darkroom_02,Child: Why are they saying those things...? I just wanted everything to be like before.,Enfant : Pourquoi disent-ils tout ça... ? Je voulais juste que tout redevienne comme avant.,الطفل: لماذا يقولون تلك الأشياء...؟ أردت فقط أن يعود كل شيء كما كان.
-darkroom_03,"{TEDDY_NAME}: Because nothing stays the same. The cold, the hospital, the fear... you made this place to keep yourself safe.","{TEDDY_NAME} : Parce que rien ne reste pareil. Le froid, l'hôpital, la peur... tu as créé cet endroit pour te protéger.",{TEDDY_NAME}: لأن لا شيء يبقى كما كان. البرد، المستشفى، الخوف... لقد صنعت هذا المكان لكي تحمي نفسك.
-darkroom_04,{TEDDY_NAME}: But you cannot stay hidden here forever. The tide is waiting.,{TEDDY_NAME} : Mais tu ne peux pas rester caché ici pour toujours. La marée t'attend.,{TEDDY_NAME}: لكنك لا تستطيع البقاء مختبئاً هنا إلى الأبد. المد ينتظرك.
-darkroom_05,Child: Where are you taking me?,Enfant : Où m'emmènes-tu ?,الطفل: إلى أين تأخذني؟
-darkroom_06,{TEDDY_NAME}: To the shore where it all began.,{TEDDY_NAME} : Vers le rivage où tout a commencé.,{TEDDY_NAME}: إلى الشاطئ حيث بدأ كل شيء.
-darkroom_07,Child: The beach...,Enfant : La plage...,الطفل: الشاطئ...
-darkroom_08,{TEDDY_NAME}: Come. Let us face the water.,{TEDDY_NAME} : Viens. Faisons face à l'eau ensemble.,{TEDDY_NAME}: تعال. فلنواجه البحر معاً.
-beach_intro_01,"{TEDDY_NAME}: Do you know, little one? I have always wondered... if you woke up one day fully healed... if you stopped feeling this terror... would I cease to exist?","{TEDDY_NAME} : Tu sais, mon petit ? Je me suis toujours demandé... si tu te réveillais un jour complètement guéri... si tu cessais d'avoir cette terreur... est-ce que je cesserais d'exister ?",{TEDDY_NAME}: أتعلم يا صغيري؟ لطالما تساءلت... لو أنك استيقظت يوماً وشُفيت تماماً... لو توقفت عن الشعور بهذا الرعب... هل سأتوقف أنا عن الوجود؟
-beach_intro_02,"Child: You are my friend, {TEDDY_NAME}. I will never forget you.","Enfant : Tu es mon ami, {TEDDY_NAME}. Je ne t'oublierai jamais.",الطفل: أنت صديقي يا {TEDDY_NAME}. لن أنساك أبداً.
-beach_intro_03,{TEDDY_NAME}: I am not your friend in the way you imagine. I am merely a beautiful idea forged out of fear so that you might survive.,{TEDDY_NAME} : Je ne suis pas ton ami au sens où tu le penses. Je suis simplement une belle idée forgée par la peur pour que tu puisses survivre.,{TEDDY_NAME}: أنا لست صديقك بالمعنى الذي تظنه. أنا مجرد فكرة جميلة صنعتها من الخوف لكي تنجو.
-beach_intro_04,{TEDDY_NAME}: I am the wall you built between yourself and the operating rooms and the exhausted faces of doctors.,"{TEDDY_NAME} : Je suis le mur que tu as bâti entre toi et les blocs opératoires, et les visages épuisés des médecins.",{TEDDY_NAME}: أنا الجدار الذي بنيته بينك وبين غرف العمليات ووجوه الأطباء المرهقة.
-beach_intro_05,"{TEDDY_NAME}: But walls turn into prisons if left standing for too long... The boat is ready on the beach. And now, you must decide how you will cross to the other shore.","{TEDDY_NAME} : Mais les murs deviennent des prisons s'ils durent trop longtemps... Le bateau est prêt sur le rivage. Et maintenant, c'est à toi de décider comment tu traverseras vers l'autre rive.",{TEDDY_NAME}: لكن الجدران تصبح سجناً إذا بقيت طويلاً... القارب جاهز على الشاطئ. والآن، عليك أن تقرر كيف ستعبر إلى الضفة الأخرى.
-beach_intro_06,Child: The boat... I have to decide how to let go.,Enfant : Le bateau... je dois décider comment lâcher prise.,الطفل: القارب... عليّ أن أقرر كيف سأعبر.
-beach_ending_ready,{TEDDY_NAME}: The boat is ready. How will you say goodbye?,{TEDDY_NAME} : Le bateau est prêt. Comment vas-tu faire tes adieux ?,{TEDDY_NAME}: القارب جاهز. كيف ستودعني؟
-beach_choice_prompt,How will you cross?,Comment vas-tu traverser ?,كيف ستعبر؟
-beach_choice_leave,Leave him on the sand and walk into the water,Le laisser sur le sable et marcher vers l'eau,اتركه على الرمال وامشِ وحيداً نحو الماء
-beach_choice_send,Put {TEDDY_NAME} on the boat and cast him into the waves,Mettre {TEDDY_NAME} sur le bateau et le pousser dans les vagues,ضع {TEDDY_NAME} في القارب وادفعه نحو عمق الأمواج
-beach_teddy_take,Press E to take {TEDDY_NAME},Appuie sur E pour prendre {TEDDY_NAME},اضغط E لأخذ {TEDDY_NAME}
-beach_teddy_put,Press E to place {TEDDY_NAME} on the boat,Appuie sur E pour poser {TEDDY_NAME} sur le bateau,اضغط E لوضع {TEDDY_NAME} على القارب
-beach_teddy_pickup,Pick up Teddy,Prends Teddy,احمل تيدي
-beach_teddy_place,Hold to place Teddy,Maintiens pour poser Teddy,اضغط مطولاً لوضع تيدي
-beach_farewell_path_a,"{TEDDY_NAME}: You were always brave, little one... Go and live your life. My purpose is fulfilled now.","{TEDDY_NAME} : Tu as toujours été courageux, mon petit... Va et vis ta vie. Ma tâche est terminée maintenant.",{TEDDY_NAME}: كنتَ شجاعاً دائماً يا صغيري... اذهب وعش حياتك. لقد انتهت وظيفتي الآن.
-beach_farewell_path_b,"{TEDDY_NAME}: If this is what you need to forgive yourself... then take your freedom. I love you, even as you cast me into the storm.",{TEDDY_NAME} : Si c'est ce dont tu as besoin pour te pardonner... alors prends ta liberté. Je t'aime même si tu me jettes dans la tempête.,{TEDDY_NAME}: إذا كان هذا ما تحتاجه لتسامح نفسك... فخذ حريتك. أنا أحبك حتى وأنت تلقي بي في العاصفة.
-beach_teddy_farewell,"{TEDDY_NAME}: If this is what you need to forgive yourself... then take your freedom. I love you, even as you cast me into the storm.",{TEDDY_NAME} : Si c'est ce dont tu as besoin pour te pardonner... alors prends ta liberté. Je t'aime même si tu me jettes dans la tempête.,{TEDDY_NAME}: إذا كان هذا ما تحتاجه لتسامح نفسك... فخذ حريتك. أنا أحبك حتى وأنت تلقي بي في العاصفة.
-teacher_ending_01,Teacher: Hey! Can you hear me?! Open your eyes!,Professeur : Hé ! Est-ce que tu m'entends ?! Ouvre les yeux !,المعلم: هل تسمعني؟! افتح عينيك!
-teacher_ending_02,Teacher: Go get the principal immediately!!,Professeur : Allez chercher le directeur immédiatement !!,المعلم: اذهبوا للمدير فوراً!!
-Hi,Hello!,Salut !,مرحباً!
-How Are You,How are you?,Comment vas-tu ?,كيف حالك؟
+key,en,fr,ar,darija
+mama_doorway_wake,"Mama: Yallah fyeq a wlidi, nod lmdrassa...","Maman : Allez réveille-toi mon chéri, c'est l'heure de l'école...",ماما: هيا استيقظ يا بني، حان وقت المدرسة...,ماما: يالاه فيق أوليدي، نوض للمدرسة...
+house_objective_wash_face,Go to the bathroom and wash your face,Va aux toilettes et lave-toi le visage,اذهب إلى الحمام واغسل وجهك,سير للطواليط وغسل وجهك
+prompt_wash_face,Wash Face,Se laver le visage,اغسل وجهك,غسل وجهك
+house_need_wash_face,I should go to the bathroom and wash my face first.,Je devrais d'abord aller me laver le visage.,يجب أن أذهب إلى الحمام وأغسل وجهي أولاً.,خاصني نمشي للطواليط نغسل وجهي بعدا.
+house_face_washed,Face washed. Feeling awake!,Visage lavé. Bien réveillé !,تم غسل الوجه. أشعر بالنشاط!,غسلت وجهي، دابا فقت مزيان!
+house_objective_get_dressed,Put on clothes and take your backpack,Mets tes vêtements et prends ton sac,ارتدِ ملابسك وخذ حقيبتك المدرسية,لبس حوايجك وهز الكارطابل ديالك
+house_need_clothes_and_bag,I need to put on my clothes and take my backpack first.,Je dois mettre mes vêtements et prendre mon sac d'abord.,خاصني نلبس حوايجي وناخد الكارطابل ديالي بعدا.,خاصني نلبس حوايجي ونهز الكارطابل ديالي بعدا.
+house_clothes_worn,School clothes worn.,Vêtements d'école enfilés.,لبست حوايج المدرسة.,لبست حوايج المدرسة.
+house_backpack_taken,School backpack collected.,Sac d'école récupéré.,خديت الكارطابل.,هزيت الكارطابل.
+mama_remind_wash_face,"Go to the bathroom and wash your face first, sleepyhead!","Va dans la salle de bain te laver le visage d'abord, petit dormeur !",اذهب إلى الحمام واغسل وجهك أولاً يا كسول!,سير للطواليط غسل وجهك بعدا يا النعاس!
+mama_remind_get_ready,Go put on your clothes and take your backpack!,Va mettre tes vêtements et prends ton cartable !,اذهب وارتدِ ملابسك وخذ حقيبتك المدرسية!,سير لبس حوايجك وهز الكارطابل ديالك!
+house_objective_talk_mom,Talk to your mom in the kitchen,Parle à ta mère dans la cuisine,تحدث مع أمك في المطبخ,هضر مع ماماك ف الكوزينة
+house_need_talk_mom,I should talk to Mom before leaving.,Je devrais parler à maman avant de partir.,خاصني نهضر مع ماما قبل ما نمشي.,خاصني نهضر مع ماما قبل ما نمشي.
+mama_house_envelope,Take this. Hand it directly to the headmaster (Al-Mudir). Don't lose it... we had a hard time convincing the doctor you were ready to go back.,Prends ceci. Donne-le directement au directeur (Al-Mudir). Ne le perds pas... on a eu du mal à convaincre le médecin que tu étais prêt à y retourner.,خذ هذه. سلمها مباشرة إلى المدير. لا تضعها... لقد عانينا لإقناع الطبيب بأنك مستعد للعودة.,هاك هادي. عطيها نيشان للمدير. ما تودرهاش... راه بزز باش قنعنا الطبيب بلي راك واجد ترجع.
+mama_house_reminder,Don't lose that certificate. Head straight to school!,Ne perds pas ce certificat. Va directement à l'école !,ماما: لا تضِع تلك الشهادة. اذهب مباشرة إلى المدرسة!,ما تودرش ديك الشهادة. سير نيشان للمدرسة!
+item_doctor_certificate,Doctor's Certificate,Certificat Médical,شهادة طبية,شهادة الطبيب
+item_medical_certificate,Medical Certificate,Certificat Médical,شهادة طبية,شهادة طبية
+mama_01,"Good morning, sweetheart. Put on your school clothes.",Bonjour mon chéri. Mets tes vêtements d'école.,صباح الخير يا بني. ارتدِ ملابس المدرسة.,صباح الخير أوليدي. لبس حوايج المدرسة.
+mama_02,The doctor gave us your medical certificate. Give it to the headmaster.,Le médecin nous a donné ton certificat médical. Donne-le au directeur.,أعطانا الطبيب شهادتك الطبية. سلمها للمدير.,الطبيب عطانا الشهادة الطبية ديالك. عطيها للمدير.
+mama_03,You will find money for the ride in the kitchen drawer.,Tu trouveras de l'argent pour le trajet dans le tiroir.,ستجد نقود المواصلات في درج المطبخ.,غادي تلقى الفلوس د الطريق ف المجر ف الكوزينة.
+mama_04,Don't be late... straight to school and watch the road.,Ne tarde pas... va tout droit à l'école et fais attention à la route.,لا تتأخر... اذهب مباشرة إلى المدرسة وانتبه للطريق.,وما تعطلش... نيشان للمدرسة وعنداك الطريق.
+baba_house_advice,"Watch the road. Straight to school, straight back home. No wandering off.","Fais attention à la route. Directement à l'école, directement à la maison. Pas de détours.",عندك الطريق. نيشان للمدرسة، نيشان للدار. بلا دوران.,عنداك الطريق. نيشان للمدرسة، نيشان للدار. ما تبقاش دور.
+baba_house_reminder,"Straight to school, straight back home. Go on.","Directement à l'école, directement à la maison. Vas-y.",بابا: مباشرة إلى المدرسة، ومباشرة إلى البيت. انطلق.,نيشان للمدرسة، نيشان للدار. سير دابا.
+baba_01,You just woke up...,Tu viens de te réveiller...,لقد استيقظت للتو...,عاد فقتي...
+baba_02,Are you hungry?,Tu as faim ?,هل أنت جائع؟,فيك الجوع؟
+baba_03,Go check with your mother.,Va voir avec ta mère.,اذهب واسأل أمك.,سير شوف مع مك.
+baba_choice_yes,Yes.,Oui.,نعم.,آه.
+baba_choice_no,No.,Non.,لا.,لا.
+house_objective_go_school,Head out to school,Va à l'école,توجه إلى المدرسة,سير للمدرسة
+door_cant_leave_no_papers,I can't leave yet. I need to talk to Mama first.,Je ne peux pas encore partir. Je dois d'abord parler à Maman.,لا أستطيع المغادرة بعد. يجب أن أتحدث مع أمي أولاً.,ما نقدرش نمشي دابا. خاصني نهضر مع ماما اللول.
+door_cant_leave_no_money,I need to get the money from the drawer before leaving.,Je dois prendre l'argent dans le tiroir avant de partir.,أحتاج إلى أخذ النقود من الدرج قبل المغادرة.,خاصني ناخد الفلوس من المجر قبل ما نمشي.
+fridge_comment,The fridge is always empty...,Le frigo est toujours vide...,الثلاجة دائماً فارغة...,الثلاجة ديما خاوية...
+cabinet_comment,I could hide here from mom.,Je pourrais me cacher ici de maman.,أستطيع الاختباء هنا من أمي.,نقدر نتخبى هنا على ماما.
+door_locked,Dad doesn't let me go in here.,Papa ne me laisse pas entrer ici.,أبي لا يسمح لي بالدخول إلى هنا.,بابا ما كيخلينيش ندخل هنا.
+drawer_locked,The drawer is locked.,Le tiroir est verrouillé.,المجر مقفول,المجر مسدود.
+window_locked,The window is locked.,La fenêtre est fermée.,النافذة مقفولة,الشرجم مسدود.
+cupboard_locked,The cabinet is locked.,Le placard est fermé.,الخزانة مقفولة,البلاكار مسدود.
+house_objective_talk_parents,Talk to your parents,Parle à tes parents,تحدث مع والديك,هضر مع والديك
+house_objective_get_money,Find money in the kitchen drawer,Trouve l'argent dans le tiroir de la cuisine,اعثر على النقود في درج المطبخ,قلب على الفلوس ف المجر د الكوزينة
+house_objective_go_store,Head out to the store,Va à l'épicerie,توجه إلى المتجر,سير للحانوت
+classroom_intro_01,"Teacher: Good morning, everyone... We have fallen far behind on this week's lessons.",Professeur : Bonjour à tous... Nous avons pris beaucoup de retard dans les leçons de cette semaine.,المعلم: صباح الخير جميعاً... تأخرنا كثيراً في دروس هذا الأسبوع.,الأستاذ: صباح الخير الدراري... تعطلنا بزاف ف الدروس د هاد السيمانة.
+classroom_intro_02,Teacher: We'll begin immediately. Time moves faster than you think.,Professeur : Nous allons commencer immédiatement. Le temps passe plus vite que vous ne le pensez.,المعلم: سنبدأ فوراً. الوقت يمر أسرع مما تظنون.,الأستاذ: غادي نبداو دابا. الوقت كيدوز أسرع من اللي كتظنوا.
+classroom_intro_03,Teacher: Let's start right away.,Professeur : Commençons sans plus attendre.,المعلم: لنبدأ فوراً.,الأستاذ: يالاه نبداو بلا ما نتعطلوا.
+teacher_2_01,"Teacher: Pay attention to the board, please.","Professeur : Sois attentif au tableau, s'il te plaît.",المعلم: انتبه إلى السبورة من فضلك.,الأستاذ: ركز مع السبورة عافاك.
+desk_book_locked_01,I should listen to what the teacher is saying first.,Je devrais d'abord écouter ce que dit le professeur.,يجب أن أستمع إلى ما يقوله المعلم أولاً.,خاصني نسمع شنو كيقول الأستاذ بعدا.
+desk_pen_01,My favorite pen... its plastic smells just like the hospital gift shop.,Mon stylo préféré... son odeur de plastique ressemble exactement à celle de la boutique de l'hôpital.,قلمي المفضل... رائحة البلاستيك فيه تشبه تماماً متجر المستشفى.,الستيلو المفضل ديالي... ريحة البلاستيك فيه بحال الحانوت د السبيطار.
+desk_doodle_01,I drew a wooden boat sinking in grey waves...,J'ai dessiné un bateau en bois qui coule dans des vagues grises...,رسمتُ قارباً خشبياً يغرق في أمواج رمادية...,رسمت واحد الفلوكة د العود كتغرق ف مواج رماديين...
+desk_carving_01,Someone carved 'WAKE UP' here.,Quelqu'un a gravé 'RÉVEILLE-TOI' ici.,أحدهم حفر هنا 'استيقظ'.,شي واحد نقش هنا فيق.
+classroom_intro_04,Teacher: Could everyone please open page 54? Now.,Professeur : Pouvez-vous tous ouvrir la page 54 ? Maintenant.,المعلم: هل يمكنكم جميعاً فتح الصفحة 54؟ الآن.,الأستاذ: عافاكم كاملين حلوا الصفحة 54 دابا.
+player_intro_01,Child: I have no energy left for this... Didn't we study this last week? Or did those days pass while I was gone?,Enfant : Je n'ai plus la force pour tout ça... N'avons-nous pas étudié cela la semaine dernière ? Ou ces jours sont-ils passés pendant mon absence ?,الطفل: لم يعد لدي طاقة لتحمل هذا... ألم ندرس هذا الأسبوع الماضي؟ أم أن تلك الأيام مرت وأنا غائب؟,الدري: ما بقات عندي طاقة لهاد الشي... ياك قرينا هاد الشي السيمانة اللي فاتت؟ ولا دوك اليام دازو وأنا غايب؟
+player_intro_02,Child: Wait... this dark illustration on the page was never here before.,Enfant : Attends... ce dessin sombre sur la page n'était pas là avant.,الطفل: انتظر... هذا الرسم الأسود في الصفحة لم يكن هنا من قبل.,الدري: بلاتي... هاد الرسم الكحل اللي ف الصفحة ما كانش هنا من قبل.
+lookback_book_01,Child: Wait... this dark illustration on the page was never here before.,Enfant : Attends... ce dessin sombre sur la page n'était pas là avant.,الطفل: انتظر... هذا الرسم الأسود في الصفحة لم يكن هنا من قبل.,الدري: بلاتي... هاد الرسم الكحل اللي ف الصفحة ما كانش هنا من قبل.
+lookback_book_02,Child: It feels as if... it is opening its mouth to call me.,Enfant : On dirait que... sa bouche s'ouvre pour m'appeler.,الطفل: يبدو وكأنه... يفتح فمه ليناديني.,الدري: بحال يلا... حال فمو كيعيط ليا.
+teddy_greet_01,"{TEDDY_NAME}: You're late today, little one...","{TEDDY_NAME} : Tu es en retard aujourd'hui, mon petit...",{TEDDY_NAME}: لقد تأخرت اليوم يا صغيري...,{TEDDY_NAME}: تعطلتي اليوم أوليدي...
+teddy_greet_02,How are you?,Comment vas-tu ?,كيف حالك؟,كيداير؟
+teddy_metro_01,"{TEDDY_NAME}: You're late today, little one... I was afraid you'd swallow all those colorful pills and forget my path.","{TEDDY_NAME} : Tu es en retard aujourd'hui, mon petit... J'avais peur que tu avales tous ces bonbons colorés et que tu oublies mon chemin.",{TEDDY_NAME}: لقد تأخرت اليوم يا صغيري... كنت أخشى أن تبتلع كل تلك الحلوى الملونة وتنسى طريقي.,{TEDDY_NAME}: تعطلتي اليوم يا الصغير... خفت لا تسرط كاع دوك الحبوب الملونين وتنسى طريقي.
+teddy_metro_02,Child: Why does the station feel so cold?,Enfant : Pourquoi la station est-elle si froide ?,الطفل: لماذا تبدو المحطة باردة هكذا؟,الدري: علاش المحطة باردة بحال هكا؟
+neighbor_01,Neighbor: Ah... you're finally here.,Voisin : Ah... tu es enfin là.,الجار: آه... لقد وصلت أخيراً.,الجار: آه... ها نتا وصلتي أخيراً.
+neighbor_02,Child: Here?,Enfant : Ici ?,الطفل: هنا؟,الدري: هنا؟
+neighbor_03,Neighbor: We've been waiting for you.,Voisin : Nous t'attendions.,الجار: لقد كنا ننتظرك.,الجار: كنا كنتسناوك.
+neighbor_04,Child: For what?,Enfant : Pourquoi ?,الطفل: من أجل ماذا؟,الدري: علاش؟
+neighbor_05,Neighbor: ...,Voisin : ...,الجار: ...,الجار: ...
+shop_01,Shop Owner: We thought you weren't coming.,Commerçant : On pensait que tu ne viendrais pas.,صاحب المتجر: ظننا أنك لن تأتي.,مول الحانوت: صحابنا واش ما غاديش تجي.
+shop_02,Child: Where are we going?,Enfant : Où allons-nous ?,الطفل: إلى أين نحن ذاهبون؟,الدري: فين غاديين؟
+shop_03,Shop Owner: I don't know.,Commerçant : Je ne sais pas.,صاحب المتجر: لا أعلم.,مول الحانوت: ما عرفتش.
+shop_04,Child: Then why are you waiting?,Enfant : Alors pourquoi m'attendez-vous ?,الطفل: إذن لماذا تنتظرني؟,الدري: عيلاماش كتسناوني؟
+shop_05,Shop Owner: For you.,Commerçant : Pour toi.,صاحب المتجر: من أجلك.,مول الحانوت: على ودك.
+vending_machine_01,Child: It's broken... Someone stuck a torn note: 'Don't listen to the train.',Enfant : C'est en panne... Quelqu'un a collé un mot déchiré : 'N'écoute pas le train.',الطفل: إنها معطلة... شخص ما ألصق ورقة ممزقة: 'لا تستمع إلى القطار.',الدري: خاسرة... شي واحد لصق ورقة مقطعة: ما تسمعش للمشينة د التران.
+intercom_01,Intercom: *Static* ... Attention passengers... upper platform service is restricted...,Interphone : *Grésillements* ... Attention voyageurs... le service du quai supérieur est limité...,مكبر الصوت: *تشويش* ... انتباه للركاب... خدمة الرصيف العلوي مقيدة...,المكبر: *تشويش* ... انتباه للمسافرين... الرصيف الفوقاني مسدود دابا...
+ticket_booth_closed_01,Child: The ticket booth is closed... The metal shutter is locked tight.,Enfant : Le guichet est fermé... Le rideau métallique est verrouillé.,الطفل: شباك التذاكر مغلق... الستار الحديدي مقفل بإحكام.,الدري: الغيشي د التذاكر مسدود... الريدوا الحديدي مسدود بالساروت.
+ticket_booth_closed_02,{TEDDY_NAME}: Looks like nobody's here. We'll have to search for a ticket on the platform.,{TEDDY_NAME} : On dirait qu'il n'y a personne. On va devoir chercher un billet sur le quai.,{TEDDY_NAME}: يبدو أنه لا يوجد أحد هنا. سيتعين علينا البحث عن تذكرة على الرصيف.,{TEDDY_NAME}: كيبان بلي ما كاين حتى واحد هنا. خاصنا نقلبوا على تذكرة ف الرصيف.
+ticket_booth_inspect_prompt,Press 'E' to inspect Ticket Booth,Appuie sur 'E' pour inspecter le guichet,المس لمعاينة شباك التذاكر,ورك باش تشوف شباك التذاكر
+transit_pass_01,Child: An old metro keycard... maybe this powers the elevator upstairs.,Enfant : Une vieille carte de métro... peut-être qu'elle active l'ascenseur en haut.,الطفل: بطاقة مترو قديمة... ربما تشغل المصعد في الأعلى.,الدري: كارطة قديمة د الميطرو... يمكن هادي تخدم لاسانسور الفوق.
+teddy_fuse_hint_01,{TEDDY_NAME}: The fuse box has no power... Remember our neighbor over on the platform? He always knew how to fix electrics. We should go ask him!,{TEDDY_NAME} : La boîte à fusibles n'a pas de courant... Tu te souviens du voisin sur le quai ? Il s'y connaît en électricité. Allons lui demander !,{TEDDY_NAME}: صندوق القواطع بدون كهرباء... هل تتذكر جارنا هناك على الرصيف؟ إنه ماهر في الكهرباء دائماً. فلنذهب ونسأله!,{TEDDY_NAME}: بواطة الضو ما فيهاش الضو... عاقل على جارنا اللي ف الرصيف؟ ديما كيعرف يصلح الضو. يالاه نسولوه!
+teddy_fuse_hint_02,Child: Good idea. Let's go see what he says.,Enfant : Bonne idée. Allons voir ce qu'il dit.,الطفل: فكرة جيدة. لنذهب ونرى ما سيقوله.,الدري: فكرة زوينة. يالاه نشوفو شنو غادي يقول.
+neighbor_fuse_advice_01,"Old Traveler: Ah, trying to power the elevator?","Vieux voyageur : Ah, tu essaies d'alimenter l'ascenseur ?",المسافر العجوز: آه، هل تحاول تزويد المصعد بالكهرباء؟,الشيباني: آه، باغي تشعل لاسانسور؟
+neighbor_fuse_reminder_01,"Old Traveler: Invert switches 1, 2, 4, and 5 DOWN, but keep the center switch UP!","Vieux voyageur : Rappelle-toi : disjoncteurs 1, 2, 4 et 5 vers le BAS, mais laisse le central vers le HAUT !",المسافر العجوز: تذكر: اعكس القواطع 1 و 2 و 4 و 5 للأسفل، ودع القاطع الأوسط مرفوعاً!,الشيباني: تفكر: هبط القواطع 1 و 2 و 4 و 5 لتحت، وخلي القاطع الوسطاني طالع لفوق!
+neighbor_fuse_advice_02,"Child: Yes, but the circuit won't turn on.","Enfant : Oui, mais le circuit ne s'allume pas.",الطفل: نعم، لكن الدائرة الكهربائية لا تعمل.,الدري: آه، ولكن السيركوي ما بغاش يشعل.
+neighbor_fuse_advice_03,"Old Traveler: Flip switches 1, 2, 4, and 5 DOWN, but leave the 3rd middle switch UP!","Vieux voyageur : Abaisse les disjoncteurs 1, 2, 4 et 5 vers le BAS, mais laisse le 3e au centre vers le HAUT !",المسافر العجوز: اعكس القواطع 1 و 2 و 4 و 5 للأسفل، ودع القاطع الثالث في المنتصف للأعلى!,الشيباني: هبط السوارت 1 و 2 و 4 و 5 لتحت، ولكن خلي الساروت التالت اللي ف الوسط طالع!
+neighbor_fuse_advice_04,"Child: 1, 2, 4, and 5 DOWN, center UP... got it!","Enfant : 1, 2, 4 et 5 vers le bas, et le central vers le haut... compris !",الطفل: القواطع 1 و 2 و 4 و 5 للأسفل، والأوسط للأعلى... فهمت!,الدري: 1 و 2 و 4 و 5 لتحت، والوسطاني لفوق... صافي فهمت!
+neighbor_fuse_advice_05,"Old Traveler: Keep that pattern, or the power to this little mind trips forever.","Vieux voyageur : Garde ce schéma, sinon le courant de ce petit esprit sautera pour toujours.",المسافر العجوز: حافظ على هذا النمط، وإلا ستنقطع الكهرباء عن هذا العقل الصغير للأبد.,الشيباني: عفل على هاد الترتيب، إلا تقطع الضو على هاد العقل الصغير ما باقيش يرجع.
+begger_metro_01,"Old Traveler: Welcome, little one.","Vieux voyageur : Bienvenue, mon petit.",المسافر العجوز: أهلاً بالصغير.,الشيباني: مرحبا بالصغير.
+begger_metro_02,Child: I'm going home... I just want to turn on the elevator.,Enfant : Je rentre à la maison... je veux juste démarrer l'ascenseur.,الطفل: أنا ذاهب إلى البيت... أريد فقط تشغيل المصعد.,الدري: أنا غادي للدار... بغيت غير نشعل لاسانسور.
+begger_metro_03,"Old Traveler: The elevators here don't take you home, my child—they take you to what you fear to remember. The breakers in that box require someone who understands the wiring... flip breakers 1, 2, 4, and 5 DOWN, and leave the center breaker UP, or the power will cut from this little mind forever.","Vieux voyageur : Les ascenseurs ici ne te ramènent pas à la maison, mon enfant—ils te montent vers ce que tu as peur de te rappeler. Les disjoncteurs dans cette boîte demandent quelqu'un qui comprend le câblage... abaisse les disjoncteurs 1, 2, 4 et 5 vers le BAS, et laisse le central vers le HAUT, sinon le courant sera coupé de ce petit esprit pour toujours.",المسافر العجوز: المصاعد هنا لا تصعد بك إلى البيت يا بني، بل تصعد بك إلى ما تخاف تذكره. القواطع في تلك العلبة تحتاج لمن يفهم ترتيب الأسلاك... اعكس القواطع 1 و 2 و 4 و 5 للأسفل، ودع القاطع الأوسط مرفوعاً، وإلا ستنقطع الكهرباء عن هذا العقل الصغير للأبد.,الشيباني: لاسانسور هنا ما كيطلعكش للدار أوليدي، كيطلعك لداك الشي اللي كتخاف تفكرو. القواطع اللي ف ديك البواطة خاصها شي واحد فاهم الخيوط... هبط 1 و 2 و 4 و 5 لتحت، وخلي الوسطاني طالع لفوق، وإلا الضو غادي يتقطع على هاد العقل الصغير للأبد.
+begger_metro_04,"Old Traveler: Remember: flip breakers 1, 2, 4, and 5 DOWN, and leave the center switch UP.","Vieux voyageur : Rappelle-toi : abaisse les 1, 2, 4 et 5 vers le BAS, et laisse le central vers le HAUT.",المسافر العجوز: تذكر: اعكس القواطع 1 و 2 و 4 و 5 للأسفل، ودع القاطع الأوسط مرفوعاً.,الشيباني: تفكر: هبط القواطع 1 و 2 و 4 و 5 لتحت، وخلي الوسطاني طالع لفوق.
+teddy_metro_03,{TEDDY_NAME}: This is where you hide when their voices outside get louder than you can bear.,{TEDDY_NAME} : C'est ici que tu te caches quand leurs voix dehors deviennent plus fortes que ce que tu peux supporter.,{TEDDY_NAME}: هذا هو المكان الذي تختبئ فيه عندما تصبح أصواتهم في الخارج أعلى من تحملك.,{TEDDY_NAME}: هنا فين كتخبى ملي كيعلاو أصواتهم على برا أكثر من اللي تقدر تتحمل.
+teddy_metro_04,Child: I feel dizzy... the smell here feels just like medical disinfectants.,Enfant : J'ai le vertige... l'odeur ici ressemble tellement à des désinfectants médicaux.,الطفل: أشعر بدوار... رائحة المكان تشبه المطهرات الطبية.,الدري: حاس بالدوخة... الريحة هنا بحال الدوا د السبيطار.
+objective_search_trash,Search the trash cans for a train ticket...,Fouille les poubelles pour trouver un ticket de train...,ابحث في سلات المهملات عن تذكرة قطار...,قلب ف الطاروات د الزبل على تذكرة د التران...
+trash_search_prompt,Press 'E' to Search Trash,Appuie sur 'E' pour fouiller la poubelle,المس لتفتيش سلة القمامة,ورك باش تقلب ف الزبل
+trash_searched_prompt,Trash Can (Empty),Poubelle (Vide),سلة القمامة (فارغة),طارو الزبل (خاوي)
+trash_searching_title,Searching the trash...,Fouille des poubelles...,...جاري تفتيش القمامة,كتقلب ف الزبل...
+trash_searching_hint,Stop marker in green zone!,Arrête le curseur dans la zone verte !,!أوقف المؤشر في المنطقة الخضراء,وقف الخط ف البلاصة الخضرا!
+trash_searching_failed,Nothing found! Try again...,Rien trouvé ! Réessaie...,...لم تجد شيئاً! حاول مجدداً,ما لقيتي والو! عاود جرب...
+trash_searching_success,Found a train ticket!,Tu as trouvé un billet de train !,!وجدت تذكرة قطار,لقيتي تذكرة د التران!
+trash_searching_empty,Nothing here but old trash... Try another trash can!,Rien que de vieux déchets... Essaie une autre poubelle !,لا يوجد سوى نفايات قديمة هنا... جرب سلة أخرى!,ما كاين والو غير الزبل... جرب طارو آخر!
+teddy_trash_empty_01,{TEDDY_NAME}: Nothing in this one... let's check another trash can!,{TEDDY_NAME} : Rien dans celle-là... vérifions une autre poubelle !,{TEDDY_NAME}: لا شيء في هذه السلة... لنبحث في سلة أخرى!,{TEDDY_NAME}: والو ف هاد الطارو... يالاه نشوفو واحد آخر!
+ticket_toast_label,Ticket,Ticket,تذكرة,تذكرة
+ticket_item_name,Train Ticket,Billet de train,تذكرة قطار,تذكرة د التران
+teddy_metro_05,"{TEDDY_NAME}: Well done... you have the ticket. Now let's go up, but promise me one thing: don't believe what they tell you up there.","{TEDDY_NAME} : Bien joué... tu as le billet. Maintenant montons, mais promets-moi une chose : ne crois pas ce qu'ils diront là-haut.",{TEDDY_NAME}: أحسنت... التذكرة معك. الآن فلنصعد، لكن عدني بشيء واحد: لا تصدق ما سيقولونه في الأعلى.,{TEDDY_NAME}: برافو... ها هي التذكرة عندك. دابا يالاه نطلعو، ولكن واعدني بحاجة وحدة: ما تتيقش ف داك الشي اللي غادي يقولولك الفوق.
+teddy_metro_06,"{TEDDY_NAME}: Let's go, the elevator is ready for us!","{TEDDY_NAME} : Allons-y, l'ascenseur est prêt pour nous !",{TEDDY_NAME}: هيا بنا، المصعد جاهز لنا!,{TEDDY_NAME}: يالاه، لاسانسور واجد لينا!
+elevator_door_no_power,Child: The elevator doors won't open. The power grid is offline.,Enfant : Les portes de l'ascenseur ne s'ouvrent pas. Le réseau électrique est hors tension.,الطفل: أبواب المصعد لا تفتح. شبكة الكهرباء مقطوعة.,الدري: بيبان لاسانسور ما بغاوش يتحلوا. الضو مقطوع.
+elevator_door_no_ticket,Child: The elevator requires a train ticket to open and operate.,Enfant : L'ascenseur a besoin d'un billet de train pour s'ouvrir et fonctionner.,الطفل: يحتاج المصعد إلى تذكرة قطار ليفتح ويعمل.,الدري: لاسانسور خاصو تذكرة د التران باش يتحل ويخدم.
+elevator_btn_no_power,Child: The elevator power is completely offline. I need to restore it at the fuse box nearby.,Enfant : L'ascenseur est totalement hors tension. Je dois rétablir le courant au disjoncteur tout près.,الطفل: طاقة المصعد مقطوعة بالكامل. أحتاج لإعادتها من صندوق القواطع القريب.,الدري: الضو د لاسانسور مقطوع كامل. خاصني نرجعو من بواطة الضو القريبة.
+elevator_btn_no_ticket,"Child: The elevator has power now, but I can't ride it without a train ticket.","Enfant : L'ascenseur est alimenté maintenant, mais je ne peux pas monter sans billet de train.",الطفل: المصعد يعمل الآن، لكن لا يمكنني ركوبه دون تذكرة قطار.,الدري: دابا لاسانسور فيه الضو، ولكن ما نقدرش نركب بلا تذكرة.
+elevator_btn_no_teddy,Child: I can't leave without my teddy bear. He's somewhere on the platform.,Enfant : Je ne peux pas partir sans mon ours en peluche. Il est quelque part sur le quai.,الطفل: لا يمكنني المغادرة بدون دبي المحشو. إنه في مكان ما على الرصيف.,الدري: ما نقدرش نمشي بلا الدبدوب ديالي. راه شي بلاصة ف الرصيف.
+elevator_train_reaction_01,Child: Doudou... it almost hit us! My head hurts... the noise was so loud...,Enfant : Doudou... il a failli nous percuter ! J'ai mal à la tête... le bruit était si fort...,الطفل: دودو... كاد يصطدم بنا! رأسي يؤلمني... الصوت كان عالياً جداً...,الدري: {TEDDY_NAME}... كان غادي يضربنا! راسي كيضرني... الصداع كان مجهد بزاف...
+elevator_train_reaction_02,"{TEDDY_NAME}: Shh... breathe, little one. It was just an echo from the outside trying to break into your thoughts.","{TEDDY_NAME} : Chut... respire, mon petit. Ce n'était qu'un écho du dehors qui essaie d'envahir tes pensées.",{TEDDY_NAME}: ششش... تنفس يا صغيري. لم يكن ذلك سوى صدى من الخارج يحاول اقتحام أفكارك.,{TEDDY_NAME}: ششش... تنفس يا الصغير. داك الشي غير صدى من برا باغي يدخل لأفكارك.
+elevator_train_reaction_03,"{TEDDY_NAME}: Hold on to me tight. As long as you hold me, nothing here can hurt you. We're almost at Floor 3.","{TEDDY_NAME} : Serre-moi fort contre toi. Tant que tu me tiens, rien ici ne peut te faire de mal. Nous arrivons au 3ème étage.",{TEDDY_NAME}: تمسك بي جيداً. ما دمت ممسكاً بي، لن يؤذيك شيء هنا. لقد اقتربنا من الطابق الثالث.,{TEDDY_NAME}: شد فيا مزيان. ما حدك شادني، حتى حاجة هنا ما تقدر تأذيك. قربنا نوصلو للطابق التالت.
+teddy_reaction_train_01,{TEDDY_NAME}: What happened?!,{TEDDY_NAME} : Qu'est-ce qui s'est passé ?!,{TEDDY_NAME}: ماذا حدث؟!,{TEDDY_NAME}: شنو طرا؟!
+departure_board_01,Child: The departure board is flickering... All destinations are erased except: 'ROOM 302'.,Enfant : Le tableau des départs clignote... Toutes les destinations sont effacées sauf : 'SALLE 302'.,الطفل: لوحة المغادرة تومض... تم مسح جميع الوجهات باستثناء: 'الغرفة 302'.,الدري: لوحة المواعيد كتسينيي... كاع الوجهات تمسحوا من غير: الغرفة 302.
+teddy_lost_piece_01,{TEDDY_NAME}: You found my ribbon! You always remember where I leave my things.,{TEDDY_NAME} : Tu as trouvé mon ruban ! Tu te souviens toujours d'où je laisse mes affaires.,{TEDDY_NAME}: لقد وجدت شريطي! أنت تتذكر دائماً أين أترك أشيائي.,{TEDDY_NAME}: لقيتي السنتة ديالي! ديما كتعقل فين كنخلي حوايجي.
+teddy_floor3_hint_01,{TEDDY_NAME}: Someone is standing down this platform...,{TEDDY_NAME} : Quelqu'un se tient au bout de ce quai...,{TEDDY_NAME}: هناك شخص يقف في نهاية هذا الرصيف...,{TEDDY_NAME}: كاين شي واحد واقف ف آخر هاد الرصيف...
+teddy_floor3_hint_02,{TEDDY_NAME}: Go see who it is.,{TEDDY_NAME} : Va voir qui c'est.,{TEDDY_NAME}: اذهب وانظر من يكون.,{TEDDY_NAME}: سير شوف شكون هذا.
+bully_floor3_01,"Bully: Do you really think you're special because you're sick? Look around... nobody plays with you because you talk to thin air. Even when you collapsed, we never wanted to see you return.","Harceleur : Tu crois vraiment que tu es spécial parce que tu es malade ? Regarde autour de toi... personne ne joue avec toi parce que tu parles dans le vide. Même quand tu t'es effondré, on ne voulait pas te voir revenir.",المتنمر: هل تعتقد حقاً أنك مميز لأنك مريض؟ انظر حولك... لا أحد يلعب معك لأنك تتحدث مع الهواء. حتى عندما سقطت، لم نكن نريد أن نراك تعود.,الحكار: واش كيسحابليك راسك مميز حيت مريض؟ شوف حواليك... حتى واحد ما كيلعب معاك حيت كتهضر مع الخوا. حتى ملي طحتي، ما كناش باغيينك ترجع.
+bully_floor3_02,Child: But I always used to play with you...,Enfant : Mais je jouais toujours avec vous...,الطفل: لكنني كنت ألعب معكم دائماً...,الدري: ولكن أنا ديما كنت كنلعب معاكم...
+bully_floor3_03,Bully: That was before that day. You're nothing more than a blue folder in a doctor's drawer now.,Harceleur : C'était avant ce jour-là. Tu n'es plus qu'un dossier bleu dans le tiroir d'un médecin maintenant.,المتنمر: ذلك كان قبل ذلك اليوم. أنت الآن مجرد ملف أزرق في درج الطبيب.,الحكار: داك الشي كان قبل داك النهار. دابا ما بقيتي غير دوسيي زرق ف مجر الطبيب.
+bully_floor3_04,Child: My teddy says you're wrong.,Enfant : Mon doudou dit que tu as tort.,الطفل: دبي يقول إنك مخطئ.,الدري: الدبدوب ديالي كيقولك راك غالط.
+bully_floor3_05,Bully: ... That thing is not your friend.,Harceleur : ... Cette chose n'est pas ton ami.,المتنمر: ... ذلك الشيء ليس صديقك.,الحكار: ... داك الشي ماشي صاحبك.
+bully_01,"Bully: Do you really think you're special because you're sick? Look around... nobody plays with you because you talk to thin air. Even when you collapsed, we never wanted to see you return.","Harceleur : Tu crois vraiment que tu es spécial parce que tu es malade ? Regarde autour de toi... personne ne joue avec toi parce que tu parles dans le vide. Même quand tu t'es effondré, on ne voulait pas te voir revenir.",المتنمر: هل تعتقد حقاً أنك مميز لأنك مريض؟ انظر حولك... لا أحد يلعب معك لأنك تتحدث مع الهواء. حتى عندما سقطت، لم نكن نريد أن نراك تعود.,الحكار: واش كيسحابليك راسك مميز حيت مريض؟ شوف حواليك... حتى واحد ما كيلعب معاك حيت كتهضر مع الخوا. حتى ملي طحتي، ما كناش باغيينك ترجع.
+bully_02,Child: But I always used to play with you...,Enfant : Mais je jouais toujours avec vous...,الطفل: لكنني كنت ألعب معكم دائماً...,الدري: ولكن أنا ديما كنت كنلعب معاكم...
+bully_03,Bully: That was before that day. You're nothing more than a blue folder in a doctor's drawer now.,Harceleur : C'était avant ce jour-là. Tu n'es plus qu'un dossier bleu dans le tiroir d'un médecin maintenant.,المتنمر: ذلك كان قبل ذلك اليوم. أنت الآن مجرد ملف أزرق في درج الطبيب.,الحكار: داك الشي كان قبل داك النهار. دابا ما بقيتي غير دوسيي زرق ف مجر الطبيب.
+bully_04,Child: But you used to play with me.,Enfant : Mais tu jouais avec moi avant.,الطفل: لكنك كنت تلعب معي من قبل.,الدري: ولكن كنتي كتلعب معايا من قبل.
+bully_05,Bully: ...,Harceleur : ...,المتنمر: ...,الحكار: ...
+teddy_met_people_01,{TEDDY_NAME}: Don't look at him! His words are merely shards of what you overheard in the schoolyard after you returned... forget about him.,{TEDDY_NAME} : Ne le regarde pas ! Ses mots ne sont que des fragments de ce que tu as entendu dans la cour d'école après ton retour... oublie-le.,{TEDDY_NAME}: لا تنظر إليه! كلماته ليست سوى شظايا من كلام سمعته في فناء المدرسة بعد عودتك... انسَ أمره.,{TEDDY_NAME}: ما تشوفش فيه! هدرتو غير فتات من الهضرة اللي سمعتيها ف الساحة د المدرسة من بعد ما رجعتي... نساه.
+turn_02,{TEDDY_NAME}: Wake up.,{TEDDY_NAME} : Réveille-toi.,{TEDDY_NAME}: استيقظ.,{TEDDY_NAME}: فيق.
+turn_03,Child: What?,Enfant : Quoi ?,الطفل: ماذا؟,الدري: شنو؟
+turn_04,{TEDDY_NAME}: Wake up.,{TEDDY_NAME} : Réveille-toi.,{TEDDY_NAME}: استيقظ.,{TEDDY_NAME}: فيق.
+turn_05,Child: But I am awake.,Enfant : Mais je suis réveillé.,الطفل: لكني مستيقظ.,الدري: ولكن أنا فايق.
+turn_06,{TEDDY_NAME}: No.,{TEDDY_NAME} : Non.,{TEDDY_NAME}: لا.,{TEDDY_NAME}: لا.
+cinematic_01,"Teacher: The situation is getting worse, ma'am... his grades have plummeted drastically, and today I found him staring into blank space for hours.","Professeur : La situation s'aggrave, madame... ses notes ont chuté de manière effrayante, et aujourd'hui je l'ai trouvé fixant le vide pendant des heures.",المعلم: الوضع يزداد سوءاً يا سيدتي... درجاته انحدرت بشكل مخيف، واليوم وجدته يحدق في الفراغ لساعات.,الأستاذ: الحالة غاديا وكتكفس ألآلة... النقط ديالو طاحو بزاف، واليوم لقيتو ساهي وكيشوف ف الخوا لساعات.
+cinematic_02,Father: The accident changed everything! He won't look us in the eyes anymore...,Père : L'accident a tout changé ! Il ne nous regarde plus dans les yeux...,الأب: الحادث غيّر كل شيء! لم يعد ينظر في أعيننا...,الأب: الكسيدة بدلات كلشي! ما بقاش كيقدر يشوف ف عينينا...
+cinematic_03,"Father: He talks to his stuffed toy as if it were a real human, and screams its name in the dead of night!","Père : Il parle à sa peluche comme à un être humain réel, et crie son nom en pleine nuit !",الأب: يتحدث مع لعبته المحشوة كأنها إنسان حقيقي، ويصرخ باسمها في الليل!,الأب: كيهضر مع اللعبة ديالو بحال يلا بنادم حقيقي، وكيغوت بسميتها وسط الليل!
+cinematic_04,Teacher: He disconnects completely from reality inside the classroom.,Professeur : Il se déconnecte totalement de la réalité en classe.,المعلم: إنه ينفصل عن الواقع تماماً داخل الفصل.,الأستاذ: كيفصل راسو تماماً على الواقع وسط القسم.
+cinematic_05,"Teacher: I fear if this continues, we won't be able to keep him in regular school... he needs specialized care.","Professeur : J'ai peur que s'il continue ainsi, nous ne puissions pas le garder à l'école normale... il a besoin de soins spécialisés.",المعلم: أخشى أنه إذا استمر هكذا، فلن نتمكن من إبقائه في المدرسة العادية... يحتاج إلى رعاية متخصصة.,الأستاذ: كنخاف يلا بقا هاكا، ما نقدروش نخليوه ف المدرسة العادية... خاصو عناية خاصة.
+cinematic_06,Child: No... please be quiet... I'm not crazy... I'm not crazy!,"Enfant : Non... taisez-vous, je vous en prie... je ne suis pas fou... je ne suis pas fou !",الطفل: لا... أرجوكم اصمتوا... لست مجنوناً... لست مجنوناً!,الدري: لا... عافاكم سكتو... أنا ماشي مسطي... أنا ماشي مسطي!
+cinematic_07,Child: Stop talking about me! Please stop!,Enfant : Arrêtez de parler de moi ! S'il vous plaît !,الطفل: توقفوا عن الحديث عني! أرجوكم توقفوا!,الدري: بركة ما تهضرو عليا! عافاكم وقفوا!
+cinematic_08,{TEDDY_NAME}: Hold on tight to me... don't let their words break you.,{TEDDY_NAME} : Accroche-toi fort à moi... ne laisse pas leurs mots te briser.,{TEDDY_NAME}: تمسك بي جيداً... لا تدع كلماتهم تحطمك.,{TEDDY_NAME}: شد فيا مزيان... ما تخليش هضرتهم تهرسك.
+cinematic_09,Child: {TEDDY_NAME}... I can't breathe...,Enfant : {TEDDY_NAME}... je ne peux plus respirer...,الطفل: {TEDDY_NAME}... لا أستطيع التنفس...,الدري: {TEDDY_NAME}... ما بقيتش كنقدر نتنفس...
+scream_01,Child: {TEDDY_NAME}!,Enfant : {TEDDY_NAME} !,الطفل: {TEDDY_NAME}!,الدري: {TEDDY_NAME}!
+scream_02,Child: {TEDDY_NAME}!,Enfant : {TEDDY_NAME} !,الطفل: {TEDDY_NAME}!,الدري: {TEDDY_NAME}!
+episode_01,Teacher: It's happening again!,Professeur : Ça recommence !,المعلم: لقد عاد الأمر مجدداً!,الأستاذ: عاود تاني جاتو الحالة!
+episode_02,Mother: My son!,Mère : Mon fils !,الأم: ابني!,الأم: ولدي!
+episode_03,Father: Hold him!,Père : Retenez-le !,الأب: أمسكوا به!,الأب: شدوه!
+episode_04,Child: {TEDDY_NAME}!,Enfant : {TEDDY_NAME} !,الطفل: {TEDDY_NAME}!,الدري: {TEDDY_NAME}!
+final_teddy_01,{TEDDY_NAME}: Don't let them take you.,{TEDDY_NAME} : Ne les laisse pas te prendre.,{TEDDY_NAME}: لا تدعهم يأخذونك.,{TEDDY_NAME}: ما تخليهمش يديوك.
+final_teddy_02,Child: {TEDDY_NAME}!,Enfant : {TEDDY_NAME} !,الطفل: {TEDDY_NAME}!,الدري: {TEDDY_NAME}!
+darkroom_01,{TEDDY_NAME}: You've finally heard them... this is the heavy truth I've been carrying for you all these months.,{TEDDY_NAME} : Tu les as enfin entendus... c'est le lourd fardeau de la vérité que je portais pour toi pendant tous ces mois.,{TEDDY_NAME}: لقد سمعتهم أخيراً... هذا هو ثقل الحقيقة الذي كنت أحمله عنك كل هذه الشهور.,{TEDDY_NAME}: أخيراً سمعتيهم... هادا هو الثقل د الحقيقة اللي كنت هازو عليك هاد الشهور كاملين.
+darkroom_02,Child: Why are they saying those things...? I just wanted everything to be like before.,Enfant : Pourquoi disent-ils tout ça... ? Je voulais juste que tout redevienne comme avant.,الطفل: لماذا يقولون تلك الأشياء...؟ أردت فقط أن يعود كل شيء كما كان.,الدري: علاش كيقولو هاد الشي...؟ بغيت غير كلشي يرجع بحال شحال هادي.
+darkroom_03,"{TEDDY_NAME}: Because nothing stays the same. The cold, the hospital, the fear... you made this place to keep yourself safe.","{TEDDY_NAME} : Parce que rien ne reste pareil. Le froid, l'hôpital, la peur... tu as créé cet endroit pour te protéger.",{TEDDY_NAME}: لأن لا شيء يبقى كما كان. البرد، المستشفى، الخوف... لقد صنعت هذا المكان لكي تحمي نفسك.,{TEDDY_NAME}: حيت حتى حاجة ما كتبقى كيف كانت. البرد، السبيطار، الخوف... نتا اللي صنعتي هاد البلاصة باش تحمي راسك.
+darkroom_04,{TEDDY_NAME}: But you cannot stay hidden here forever. The tide is waiting.,{TEDDY_NAME} : Mais tu ne peux pas rester caché ici pour toujours. La marée t'attend.,{TEDDY_NAME}: لكنك لا تستطيع البقاء مختبئاً هنا إلى الأبد. المد ينتظرك.,{TEDDY_NAME}: ولكن ما تقدرش تبقى مخبي هنا ديما. البحر كيتسناك.
+darkroom_05,Child: Where are you taking me?,Enfant : Où m'emmènes-tu ?,الطفل: إلى أين تأخذني؟,الدري: فين ديني؟
+darkroom_06,{TEDDY_NAME}: To the shore where it all began.,{TEDDY_NAME} : Vers le rivage où tout a commencé.,{TEDDY_NAME}: إلى الشاطئ حيث بدأ كل شيء.,{TEDDY_NAME}: للشط فين بدا كلشي.
+darkroom_07,Child: The beach...,Enfant : La plage...,الطفل: الشاطئ...,الدري: البحر...
+darkroom_08,{TEDDY_NAME}: Come. Let us face the water.,{TEDDY_NAME} : Viens. Faisons face à l'eau ensemble.,{TEDDY_NAME}: تعال. فلنواجه البحر معاً.,{TEDDY_NAME}: اجي. نواجهو الما بجوج.
+beach_intro_01,"{TEDDY_NAME}: Do you know, little one? I have always wondered... if you woke up one day fully healed... if you stopped feeling this terror... would I cease to exist?","{TEDDY_NAME} : Tu sais, mon petit ? Je me suis toujours demandé... si tu te réveillais un jour complètement guéri... si tu cessais d'avoir cette terreur... est-ce que je cesserais d'exister ?",{TEDDY_NAME}: أتعلم يا صغيري؟ لطالما تساءلت... لو أنك استيقظت يوماً وشُفيت تماماً... لو توقفت عن الشعور بهذا الرعب... هل سأتوقف أنا عن الوجود؟,{TEDDY_NAME}: عرفتي يا الصغير؟ ديما كنت كنتساءل... يلا فقتي شي نهار وبريتي تماماً... يلا ما بقيتيش حاس بهاد الخوف... واش غادي نبقى موجود؟
+beach_intro_02,"Child: You are my friend, {TEDDY_NAME}. I will never forget you.","Enfant : Tu es mon ami, {TEDDY_NAME}. Je ne t'oublierai jamais.",الطفل: أنت صديقي يا {TEDDY_NAME}. لن أنساك أبداً.,الدري: نتا صاحبي يا {TEDDY_NAME}. عمري ما ننساك.
+beach_intro_03,{TEDDY_NAME}: I am not your friend in the way you imagine. I am merely a beautiful idea forged out of fear so that you might survive.,{TEDDY_NAME} : Je ne suis pas ton ami au sens où tu le penses. Je suis simplement une belle idée forgée par la peur pour que tu puisses survivre.,{TEDDY_NAME}: أنا لست صديقك بالمعنى الذي تظنه. أنا مجرد فكرة جميلة صنعتها من الخوف لكي تنجو.,{TEDDY_NAME}: أنا ماشي صاحبك كيف كيسحابليك. أنا غير فكرة زوينة صنعتها من الخوف باش تقدر تنجى.
+beach_intro_04,{TEDDY_NAME}: I am the wall you built between yourself and the operating rooms and the exhausted faces of doctors.,"{TEDDY_NAME} : Je suis le mur que tu as bâti entre toi et les blocs opératoires, et les visages épuisés des médecins.",{TEDDY_NAME}: أنا الجدار الذي بنيته بينك وبين غرف العمليات ووجوه الأطباء المرهقة.,{TEDDY_NAME}: أنا الحيط اللي بنيتي بينك وبين بلوكات العمليات ووجوه الأطباء العيانين.
+beach_intro_05,"{TEDDY_NAME}: But walls turn into prisons if left standing for too long... The boat is ready on the beach. And now, you must decide how you will cross to the other shore.","{TEDDY_NAME} : Mais les murs deviennent des prisons s'ils durent trop longtemps... Le bateau est prêt sur le rivage. Et maintenant, c'est à toi de décider comment tu traverseras vers l'autre rive.",{TEDDY_NAME}: لكن الجدران تصبح سجناً إذا بقيت طويلاً... القارب جاهز على الشاطئ. والآن، عليك أن تقرر كيف ستعبر إلى الضفة الأخرى.,{TEDDY_NAME}: ولكن الحيوط كيرجعو حبس يلا بقاو واقفين بزاف... الفلوكة واجدة ف الشط. ودابا، خاصك تقرر كيفاش غادي تقطع للضفة الخرى.
+beach_intro_06,Child: The boat... I have to decide how to let go.,Enfant : Le bateau... je dois décider comment lâcher prise.,الطفل: القارب... عليّ أن أقرر كيف سأعبر.,الدري: الفلوكة... خاصني نقرر كيفاش نخليها.
+beach_ending_ready,{TEDDY_NAME}: The boat is ready. How will you say goodbye?,{TEDDY_NAME} : Le bateau est prêt. Comment vas-tu faire tes adieux ?,{TEDDY_NAME}: القارب جاهز. كيف ستودعني؟,{TEDDY_NAME}: الفلوكة واجدة. كيفاش غادي تودعني؟
+beach_choice_prompt,How will you cross?,Comment vas-tu traverser ?,كيف ستعبر؟,كيفاش غادي تقطع البحر؟
+beach_choice_leave,Leave him on the sand and walk into the water,Le laisser sur le sable et marcher vers l'eau,اتركه على الرمال وامشِ وحيداً نحو الماء,خليه فوق الرملة ومشي للما بوحدك
+beach_choice_send,Put {TEDDY_NAME} on the boat and cast him into the waves,Mettre {TEDDY_NAME} sur le bateau et le pousser dans les vagues,ضع {TEDDY_NAME} في القارب وادفعه نحو عمق الأمواج,حط {TEDDY_NAME} ف الفلوكة ودفعو وسط لمواج
+beach_teddy_take,Press E to take {TEDDY_NAME},Appuie sur E pour prendre {TEDDY_NAME},المس لأخذ {TEDDY_NAME},ورك باش تاخد {TEDDY_NAME}
+beach_teddy_put,Press E to place {TEDDY_NAME} on the boat,Appuie sur E pour poser {TEDDY_NAME} sur le bateau,المس لوضع {TEDDY_NAME} في القارب,ورك باش تحط {TEDDY_NAME} ف الفلوكة
+beach_teddy_pickup,Pick up Teddy,Prends Teddy,احمل تيدي,هز {TEDDY_NAME}
+beach_teddy_place,Hold to place Teddy,Maintiens pour poser Teddy,اضغط مطولاً لوضع تيدي,بقا مورك باش تحط {TEDDY_NAME}
+beach_farewell_path_a,"{TEDDY_NAME}: You were always brave, little one... Go and live your life. My purpose is fulfilled now.","{TEDDY_NAME} : Tu as toujours été courageux, mon petit... Va et vis ta vie. Ma tâche est terminée maintenant.",{TEDDY_NAME}: كنتَ شجاعاً دائماً يا صغيري... اذهب وعش حياتك. لقد انتهت وظيفتي الآن.,{TEDDY_NAME}: ديما كنتي شجاع أوليدي... سير عيش حياتك. الدور ديالي سالا دابا.
+beach_farewell_path_b,"{TEDDY_NAME}: If this is what you need to forgive yourself... then take your freedom. I love you, even as you cast me into the storm.",{TEDDY_NAME} : Si c'est ce dont tu as besoin pour te pardonner... alors prends ta liberté. Je t'aime même si tu me jettes dans la tempête.,{TEDDY_NAME}: إذا كان هذا ما تحتاجه لتسامح نفسك... فخذ حريتك. أنا أحبك حتى وأنت تلقي بي في العاصفة.,{TEDDY_NAME}: يلا كان هادا هو اللي خاصك باش تسامح راسك... خود حريتك. راه كنبغيك واخا كتلوحني وسط العاصفة.
+beach_teddy_farewell,"{TEDDY_NAME}: If this is what you need to forgive yourself... then take your freedom. I love you, even as you cast me into the storm.",{TEDDY_NAME} : Si c'est ce dont tu as besoin pour te pardonner... alors prends ta liberté. Je t'aime même si tu me jettes dans la tempête.,{TEDDY_NAME}: إذا كان هذا ما تحتاجه لتسامح نفسك... فخذ حريتك. أنا أحبك حتى وأنت تلقي بي في العاصفة.,{TEDDY_NAME}: يلا كان هادا هو اللي خاصك باش تسامح راسك... خود حريتك. راه كنبغيك واخا كتلوحني وسط العاصفة.
+teacher_ending_01,Teacher: Hey! Can you hear me?! Open your eyes!,Professeur : Hé ! Est-ce que tu m'entends ?! Ouvre les yeux !,المعلم: هل تسمعني؟! افتح عينيك!,الأستاذ: هيي! واش كتسمعني؟! حل عينيك!
+teacher_ending_02,Teacher: Go get the principal immediately!!,Professeur : Allez chercher le directeur immédiatement !!,المعلم: اذهبوا للمدير فوراً!!,الأستاذ: سيرو عيطوا للمدير دابا!!
+lang_en,English,Anglais,الإنجليزية,الإنجليزية
+lang_ar,Arabic,Arabe,العربية,العربية
+lang_fr,French,Français,الفرنسية,الفرنسية
+lang_darija,Darija,Darija,الدارجة,الدارجة
+ui_fps_format,{0} FPS,{0} FPS,{0} إطار,{0} إطار
+ui_pause_title,PAUSED,PAUSE,متوقف مؤقتاً,اللعبة واقفة
+ui_pause_resume,Resume,Reprendre,استئناف,كمل اللعب
+ui_pause_restart,Restart,Recommencer,إعادة البدء,عاود من اللول
+ui_pause_main_menu,Main Menu,Menu Principal,القائمة الرئيسية,القائمة الرئيسية
+ui_continue,CONTINUE >,CONTINUER >,متابعة,كمل
+ui_close,[ CLOSE ],[ FERMER ],[ إغلاق ],[ سد ]
+ui_restart,RESTART,RECOMMENCER,إعادة البدء,عاود
+ui_end_of_episode,END OF EPISODE,FIN DE L'ÉPISODE,نهاية الحلقة,سالات الحلقة
+ui_end_episode_subtitle,As A Kid - Episode 1,As A Kid - Épisode 1,عندما كنت طفلاً - الحلقة 1,فاش كنت صغير - الحلقة 1
+ui_to_be_continued,To be continued...,À suivre...,يتبع...,يتبع...
+ui_end_prototype_title,END OF PROTOTYPE,FIN DU PROTOTYPE,نهاية التجربة,سالا البروطوتيب
+ui_end_prototype_subtitle,Thank you for experiencing the story sequence.,Merci d'avoir vécu cette histoire.,شكراً لتجربتك هذه القصة.,شكراً حيت جربتي هاد القصة.
+ui_restart_sequence,Restart Sequence,Recommencer,إعادة المشهد,عاود المشهد
+ui_game_title,As A Kid,As A Kid,عندما كنت طفلاً,فاش كنت صغير
+ui_menu_episodes,Episodes,Épisodes,الحلقات,الحلقات
+ui_menu_options,Options,Options,الإعدادات,الإعدادات
+ui_menu_credits,Credits,Crédits,طاقم العمل,شكون صاوب اللعبة
+ui_menu_exit,Exit,Quitter,خروج,خرج
+ui_menu_back,Back,Retour,رجوع,رجع
+ui_menu_play,Play,Jouer,لعب,بدا اللعب
+ui_episode_1_subtitle,Episode 1: Metro,Épisode 1 : Métro,الحلقة 1: المترو,الحلقة 1: الميطرو
+ui_settings_sensitivity,Sensitivity: {0},Sensibilité : {0},الحساسية: {0},الحساسية: {0}
+ui_settings_sound,Sound: {0}%,Son : {0}%,الصوت: {0}%,الصوت: {0}%
+ui_settings_fps_counter,FPS Counter,Compteur FPS,عداد الإطارات,عداد الإطارات
+ui_settings_lock_fps,Lock FPS (60 Frames),Bloquer FPS (60 Images),تثبيت الإطارات (60 إطاراً),ثبت الإطارات (60 إطار)
+ui_credits_made_with_love,Made with Love,Fait avec Amour,صُنع بكل حب,مصاوبة بالحب
+speaker_teacher,Teacher,Professeur,المعلم,الأستاذ
+speaker_child,Child,Enfant,الطفل,الدري
+speaker_mama,Mama,Maman,الأم,ماما
+speaker_baba,Baba,Papa,الأب,بابا
+prompt_open_door_f3,Tap to open door,Appuyez pour ouvrir la porte,المس لفتح الباب,ورك باش تحل الباب
+prompt_tap_interact,Tap to interact,Appuyez pour interagir,المس للتفاعل,ورك باش تتفاعل
+prompt_tap_talk,Tap to talk,Appuyez pour parler,المس للتحدث,ورك باش تهضر
+prompt_open_wardrobe,Open wardrobe,Ouvrir l'armoire,افتح الخزانة,حل الماريو
+prompt_put_on_clothes,Put on clothes,Mettre les vêtements,ارتدِ الملابس,لبس حوايجك
+prompt_take_backpack,Take Backpack,Prendre le sac,خذ الحقيبة,هز الكارطابل
+prompt_leave_school,Leave for School,Partir à l'école,اخرج إلى المدرسة,خرج للمدرسة
+prompt_front_door,Front Door,Porte d'entrée,باب المنزل,باب الدار
+prompt_open_door,Open Door,Ouvrir la porte,افتح الباب,حل الباب
+prompt_close_door,Close Door,Fermer la porte,أغلق الباب,سد الباب
+prompt_open_drawer,Open Drawer,Ouvrir le tiroir,افتح الدرج,حل المجر
+prompt_close_drawer,Close Drawer,Fermer le tiroir,أغلق الدرج,سد المجر
+prompt_open_window,Open Window,Ouvrir la fenêtre,افتح النافذة,حل الشرجم
+prompt_close_window,Close Window,Fermer la fenêtre,أغلق النافذة,سد الشرجم
+prompt_open_cabinet,Open Cabinet,Ouvrir le placard,افتح الخزانة,حل البلاكار
+prompt_close_cabinet,Close Cabinet,Fermer le placard,أغلق الخزانة,سد البلاكار
+prompt_enter_door,Enter Door,Entrer,ادخل,دخل
+prompt_pickup_money,Pick up Money,Prendre l'argent,خذ النقود,هز الفلوس
+prompt_pickup_object,Pick up Object,Prendre l'objet,التقط الغرض,هز الحاجة
+prompt_action_look,Look,Regarder,انظر,شوف
+prompt_action_open_book,Open Book,Ouvrir le livre,افتح الكتاب,حل الكتاب
+prompt_tap_look,Tap To Look,Appuyez pour regarder,المس للنظر,ورك باش تشوف
+prompt_press_look,Press 'E' To Look,Appuyez sur 'E' pour regarder,اضغط للنظر,برك باش تشوف
+prompt_tap_open_book,Tap To Open Book,Appuyez pour ouvrir le livre,المس لفتح الكتاب,ورك باش تحل الكتاب
+prompt_press_open_book,Press 'E' To Open Book,Appuyez sur 'E' pour ouvrir le livre,اضغط لفتح الكتاب,برك باش تحل الكتاب
+prompt_open_fusebox,Tap to Open Fuse Box,Appuyez pour ouvrir le disjoncteur,المس لفتح صندوق القواطع,ورك باش تحل بواطة الضو
+prompt_fusebox_powered,Fuse Box (Power Restored),Boîte à fusibles (Alimentée),صندوق القواطع (تمت استعادة الطاقة),بواطة الضو (الضو راجع)
+prompt_take_ticket,Tap to Take Train Ticket,Appuyez pour prendre le billet,المس لأخذ تذكرة القطار,ورك باش تاخد التذكرة
+prompt_take_keycard,Tap to take Metro Keycard,Appuyez pour prendre la carte de métro,المس لأخذ بطاقة المترو,ورك باش تاخد كارطة الميطرو
+prompt_inspect_vending,Tap to inspect Vending Machine,Appuyez pour inspecter le distributeur,المس لفحص آلة البيع,ورك باش تشوف الماكينة
+prompt_listen_intercom,Tap to listen to Intercom,Appuyez pour écouter l'interphone,المس للاستماع إلى مكبر الصوت,ورك باش تسمع المكبر
+prompt_read_departure_board,Tap to read Departure Board,Appuyez pour lire le tableau des départs,المس لقراءة لوحة المغادرة,ورك باش تقرا لوحة المواعيد
+prompt_take_teddy_ribbon,Tap to take Teddy's Ribbon,Appuyez pour prendre le ruban,المس لأخذ شريط دودو,ورك باش تاخد ربطة دودو
+item_200_dh,200 DH,200 DH,200 درهم,200 درهم
+obj_find_teddy,Find Teddy...,Trouve Doudou...,ابحث عن دبدوبك...,قلب على دودو...
+obj_restore_circuit,Restore the circuit...,Rétablis le circuit...,أعد تشغيل الدائرة الكهربائية...,رجع الضو...
+obj_neighbor_knows,The neighbor might know...,Le voisin sait peut-être...,ربما يعرف الجار...,الجار يقدر يكون عارف...
+obj_head_upstairs,Head upstairs...,Monte à l'étage...,اصعد إلى الطابق العلوي...,طلع الفوق...
+obj_need_ticket,Need a ticket...,Il faut un billet...,تحتاج إلى تذكرة...,خاصك تذكرة...
+obj_grid_dead,The grid is dead...,Le réseau est coupé...,الشبكة الكهربائية مقطوعة...,الضو مقطوع...
+obj_where_are_we,Where are we...?,Où sommes-nous...?,أين نحن...؟,فين حنا...؟
+obj_behind_door,Behind the door...,Derrière la porte...,خلف الباب...,مورا الباب...
+door_sign_staff_only,STAFF ONLY,PERSONNEL UNIQUEMENT,للموظفين فقط,خاص بالخدامين
+raft_prompt_pickup,Tap to pick up,Appuyez pour prendre,المس للالتقاط,ورك باش تهز
+raft_prompt_drop,Drop held item,Lâcher l'objet,إفلات الغرض,طلق الحاجة
+raft_prompt_drop_short,Drop,Lâcher,إفلات,طلق
+raft_prompt_board,Tap to get on,Appuyez pour monter,المس للركوب,ورك باش تركب
+raft_prompt_place,Tap to place,Appuyez pour poser,المس للوضع,ورك باش تحط
+raft_prompt_need_wood,Need wood first,Besoin de bois d'abord,تحتاج الخشب أولاً,خاصك الخشب بعدا
+raft_prompt_need_cloth,Need cloth,Besoin de tissu,تحتاج القماش,خاصك التوب
+raft_tracker_progress,Wood: {0}/3\nCloth: {1}/1,Bois : {0}/3\nTissu : {1}/1,الخشب: {0}/3\nالقماش: {1}/1,الخشب: {0}/3\nالتوب: {1}/1
+beach_tracker_boat_ready,Boat: Ready!\nTap to board,Bateau : Prêt !\nAppuyez pour monter,القارب: جاهز!\nالمس للركوب,الفلوكة: واجدة!\nورك باش تركب
+beach_tracker_take_teddy,Objective:\nTake {TEDDY_NAME} from the table,Objectif :\nPrends {TEDDY_NAME} sur la table,الهدف:\nخذ {TEDDY_NAME} من الطاولة,الهدف:\nهز {TEDDY_NAME} من الطبلة
+beach_tracker_bring_teddy,Objective:\nBring {TEDDY_NAME} to the raft,Objectif :\nAmène {TEDDY_NAME} au radeau,الهدف:\nأحضر {TEDDY_NAME} إلى القارب,الهدف:\nجيب {TEDDY_NAME} للفلوكة
+credits_ep1_role,EPISODE 1,ÉPISODE 1,الحلقة 1,الحلقة 1
+credits_ep1_name,AS A KID,AS A KID,عندما كنت طفلاً,فاش كنت صغير
+credits_dir_role,STORY & CREATIVE DIRECTION\nENVIRONMENT & LEVEL DESIGN,HISTOIRE & DIRECTION CRÉATIVE\nENVIRONNEMENT & LEVEL DESIGN,القصة والإخراج الإبداعي\nتصميم البيئة والمراحل,القصة والإخراج\nتصميم البلايص والمراحل
+credits_dir_name,Yassir Essabbahy,Yassir Essabbahy,ياسر الصباحي,ياسر الصباحي
+credits_sys_role,GAMEPLAY SYSTEMS & CINEMATICS\nSOUND DESIGN & AUDIO,SYSTÈMES DE JEU & CINÉMATIQUES\nDESIGN SONORE & AUDIO,أنظمة اللعب والمشاهد السينمائية\nتصميم الصوت والمؤثرات,سيستيم د اللعب والسينيماتيك\nتصميم الصوت والموسيقى
+credits_sys_name,Core Team,Équipe Principale,الفريق الأساسي,الفريق الرئيسي
+credits_thanks_role,SPECIAL THANKS,REMERCIEMENTS,شكر خاص,شكر خاص
+credits_thanks_name,To everyone who supported this journey.\n\nThank you for playing.,À tous ceux qui ont soutenu ce voyage.\n\nMerci d'avoir joué.,لكل من دعم هذه الرحلة.\n\nشكراً لك على اللعب.,لكاع اللي دعمونا ف هاد الرحلة.\n\nشكراً حيت لعبتي.
+credits_return_prompt,[ TAP ANYWHERE TO RETURN TO MAIN MENU ],[ APPUYEZ POUR RETOURNER AU MENU ],[ المس في أي مكان للعودة إلى القائمة الرئيسية ],[ ورك ف أي بلاصة باش ترجع للقائمة ]
+Hi,Hello!,Salut !,مرحباً!,سلام!
+How Are You,How are you?,Comment vas-tu ?,كيف حالك؟,كيداير؟

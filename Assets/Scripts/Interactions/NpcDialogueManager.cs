@@ -92,7 +92,7 @@ public class NpcDialogueManager : MonoBehaviour
             return new Color(1.0f, 0.65f, 0.30f, 1.0f); // #FFA64D Soft Amber / Orange
 
         // Teacher
-        if (s.Contains("teacher") || s.Contains("professeur") || s.Contains("prof") || s.Contains("المعلم"))
+        if (s.Contains("teacher") || s.Contains("professeur") || s.Contains("prof") || s.Contains("المعلم") || s.Contains("الأستاذ"))
             return new Color(1.0f, 0.94f, 0.63f, 1.0f); // #FFF0A0 Warm Pale Yellow / Cream
 
         // Neighbor
@@ -100,11 +100,11 @@ public class NpcDialogueManager : MonoBehaviour
             return new Color(0.48f, 0.89f, 0.58f, 1.0f); // #7BE495 Soft Mint / Lime Green
 
         // Shop Owner / Merchant
-        if (s.Contains("shop") || s.Contains("owner") || s.Contains("commercant") || s.Contains("merchant") || s.Contains("المتجر"))
+        if (s.Contains("shop") || s.Contains("owner") || s.Contains("commercant") || s.Contains("merchant") || s.Contains("المتجر") || s.Contains("الحانوت"))
             return new Color(1.0f, 0.55f, 0.40f, 1.0f); // #FF8C66 Warm Coral / Peach
 
         // Bully
-        if (s.Contains("bully") || s.Contains("harceleur") || s.Contains("المتنمر"))
+        if (s.Contains("bully") || s.Contains("harceleur") || s.Contains("المتنمر") || s.Contains("الحكار"))
             return new Color(1.0f, 0.42f, 0.42f, 1.0f); // #FF6B6B Muted Crimson / Red
 
         // Brother
@@ -112,19 +112,19 @@ public class NpcDialogueManager : MonoBehaviour
             return new Color(0.36f, 0.88f, 0.90f, 1.0f); // #5CE1E6 Soft Sky Blue / Cyan
 
         // Mother
-        if (s.Contains("mother") || s.Contains("mama") || s.Contains("mere") || s.Contains("الأم") || s.Contains("ام"))
+        if (s.Contains("mother") || s.Contains("mama") || s.Contains("mere") || s.Contains("الأم") || s.Contains("ماما") || s.Contains("ام"))
             return new Color(0.87f, 0.63f, 0.87f, 1.0f); // #DDA0DD Soft Lilac / Lavender
 
         // Father
-        if (s.Contains("father") || s.Contains("baba") || s.Contains("dad") || s.Contains("pere") || s.Contains("الأب") || s.Contains("اب"))
+        if (s.Contains("father") || s.Contains("baba") || s.Contains("dad") || s.Contains("pere") || s.Contains("الأب") || s.Contains("بابا") || s.Contains("اب"))
             return new Color(0.56f, 0.80f, 0.96f, 1.0f); // #90CDF4 Slate / Steel Blue
 
         // Intercom / System / Announcement
-        if (s.Contains("intercom") || s.Contains("interphone") || s.Contains("system") || s.Contains("مكبر"))
+        if (s.Contains("intercom") || s.Contains("interphone") || s.Contains("system") || s.Contains("مكبر") || s.Contains("المكبر"))
             return new Color(0.50f, 1.0f, 0.83f, 1.0f); // #80FFD4 Retro Terminal Aqua
 
         // Old Traveler / Beggar
-        if (s.Contains("traveler") || s.Contains("beggar") || s.Contains("voyageur") || s.Contains("mendiant") || s.Contains("مسافر") || s.Contains("متسول") || s.Contains("عجوز"))
+        if (s.Contains("traveler") || s.Contains("beggar") || s.Contains("voyageur") || s.Contains("mendiant") || s.Contains("مسافر") || s.Contains("متسول") || s.Contains("عجوز") || s.Contains("الشيباني"))
             return new Color(0.92f, 0.80f, 0.60f, 1.0f); // #EBCCA0 Weathered Muted Amber
 
         // Child / Player / Protagonist / Default
@@ -235,10 +235,10 @@ public class NpcDialogueManager : MonoBehaviour
 
         if (continueButton != null)
         {
-            var btnText = continueButton.GetComponentInChildren<TMPro.TextMeshProUGUI>();
-            if (btnText != null && btnText.text != null && btnText.text.Contains("\u25B6"))
+            var btnText = continueButton.GetComponentInChildren<TMPro.TextMeshProUGUI>(true);
+            if (btnText != null)
             {
-                btnText.text = btnText.text.Replace("\u25B6", ">");
+                LocalizationManager.ApplyText(btnText, LocalizationManager.Resolve("ui_continue", "CONTINUE >"), preserveAlignment: true);
             }
         }
     }
@@ -854,6 +854,9 @@ public class NpcDialogueManager : MonoBehaviour
             }
             label.color = Color.white;
             label.fontSize = 22f;
+            label.enableAutoSizing = true;
+            label.fontSizeMin = 15f;
+            label.fontSizeMax = 22f;
             label.fontStyle = FontStyles.Normal;
             label.alignment = TextAlignmentOptions.Center;
         }
@@ -864,23 +867,31 @@ public class NpcDialogueManager : MonoBehaviour
         if (choicePack == null) return;
         ApplyMonochromeChoiceTheme();
 
+        string teddyName = MetroStorySequenceController.TeddyName;
+
         var yesLabel = choicePack.transform.Find("YesButton/Label")?.GetComponent<TextMeshProUGUI>();
         if (yesLabel != null)
         {
-            string cleanA = optionA.Replace("<size=70%><color=#8E9EAB>[1]</color></size>  ", "").Replace("[1]", "").Trim();
-            string textA = Story.MobileUIAdapter.IsMobile ? cleanA.ToUpper() : $"[1]  {cleanA.ToUpper()}";
-            yesLabel.isRightToLeftText = LocalizationManager.ContainsArabic(textA);
-            yesLabel.text = LocalizationManager.FixRTL(textA);
+            string cleanA = (optionA ?? "").Replace("<size=70%><color=#8E9EAB>[1]</color></size>  ", "").Replace("[1]", "").Trim();
+            if (!string.IsNullOrEmpty(teddyName))
+                cleanA = cleanA.Replace("{TEDDY_NAME}", teddyName).Replace("[TEDDY NAME]", teddyName);
+            bool hasArabicA = LocalizationManager.ContainsArabic(cleanA);
+            string formattedA = hasArabicA ? cleanA : cleanA.ToUpper();
+            string textA = (Story.MobileUIAdapter.IsMobile || hasArabicA) ? formattedA : $"[1]  {formattedA}";
+            LocalizationManager.ApplyText(yesLabel, textA, preserveAlignment: true);
             yesLabel.color = Color.white;
         }
 
         var noLabel = choicePack.transform.Find("NoButton/Label")?.GetComponent<TextMeshProUGUI>();
         if (noLabel != null)
         {
-            string cleanB = optionB.Replace("<size=70%><color=#8E9EAB>[2]</color></size>  ", "").Replace("[2]", "").Trim();
-            string textB = Story.MobileUIAdapter.IsMobile ? cleanB.ToUpper() : $"[2]  {cleanB.ToUpper()}";
-            noLabel.isRightToLeftText = LocalizationManager.ContainsArabic(textB);
-            noLabel.text = LocalizationManager.FixRTL(textB);
+            string cleanB = (optionB ?? "").Replace("<size=70%><color=#8E9EAB>[2]</color></size>  ", "").Replace("[2]", "").Trim();
+            if (!string.IsNullOrEmpty(teddyName))
+                cleanB = cleanB.Replace("{TEDDY_NAME}", teddyName).Replace("[TEDDY NAME]", teddyName);
+            bool hasArabicB = LocalizationManager.ContainsArabic(cleanB);
+            string formattedB = hasArabicB ? cleanB : cleanB.ToUpper();
+            string textB = (Story.MobileUIAdapter.IsMobile || hasArabicB) ? formattedB : $"[2]  {formattedB}";
+            LocalizationManager.ApplyText(noLabel, textB, preserveAlignment: true);
             noLabel.color = Color.white;
         }
     }

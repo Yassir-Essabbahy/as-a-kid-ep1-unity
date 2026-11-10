@@ -59,7 +59,25 @@ public class RaftPlayerInteraction : MonoBehaviour
     private void Start()
     {
         ResolveReferences();
+        if (LocalizationManager.Instance != null)
+        {
+            LocalizationManager.Instance.OnLanguageChanged -= HandleLanguageChanged;
+            LocalizationManager.Instance.OnLanguageChanged += HandleLanguageChanged;
+        }
         ClearPrompt();
+        UpdateObjectiveTracker();
+    }
+
+    private void OnDestroy()
+    {
+        if (LocalizationManager.Instance != null)
+        {
+            LocalizationManager.Instance.OnLanguageChanged -= HandleLanguageChanged;
+        }
+    }
+
+    private void HandleLanguageChanged(string _)
+    {
         UpdateObjectiveTracker();
     }
 
@@ -204,7 +222,7 @@ public class RaftPlayerInteraction : MonoBehaviour
         {
             if (currentHeldPiece == null)
             {
-                SetPrompt($"{interactKey} to pick up");
+                SetPrompt(LocalizationManager.Resolve("raft_prompt_pickup", $"{interactKey} to pick up"));
 
                 if (interactInput != null && interactInput.WasPressed)
                 {
@@ -214,7 +232,7 @@ public class RaftPlayerInteraction : MonoBehaviour
             }
             else if (hitPiece != currentHeldPiece)
             {
-                SetPrompt($"{dropKey} to drop held item");
+                SetPrompt(LocalizationManager.Resolve("raft_prompt_drop", $"{dropKey} to drop held item"));
             }
             return;
         }
@@ -226,7 +244,7 @@ public class RaftPlayerInteraction : MonoBehaviour
             {
                 if (BeachEndingController.Instance != null && BeachEndingController.Instance.CanBoardRaft)
                 {
-                    SetPrompt($"{interactKey} to get on");
+                    SetPrompt(LocalizationManager.Resolve("raft_prompt_board", $"{interactKey} to get on"));
 
                     if (interactInput != null && interactInput.WasPressed)
                     {
@@ -245,7 +263,9 @@ public class RaftPlayerInteraction : MonoBehaviour
             {
                 if (hitBuildArea.CanPlacePiece(currentHeldPiece))
                 {
-                    SetPrompt($"{interactKey} to place / {dropKey} to drop");
+                    string placeStr = LocalizationManager.Resolve("raft_prompt_place", $"{interactKey} to place");
+                    string dropStr = LocalizationManager.Resolve("raft_prompt_drop_short", $"{dropKey} to drop");
+                    SetPrompt($"{placeStr} / {dropStr}");
 
                     if (interactInput != null && interactInput.WasPressed)
                     {
@@ -255,13 +275,16 @@ public class RaftPlayerInteraction : MonoBehaviour
                 }
                 else
                 {
+                    string dropStr = LocalizationManager.Resolve("raft_prompt_drop_short", $"{dropKey} to drop");
                     if (currentHeldPiece.pieceId.ToLower().Contains("mat"))
                     {
-                        SetPrompt($"Need wood first / {dropKey} to drop");
+                        string needWood = LocalizationManager.Resolve("raft_prompt_need_wood", "Need wood first");
+                        SetPrompt($"{needWood} / {dropStr}");
                     }
                     else
                     {
-                        SetPrompt($"Need cloth / {dropKey} to drop");
+                        string needCloth = LocalizationManager.Resolve("raft_prompt_need_cloth", "Need cloth");
+                        SetPrompt($"{needCloth} / {dropStr}");
                     }
                 }
             }
@@ -275,7 +298,7 @@ public class RaftPlayerInteraction : MonoBehaviour
         // Case C: No interactive target in view
         if (currentHeldPiece != null)
         {
-            SetPrompt($"{dropKey} to drop");
+            SetPrompt(LocalizationManager.Resolve("raft_prompt_drop_short", $"{dropKey} to drop"));
         }
         else
         {
@@ -289,7 +312,7 @@ public class RaftPlayerInteraction : MonoBehaviour
 
         currentHeldPiece = piece;
         currentHeldPiece.StartCarrying(carryPoint);
-        SetPrompt($"{dropKey} to drop");
+        SetPrompt(LocalizationManager.Resolve("raft_prompt_drop_short", $"{dropKey} to drop"));
     }
 
     private void DropCurrentPiece()
@@ -323,7 +346,8 @@ public class RaftPlayerInteraction : MonoBehaviour
         int woodCount = buildArea != null ? buildArea.WoodPlacedCount : 0;
         int clothCount = (buildArea != null && buildArea.IsSailPlaced) ? 1 : 0;
 
-        objectiveTrackerText.text = $"Wood: {woodCount}/3\nCloth: {clothCount}/1";
+        string trackerStr = LocalizationManager.Format("raft_tracker_progress", "Wood: {0}/3\nCloth: {1}/1", woodCount, clothCount);
+        LocalizationManager.ApplyText(objectiveTrackerText, trackerStr, preserveAlignment: true);
     }
 
     private void SetPrompt(string text)
@@ -336,7 +360,7 @@ public class RaftPlayerInteraction : MonoBehaviour
 
         if (promptText != null)
         {
-            promptText.text = text;
+            LocalizationManager.ApplyText(promptText, text, preserveAlignment: true);
             promptText.gameObject.SetActive(true);
         }
 
@@ -345,7 +369,7 @@ public class RaftPlayerInteraction : MonoBehaviour
             promptBox.SetActive(true);
             if (promptBoxRect != null)
             {
-                float width = Mathf.Max(130f, promptText != null ? promptText.GetPreferredValues(text).x + 32f : 190f);
+                float width = Mathf.Max(130f, promptText != null ? promptText.GetPreferredValues(promptText.text).x + 36f : 190f);
                 promptBoxRect.sizeDelta = new Vector2(width, 36f);
             }
         }

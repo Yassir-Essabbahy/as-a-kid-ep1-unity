@@ -11,7 +11,7 @@ public class DrawerController : MonoBehaviour, IInteractable
     [Header("Sound")]
     public AudioClip openCloseSound;
 
-    public string PromptMessage => isOpen ? "Close Drawer" : "Open Drawer";
+    public string PromptMessage => isOpen ? LocalizationManager.Resolve("prompt_close_drawer", "Close Drawer") : LocalizationManager.Resolve("prompt_open_drawer", "Open Drawer");
 
     private AudioSource audioSource;
     private bool isOpen = false;

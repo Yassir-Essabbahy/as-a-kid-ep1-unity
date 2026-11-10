@@ -30,9 +30,13 @@ public class FindableItem : MonoBehaviour
         if (player != null) playerTransform = player.transform;
     }
 
+    private string GetLocalizedPrompt() => LocalizationManager.Resolve("prompt_take_ticket", promptText);
+
     private void OnDisable()
     {
-        if (NpcInteractionText.Instance != null && NpcInteractionText.Instance.GetCurrentPrompt() == promptText)
+        string p = GetLocalizedPrompt();
+        if (NpcInteractionText.Instance != null &&
+            (NpcInteractionText.Instance.GetCurrentPrompt() == p || NpcInteractionText.Instance.GetCurrentPrompt() == promptText))
         {
             NpcInteractionText.Instance.ClearPrompt();
         }
@@ -52,7 +56,7 @@ public class FindableItem : MonoBehaviour
             {
                 if (NpcInteractionText.Instance != null)
                 {
-                    NpcInteractionText.Instance.SetPrompt(promptText);
+                    NpcInteractionText.Instance.SetPrompt(GetLocalizedPrompt());
                 }
 
                 if (Input.GetKeyDown(KeyCode.E))
@@ -63,7 +67,9 @@ public class FindableItem : MonoBehaviour
         }
         else
         {
-            if (NpcInteractionText.Instance != null && NpcInteractionText.Instance.GetCurrentPrompt() == promptText)
+            string p = GetLocalizedPrompt();
+            if (NpcInteractionText.Instance != null &&
+                (NpcInteractionText.Instance.GetCurrentPrompt() == p || NpcInteractionText.Instance.GetCurrentPrompt() == promptText))
             {
                 NpcInteractionText.Instance.ClearPrompt();
             }

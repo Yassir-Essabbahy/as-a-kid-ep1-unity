@@ -117,7 +117,7 @@ public class MetroStorySequenceController : MonoBehaviour
     {
         get
         {
-            if (LocalizationManager.Instance != null && LocalizationManager.Instance.CurrentLanguage == "ar")
+            if (LocalizationManager.Instance != null && LocalizationManager.Instance.IsCurrentLanguageRTL)
                 return "دودو";
             return "Doudou";
         }
@@ -198,6 +198,34 @@ public class MetroStorySequenceController : MonoBehaviour
     public TextMeshProUGUI objectiveText;
 
     private bool sequenceBusy = false;
+    private string _lastObjectiveKey = "obj_find_teddy";
+    private string _lastObjectiveFallback = "Find Teddy...";
+
+    public void SetObjective(string key, string fallback = null)
+    {
+        _lastObjectiveKey = key;
+        _lastObjectiveFallback = fallback;
+        if (objectiveText == null) return;
+        objectiveText.gameObject.SetActive(true);
+        string text = string.IsNullOrEmpty(key) ? (fallback ?? "") : LocalizationManager.Resolve(key, fallback);
+        LocalizationManager.ApplyText(objectiveText, text, preserveAlignment: true);
+    }
+
+    private void OnDestroy()
+    {
+        if (LocalizationManager.Instance != null)
+        {
+            LocalizationManager.Instance.OnLanguageChanged -= HandleLanguageChanged;
+        }
+    }
+
+    private void HandleLanguageChanged(string _)
+    {
+        if (objectiveText != null && objectiveText.gameObject.activeInHierarchy && !string.IsNullOrEmpty(_lastObjectiveKey))
+        {
+            SetObjective(_lastObjectiveKey, _lastObjectiveFallback);
+        }
+    }
 
     private void Awake()
     {
@@ -237,11 +265,12 @@ public class MetroStorySequenceController : MonoBehaviour
             restartButton.onClick.AddListener(RestartSequence);
         }
 
-        if (objectiveText != null)
+        if (LocalizationManager.Instance != null)
         {
-            objectiveText.gameObject.SetActive(true);
-            objectiveText.text = "Find Teddy...";
+            LocalizationManager.Instance.OnLanguageChanged -= HandleLanguageChanged;
+            LocalizationManager.Instance.OnLanguageChanged += HandleLanguageChanged;
         }
+        SetObjective("obj_find_teddy", "Find Teddy...");
 
         ResetCinematicCameras();
         if (cinemachineBrain != null)
@@ -389,11 +418,7 @@ public class MetroStorySequenceController : MonoBehaviour
         {
             neighborGaveAdvice = true;
             Debug.Log("[MetroStory] Neighbor gave electrical advice!");
-            if (objectiveText != null)
-            {
-                objectiveText.gameObject.SetActive(true);
-                objectiveText.text = "Restore the circuit...";
-            }
+            SetObjective("obj_restore_circuit", "Restore the circuit...");
 
             if (neighborConversation != null)
             {
@@ -412,11 +437,7 @@ public class MetroStorySequenceController : MonoBehaviour
         fuseBoxInspected = true;
         Debug.Log("[MetroStory] Fusebox inspected! Neighbor advice quest activated.");
 
-        if (objectiveText != null)
-        {
-            objectiveText.gameObject.SetActive(true);
-            objectiveText.text = "The neighbor might know...";
-        }
+        SetObjective("obj_neighbor_knows", "The neighbor might know...");
 
         if (neighborConversation != null)
         {
@@ -522,11 +543,7 @@ public class MetroStorySequenceController : MonoBehaviour
         if (IsElevatorUnlocked)
         {
             currentPhase = StoryPhase.Floor1_ElevatorReady;
-            if (objectiveText != null)
-            {
-                objectiveText.gameObject.SetActive(true);
-                objectiveText.text = "Head upstairs...";
-            }
+            SetObjective("obj_head_upstairs", "Head upstairs...");
         }
         else
         {
@@ -550,16 +567,7 @@ public class MetroStorySequenceController : MonoBehaviour
         }
 
         // Set objective
-        if (objectiveText != null)
-        {
-            objectiveText.gameObject.SetActive(true);
-            string obj = GetLoc("objective_search_trash");
-            if (string.IsNullOrEmpty(obj) || obj.StartsWith("["))
-            {
-                obj = "Search the trash cans for a train ticket...";
-            }
-            objectiveText.text = obj;
-        }
+        SetObjective("objective_search_trash", "Search the trash cans for a train ticket...");
 
         // Companion Bear speaks to the player!
         string line1 = GetLoc("teddy_metro_03");
@@ -577,11 +585,7 @@ public class MetroStorySequenceController : MonoBehaviour
     {
         if (!IsElevatorUnlocked)
         {
-            if (objectiveText != null)
-            {
-                objectiveText.gameObject.SetActive(true);
-                objectiveText.text = "Need a ticket...";
-            }
+            SetObjective("obj_need_ticket", "Need a ticket...");
         }
     }
 
@@ -593,20 +597,12 @@ public class MetroStorySequenceController : MonoBehaviour
             {
                 currentPhase = StoryPhase.Floor1_ElevatorReady;
                 Debug.Log("[MetroStory] Floor 1 requirements met & power restored. Elevator is unlocked!");
-                if (objectiveText != null)
-                {
-                    objectiveText.gameObject.SetActive(true);
-                    objectiveText.text = "Head upstairs...";
-                }
+                SetObjective("obj_head_upstairs", "Head upstairs...");
             }
             else
             {
                 Debug.Log("[MetroStory] Floor 1 people spoken/pass collected, but elevator has no power!");
-                if (objectiveText != null)
-                {
-                    objectiveText.gameObject.SetActive(true);
-                    objectiveText.text = "The grid is dead...";
-                }
+                SetObjective("obj_grid_dead", "The grid is dead...");
             }
         }
     }
@@ -628,11 +624,7 @@ public class MetroStorySequenceController : MonoBehaviour
     private IEnumerator AutoTriggerTeddyRoutine()
     {
         isAutoTriggeringTeddy = true;
-        if (objectiveText != null)
-        {
-            objectiveText.gameObject.SetActive(true);
-            objectiveText.text = "...";
-        }
+        SetObjective("", "...");
 
         if (Application.isPlaying)
         {
@@ -650,11 +642,7 @@ public class MetroStorySequenceController : MonoBehaviour
     public void OnElevatorStarted()
     {
         currentPhase = StoryPhase.Elevator_Travel;
-        if (objectiveText != null)
-        {
-            objectiveText.gameObject.SetActive(true);
-            objectiveText.text = "...";
-        }
+        SetObjective("", "...");
         Debug.Log("[MetroStory] Elevator travel started.");
     }
 
@@ -668,11 +656,7 @@ public class MetroStorySequenceController : MonoBehaviour
     {
         currentPhase = StoryPhase.Floor3_Arrival;
         ActivateFloor3StoryElements();
-        if (objectiveText != null)
-        {
-            objectiveText.gameObject.SetActive(true);
-            objectiveText.text = "Where are we...?";
-        }
+        SetObjective("obj_where_are_we", "Where are we...?");
         Debug.Log($"[MetroStory] Arrived on Floor 3 (Index {floorIndex}).");
     }
 
@@ -917,11 +901,7 @@ public class MetroStorySequenceController : MonoBehaviour
 
         currentPhase = StoryPhase.DoorWaiting;
 
-        if (objectiveText != null)
-        {
-            objectiveText.gameObject.SetActive(true);
-            objectiveText.text = "Behind the door...";
-        }
+        SetObjective("obj_behind_door", "Behind the door...");
 
         if (fpsController != null) fpsController.SetControlLocked(false);
         sequenceBusy = false;

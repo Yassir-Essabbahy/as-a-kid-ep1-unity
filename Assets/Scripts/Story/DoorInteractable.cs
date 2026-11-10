@@ -67,14 +67,15 @@ public class DoorInteractable : MonoBehaviour
             if (isLookingAtDoor)
             {
                 playerInRange = true;
+                string doorPrompt = LocalizationManager.Resolve("prompt_open_door_f3", "Tap to open door");
                 if (NpcInteractionText.Instance != null)
                 {
-                    NpcInteractionText.Instance.SetPrompt("Press 'E' to open door");
+                    NpcInteractionText.Instance.SetPrompt(doorPrompt);
                 }
                 else if (interactText != null)
                 {
                     interactText.gameObject.SetActive(true);
-                    interactText.text = Story.MobileUIAdapter.AdaptPrompt("Press 'E' to open door");
+                    LocalizationManager.ApplyText(interactText, Story.MobileUIAdapter.AdaptPrompt(doorPrompt), preserveAlignment: true);
                 }
 
                 if (Input.GetKeyDown(interactKey) || ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame)
@@ -101,14 +102,15 @@ public class DoorInteractable : MonoBehaviour
         if (MetroStorySequenceController.Instance == null) return;
         if (MetroStorySequenceController.Instance.currentPhase == MetroStorySequenceController.StoryPhase.DoorWaiting)
         {
+            string doorPrompt = LocalizationManager.Resolve("prompt_open_door_f3", "Tap to open door");
             if (NpcInteractionText.Instance != null)
             {
-                NpcInteractionText.Instance.SetPrompt("Press 'E' to open door");
+                NpcInteractionText.Instance.SetPrompt(doorPrompt);
             }
             else if (interactText != null)
             {
                 interactText.gameObject.SetActive(true);
-                interactText.text = Story.MobileUIAdapter.AdaptPrompt("Press 'E' to open door");
+                LocalizationManager.ApplyText(interactText, Story.MobileUIAdapter.AdaptPrompt(doorPrompt), preserveAlignment: true);
             }
         }
     }

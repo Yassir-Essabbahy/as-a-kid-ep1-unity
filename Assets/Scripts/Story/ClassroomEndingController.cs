@@ -1,362 +1,360 @@
-using System.Collections;
-using TMPro;
-using Unity.Cinemachine;
-using UnityEngine;
-using UnityEngine.SceneManagement;
-using UnityEngine.UI;
-
-public class ClassroomEndingController : MonoBehaviour
-{
-    public static bool IsEndingActive = false;
-
-    [Header("Cameras")]
-    public CinemachineCamera clockVCam;
-    public CinemachineCamera teacherVCam;
-    public CinemachineBrain cinemachineBrain;
-
-    [Header("Clock")]
-    public Transform wallClock;
-    public ClassroomClock classroomClock;
-    public float initialClockFocusTime = 2.5f;
-
-    [Header("Teacher & IK")]
-    public NpcLookAt teacherLookAt;
-
-    [Header("Cinematic & Dialogue")]
-    public DialogueManager dialogueManager;
-
-    [Header("Ending UI")]
-    public GameObject endOfEpisodePanel;
-    public TextMeshProUGUI titleText;
-    public TMP_FontAsset titleCardFont;
-    public string titleCardString = "To be continued...";
-    public Button restartButton;
-    public ScreenFader screenFader;
-
-    [Header("Credits Audio")]
-    public AudioClip creditsMusicClip;
-    public float endingMusicVolume = 0.22f;
-
-    private void Awake()
-    {
+using System.Collections;
+using TMPro;
+using Unity.Cinemachine;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+
+public class ClassroomEndingController : MonoBehaviour
+{
+    public static bool IsEndingActive = false;
+
+    [Header("Cameras")]
+    public CinemachineCamera clockVCam;
+    public CinemachineCamera teacherVCam;
+    public CinemachineBrain cinemachineBrain;
+
+    [Header("Clock")]
+    public Transform wallClock;
+    public ClassroomClock classroomClock;
+    public float initialClockFocusTime = 2.5f;
+
+    [Header("Teacher & IK")]
+    public NpcLookAt teacherLookAt;
+
+    [Header("Cinematic & Dialogue")]
+    public DialogueManager dialogueManager;
+
+    [Header("Ending UI")]
+    public GameObject endOfEpisodePanel;
+    public TextMeshProUGUI titleText;
+    public TMP_FontAsset titleCardFont;
+    public string titleCardString = "To be continued...";
+    public Button restartButton;
+    public ScreenFader screenFader;
+
+    [Header("Credits Audio")]
+    public AudioClip creditsMusicClip;
+    public float endingMusicVolume = 0.22f;
+
+    private void Awake()
+    {
         string sceneName = SceneManager.GetActiveScene().name;
         if (sceneName == "Ending") IsEndingActive = true;
         else if (sceneName == "Start") IsEndingActive = false;
-        ResolveReferences();
-    }
-
-    private void Start()
-    {
-        if (!IsEndingActive)
-        {
-            Debug.Log("[ClassroomEnding] Not in ending mode. Normal classroom intro will proceed.");
-            return;
-        }
-
-        Debug.Log("[ClassroomEnding] Ending mode ACTIVE! Taking over classroom sequence.");
-        StartCoroutine(PlayEndingSequence());
-    }
-
-    public void ResolveReferences()
-    {
-        if (wallClock == null)
-        {
-            var wc = GameObject.Find("WallClock");
-            if (wc != null) wallClock = wc.transform;
-        }
-
-        if (teacherLookAt == null)
-        {
-            var teacher = GameObject.Find("Teacher");
-            if (teacher != null)
-            {
-                teacherLookAt = teacher.GetComponent<NpcLookAt>();
-                if (teacherLookAt == null)
-                    teacherLookAt = teacher.AddComponent<NpcLookAt>();
-            }
-        }
-
-        if (teacherLookAt != null)
-        {
-            if (teacherLookAt.animator == null)
-            {
-                var teacher = GameObject.Find("Teacher");
-                if (teacher != null) teacherLookAt.animator = teacher.GetComponent<Animator>();
-            }
-            if (teacherLookAt.LookAtObj == null && teacherVCam != null)
-            {
-                teacherLookAt.LookAtObj = teacherVCam.transform;
-            }
-        }
-
-        if (dialogueManager == null)
-            dialogueManager = DialogueManager.Instance ?? FindAnyObjectByType<DialogueManager>();
-
-        if (clockVCam == null)
-        {
-            var cv = GameObject.Find("ClockVCam");
-            if (cv != null) clockVCam = cv.GetComponent<CinemachineCamera>();
-        }
-
-        if (teacherVCam == null)
-        {
-            var tv = GameObject.Find("TeacherVCam");
-            if (tv != null) teacherVCam = tv.GetComponent<CinemachineCamera>();
-        }
-
-        if (screenFader == null)
-            screenFader = FindAnyObjectByType<ScreenFader>();
-
-        if (cinemachineBrain == null)
-        {
-            var cam = Camera.main;
-            if (cam != null) cinemachineBrain = cam.GetComponent<CinemachineBrain>();
-        }
-
-        if (endOfEpisodePanel == null)
-        {
-            var canvas = GameObject.Find("Canvas");
-            if (canvas != null)
-            {
-                var panel = canvas.transform.Find("EndOfEpisodePanel");
-                if (panel != null) endOfEpisodePanel = panel.gameObject;
-            }
-        }
-
-        if (restartButton == null && endOfEpisodePanel != null)
-        {
-            restartButton = endOfEpisodePanel.GetComponentInChildren<Button>();
-        }
-
-        if (titleText == null && endOfEpisodePanel != null)
-        {
-            var t = endOfEpisodePanel.transform.Find("TitleText");
-            if (t != null) titleText = t.GetComponent<TextMeshProUGUI>();
-            if (titleText == null) titleText = endOfEpisodePanel.GetComponentInChildren<TextMeshProUGUI>();
-        }
-
-        if (titleCardFont == null)
-        {
-            titleCardFont = Resources.Load<TMP_FontAsset>("Fonts/GeistPixel-Regular-VariableFont_ELSH SDF");
-        }
-
-        if (creditsMusicClip == null)
-        {
-            creditsMusicClip = Resources.Load<AudioClip>("Sounds/CreditsMusic");
-            if (creditsMusicClip == null)
-            {
-#if UNITY_EDITOR
-                creditsMusicClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Sounds/CreditsMusic.mp3");
-#endif
-            }
-        }
-
-        if (restartButton != null)
-        {
-            restartButton.onClick.RemoveListener(RestartGame);
-            restartButton.onClick.AddListener(RestartGame);
-        }
-    }
-
-    public IEnumerator PlayEndingSequence()
-    {
-        ResolveReferences();
-
-        if (screenFader != null)
-        {
-            screenFader.SetFadeAudio(false);
-        }
-        AudioListener.volume = 1f;
-
-        // Start CreditsMusic at subtle down volume (underscoring the ending scene)
-        if (creditsMusicClip != null)
-        {
-            Credits.CreditsMusicController.PlayAtEndingVolume(creditsMusicClip, endingMusicVolume, 3.0f);
-        }
-
-        // 1. Suppress ClassroomGazeScene
-        var gazeScene = FindAnyObjectByType<ClassroomGazeScene>();
-        if (gazeScene != null)
-        {
-            gazeScene.enabled = false;
-        }
-
-        // Disable player controller
-        var fps = FindAnyObjectByType<FirstPersonController>();
-        if (fps != null) fps.SetControlLocked(true);
-
-        // 2. Start focused on WallClock
-        if (cinemachineBrain != null)
-        {
-            cinemachineBrain.DefaultBlend = new CinemachineBlendDefinition(CinemachineBlendDefinition.Styles.Cut, 0f);
-            cinemachineBrain.enabled = true;
-        }
-
-        if (teacherVCam != null) teacherVCam.Priority.Value = 10;
-        if (clockVCam != null)
-        {
-            clockVCam.Priority.Value = 100;
-        }
-
-        // Initialize Teacher IK targeting teacherVCam/camera
-        if (teacherLookAt != null)
-        {
-            teacherLookAt.IKActive = false;
-            teacherLookAt.LookAtObj = (teacherVCam != null) ? teacherVCam.transform : Camera.main?.transform;
-        }
-
-        // 3. Cinematic Bands immediately slide in / appear for widescreen letterboxing
-        var s1Diag = dialogueManager ?? DialogueManager.Instance ?? FindAnyObjectByType<DialogueManager>();
-        if (s1Diag != null && Application.isPlaying)
-        {
-            if (s1Diag.dialogueBox != null)
-            {
-                s1Diag.dialogueBox.SetActive(true);
-                s1Diag.ResetBandsOffscreen();
-                if (s1Diag.speakerText != null) s1Diag.speakerText.text = "";
-                if (s1Diag.bodyText != null) s1Diag.bodyText.text = "";
-                if (s1Diag.continueButton != null) s1Diag.continueButton.gameObject.SetActive(false);
-                StartCoroutine(s1Diag.SlideBandsRoutine(true));
-            }
-        }
-
-        // Fade in from black
-        if (screenFader != null)
-        {
-            screenFader.FadeFromBlack(1.0f);
-        }
-
-        // 4. Cinematic Shot on WallClock (hold shot for ~2.5s)
-        yield return new WaitForSeconds(initialClockFocusTime);
-
-        // 5. Smoothly blend down and across room to Teacher
-        if (cinemachineBrain != null)
-        {
-            cinemachineBrain.DefaultBlend = new CinemachineBlendDefinition(CinemachineBlendDefinition.Styles.EaseInOut, 1.2f);
-        }
-        if (teacherVCam != null)
-        {
-            teacherVCam.Priority.Value = 150;
-        }
-
-        // Teacher locks eyes/gaze onto the player
-        if (teacherLookAt != null)
-        {
-            teacherLookAt.IKActive = true;
-            teacherLookAt.LookAtObj = (teacherVCam != null) ? teacherVCam.transform : Camera.main?.transform;
-        }
-
-        yield return new WaitForSeconds(1.2f);
-
-        // 6. Teacher Dialogue in bottom cinematic band
-        string teacherName = MetroStorySequenceController.GetLoc("teacher_ending_01");
-        string teacherQuestion = MetroStorySequenceController.GetLoc("teacher_ending_02");
-
-        var npcDiag = NpcDialogueManager.Instance ?? FindAnyObjectByType<NpcDialogueManager>();
-
-        Color teacherColor = NpcDialogueManager.GetSpeakerColor("Teacher");
-        var pixelFont = NpcDialogueManager.DefaultDialogueFont;
-
-        if (s1Diag != null && Application.isPlaying && s1Diag.dialogueBox != null)
-        {
-            string speakerTitle = "Teacher";
-            if (LocalizationManager.Instance != null && LocalizationManager.Instance.CurrentLanguage == "ar") speakerTitle = "المعلم";
-            else if (LocalizationManager.Instance != null && LocalizationManager.Instance.CurrentLanguage == "fr") speakerTitle = "Professeur";
-
-            if (s1Diag.speakerText != null)
-            {
-                s1Diag.speakerText.isRightToLeftText = LocalizationManager.ContainsArabic(speakerTitle);
-                s1Diag.speakerText.text = LocalizationManager.FixRTL(speakerTitle);
-                s1Diag.speakerText.color = teacherColor;
-                s1Diag.speakerText.fontSize = NpcDialogueManager.STANDARD_FONT_SIZE;
-                if (pixelFont != null) s1Diag.speakerText.font = pixelFont;
-            }
-            if (s1Diag.bodyText != null)
-            {
-                s1Diag.bodyText.color = teacherColor;
-                s1Diag.bodyText.fontSize = NpcDialogueManager.STANDARD_FONT_SIZE;
-                if (pixelFont != null) s1Diag.bodyText.font = pixelFont;
-            }
-
-            string cleanLine1 = teacherName;
-            int colon1 = cleanLine1.IndexOf(':');
-            if (colon1 >= 0 && colon1 < 15) cleanLine1 = cleanLine1.Substring(colon1 + 1).Trim();
-
-            string cleanLine2 = teacherQuestion;
-            int colon2 = cleanLine2.IndexOf(':');
-            if (colon2 >= 0 && colon2 < 15) cleanLine2 = cleanLine2.Substring(colon2 + 1).Trim();
-
-            // Line 1
-            if (s1Diag.bodyText != null)
-            {
-                s1Diag.TypeCustomLine(cleanLine1, teacherColor);
-            }
-
-            yield return new WaitForSeconds(3.2f);
-
-            // Line 2
-            if (s1Diag.bodyText != null)
-            {
-                s1Diag.TypeCustomLine(cleanLine2, teacherColor);
-            }
-
-            yield return new WaitForSeconds(3.5f);
-        }
-        else if (npcDiag != null && Application.isPlaying)
-        {
-            yield return StartCoroutine(npcDiag.ShowDialogue(
-                new string[] { teacherName },
-                hasChoice: false,
-                dialogueColor: teacherColor,
-                dialogueFont: pixelFont
-            ));
-
-            yield return new WaitForSeconds(1.5f);
-
-            yield return StartCoroutine(npcDiag.ShowDialogue(
-                new string[] { teacherQuestion },
-                hasChoice: false,
-                dialogueColor: teacherColor,
-                dialogueFont: pixelFont
-            ));
-        }
-        else
-        {
-            yield return new WaitForSeconds(2.0f);
-        }
-
-        yield return new WaitForSeconds(0.6f);
-
-        // Hide dialogue box cleanly
-        if (s1Diag != null && s1Diag.dialogueBox != null)
-        {
-            s1Diag.dialogueBox.SetActive(false);
-        }
-
-        // Ensure EndOfEpisodePanel is completely disabled (no "To be continued..." title card)
-        if (endOfEpisodePanel != null)
-        {
-            endOfEpisodePanel.SetActive(false);
-        }
-
-        Debug.Log("[ClassroomEnding] Ending scene complete. Transitioning smoothly to Credits scene with music continuing uninterrupted...");
-
-        // Smoothly fade to black over 2.0s without touching audio, then load Credits scene
-        ScreenFader.TransitionToScene("Credits", 2.0f, shouldFadeAudio: false);
-    }
-
-    public void RestartGame()
-    {
-        Debug.Log("[ClassroomEnding] Restart clicked - transitioning to MoroccanBeach.");
-        IsEndingActive = false;
-        Time.timeScale = 1f;
-        ScreenFader.TransitionToScene("MoroccanBeach", 2.0f);
-    }
-
-    [ContextMenu("Debug: Force Trigger Ending")]
-    public void DebugForceEnding()
-    {
-        IsEndingActive = true;
-        StartCoroutine(PlayEndingSequence());
-    }
-}
+        ResolveReferences();
+    }
+
+    private void Start()
+    {
+        if (!IsEndingActive)
+        {
+            Debug.Log("[ClassroomEnding] Not in ending mode. Normal classroom intro will proceed.");
+            return;
+        }
+
+        Debug.Log("[ClassroomEnding] Ending mode ACTIVE! Taking over classroom sequence.");
+        StartCoroutine(PlayEndingSequence());
+    }
+
+    public void ResolveReferences()
+    {
+        if (wallClock == null)
+        {
+            var wc = GameObject.Find("WallClock");
+            if (wc != null) wallClock = wc.transform;
+        }
+
+        if (teacherLookAt == null)
+        {
+            var teacher = GameObject.Find("Teacher");
+            if (teacher != null)
+            {
+                teacherLookAt = teacher.GetComponent<NpcLookAt>();
+                if (teacherLookAt == null)
+                    teacherLookAt = teacher.AddComponent<NpcLookAt>();
+            }
+        }
+
+        if (teacherLookAt != null)
+        {
+            if (teacherLookAt.animator == null)
+            {
+                var teacher = GameObject.Find("Teacher");
+                if (teacher != null) teacherLookAt.animator = teacher.GetComponent<Animator>();
+            }
+            if (teacherLookAt.LookAtObj == null && teacherVCam != null)
+            {
+                teacherLookAt.LookAtObj = teacherVCam.transform;
+            }
+        }
+
+        if (dialogueManager == null)
+            dialogueManager = DialogueManager.Instance ?? FindAnyObjectByType<DialogueManager>();
+
+        if (clockVCam == null)
+        {
+            var cv = GameObject.Find("ClockVCam");
+            if (cv != null) clockVCam = cv.GetComponent<CinemachineCamera>();
+        }
+
+        if (teacherVCam == null)
+        {
+            var tv = GameObject.Find("TeacherVCam");
+            if (tv != null) teacherVCam = tv.GetComponent<CinemachineCamera>();
+        }
+
+        if (screenFader == null)
+            screenFader = FindAnyObjectByType<ScreenFader>();
+
+        if (cinemachineBrain == null)
+        {
+            var cam = Camera.main;
+            if (cam != null) cinemachineBrain = cam.GetComponent<CinemachineBrain>();
+        }
+
+        if (endOfEpisodePanel == null)
+        {
+            var canvas = GameObject.Find("Canvas");
+            if (canvas != null)
+            {
+                var panel = canvas.transform.Find("EndOfEpisodePanel");
+                if (panel != null) endOfEpisodePanel = panel.gameObject;
+            }
+        }
+
+        if (restartButton == null && endOfEpisodePanel != null)
+        {
+            restartButton = endOfEpisodePanel.GetComponentInChildren<Button>();
+        }
+
+        if (titleText == null && endOfEpisodePanel != null)
+        {
+            var t = endOfEpisodePanel.transform.Find("TitleText");
+            if (t != null) titleText = t.GetComponent<TextMeshProUGUI>();
+            if (titleText == null) titleText = endOfEpisodePanel.GetComponentInChildren<TextMeshProUGUI>();
+        }
+
+        if (titleCardFont == null)
+        {
+            titleCardFont = Resources.Load<TMP_FontAsset>("Fonts/GeistPixel-Regular-VariableFont_ELSH SDF");
+        }
+
+        if (creditsMusicClip == null)
+        {
+            creditsMusicClip = Resources.Load<AudioClip>("Sounds/CreditsMusic");
+            if (creditsMusicClip == null)
+            {
+#if UNITY_EDITOR
+                creditsMusicClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Sounds/CreditsMusic.mp3");
+#endif
+            }
+        }
+
+        if (restartButton != null)
+        {
+            restartButton.onClick.RemoveListener(RestartGame);
+            restartButton.onClick.AddListener(RestartGame);
+        }
+    }
+
+    public IEnumerator PlayEndingSequence()
+    {
+        ResolveReferences();
+
+        if (screenFader != null)
+        {
+            screenFader.SetFadeAudio(false);
+        }
+        AudioListener.volume = 1f;
+
+        // Start CreditsMusic at subtle down volume (underscoring the ending scene)
+        if (creditsMusicClip != null)
+        {
+            Credits.CreditsMusicController.PlayAtEndingVolume(creditsMusicClip, endingMusicVolume, 3.0f);
+        }
+
+        // 1. Suppress ClassroomGazeScene
+        var gazeScene = FindAnyObjectByType<ClassroomGazeScene>();
+        if (gazeScene != null)
+        {
+            gazeScene.enabled = false;
+        }
+
+        // Disable player controller
+        var fps = FindAnyObjectByType<FirstPersonController>();
+        if (fps != null) fps.SetControlLocked(true);
+
+        // 2. Start focused on WallClock
+        if (cinemachineBrain != null)
+        {
+            cinemachineBrain.DefaultBlend = new CinemachineBlendDefinition(CinemachineBlendDefinition.Styles.Cut, 0f);
+            cinemachineBrain.enabled = true;
+        }
+
+        if (teacherVCam != null) teacherVCam.Priority.Value = 10;
+        if (clockVCam != null)
+        {
+            clockVCam.Priority.Value = 100;
+        }
+
+        // Initialize Teacher IK targeting teacherVCam/camera
+        if (teacherLookAt != null)
+        {
+            teacherLookAt.IKActive = false;
+            teacherLookAt.LookAtObj = (teacherVCam != null) ? teacherVCam.transform : Camera.main?.transform;
+        }
+
+        // 3. Cinematic Bands immediately slide in / appear for widescreen letterboxing
+        var s1Diag = dialogueManager ?? DialogueManager.Instance ?? FindAnyObjectByType<DialogueManager>();
+        if (s1Diag != null && Application.isPlaying)
+        {
+            if (s1Diag.dialogueBox != null)
+            {
+                s1Diag.dialogueBox.SetActive(true);
+                s1Diag.ResetBandsOffscreen();
+                if (s1Diag.speakerText != null) s1Diag.speakerText.text = "";
+                if (s1Diag.bodyText != null) s1Diag.bodyText.text = "";
+                if (s1Diag.continueButton != null) s1Diag.continueButton.gameObject.SetActive(false);
+                StartCoroutine(s1Diag.SlideBandsRoutine(true));
+            }
+        }
+
+        // Fade in from black
+        if (screenFader != null)
+        {
+            screenFader.FadeFromBlack(1.0f);
+        }
+
+        // 4. Cinematic Shot on WallClock (hold shot for ~2.5s)
+        yield return new WaitForSeconds(initialClockFocusTime);
+
+        // 5. Smoothly blend down and across room to Teacher
+        if (cinemachineBrain != null)
+        {
+            cinemachineBrain.DefaultBlend = new CinemachineBlendDefinition(CinemachineBlendDefinition.Styles.EaseInOut, 1.2f);
+        }
+        if (teacherVCam != null)
+        {
+            teacherVCam.Priority.Value = 150;
+        }
+
+        // Teacher locks eyes/gaze onto the player
+        if (teacherLookAt != null)
+        {
+            teacherLookAt.IKActive = true;
+            teacherLookAt.LookAtObj = (teacherVCam != null) ? teacherVCam.transform : Camera.main?.transform;
+        }
+
+        yield return new WaitForSeconds(1.2f);
+
+        // 6. Teacher Dialogue in bottom cinematic band
+        string teacherName = MetroStorySequenceController.GetLoc("teacher_ending_01");
+        string teacherQuestion = MetroStorySequenceController.GetLoc("teacher_ending_02");
+
+        var npcDiag = NpcDialogueManager.Instance ?? FindAnyObjectByType<NpcDialogueManager>();
+
+        Color teacherColor = NpcDialogueManager.GetSpeakerColor("Teacher");
+        var pixelFont = NpcDialogueManager.DefaultDialogueFont;
+
+        if (s1Diag != null && Application.isPlaying && s1Diag.dialogueBox != null)
+        {
+            string speakerTitle = LocalizationManager.Resolve("speaker_teacher", "Teacher");
+
+            if (s1Diag.speakerText != null)
+            {
+                s1Diag.speakerText.isRightToLeftText = LocalizationManager.ContainsArabic(speakerTitle);
+                s1Diag.speakerText.text = LocalizationManager.FixRTL(speakerTitle);
+                s1Diag.speakerText.color = teacherColor;
+                s1Diag.speakerText.fontSize = NpcDialogueManager.STANDARD_FONT_SIZE;
+                if (pixelFont != null) s1Diag.speakerText.font = pixelFont;
+            }
+            if (s1Diag.bodyText != null)
+            {
+                s1Diag.bodyText.color = teacherColor;
+                s1Diag.bodyText.fontSize = NpcDialogueManager.STANDARD_FONT_SIZE;
+                if (pixelFont != null) s1Diag.bodyText.font = pixelFont;
+            }
+
+            string cleanLine1 = teacherName;
+            int colon1 = cleanLine1.IndexOf(':');
+            if (colon1 >= 0 && colon1 < 15) cleanLine1 = cleanLine1.Substring(colon1 + 1).Trim();
+
+            string cleanLine2 = teacherQuestion;
+            int colon2 = cleanLine2.IndexOf(':');
+            if (colon2 >= 0 && colon2 < 15) cleanLine2 = cleanLine2.Substring(colon2 + 1).Trim();
+
+            // Line 1
+            if (s1Diag.bodyText != null)
+            {
+                s1Diag.TypeCustomLine(cleanLine1, teacherColor);
+            }
+
+            yield return new WaitForSeconds(3.2f);
+
+            // Line 2
+            if (s1Diag.bodyText != null)
+            {
+                s1Diag.TypeCustomLine(cleanLine2, teacherColor);
+            }
+
+            yield return new WaitForSeconds(3.5f);
+        }
+        else if (npcDiag != null && Application.isPlaying)
+        {
+            yield return StartCoroutine(npcDiag.ShowDialogue(
+                new string[] { teacherName },
+                hasChoice: false,
+                dialogueColor: teacherColor,
+                dialogueFont: pixelFont
+            ));
+
+            yield return new WaitForSeconds(1.5f);
+
+            yield return StartCoroutine(npcDiag.ShowDialogue(
+                new string[] { teacherQuestion },
+                hasChoice: false,
+                dialogueColor: teacherColor,
+                dialogueFont: pixelFont
+            ));
+        }
+        else
+        {
+            yield return new WaitForSeconds(2.0f);
+        }
+
+        yield return new WaitForSeconds(0.6f);
+
+        // Hide dialogue box cleanly
+        if (s1Diag != null && s1Diag.dialogueBox != null)
+        {
+            s1Diag.dialogueBox.SetActive(false);
+        }
+
+        // Ensure EndOfEpisodePanel is completely disabled (no "To be continued..." title card)
+        if (endOfEpisodePanel != null)
+        {
+            endOfEpisodePanel.SetActive(false);
+        }
+
+        Debug.Log("[ClassroomEnding] Ending scene complete. Transitioning smoothly to Credits scene with music continuing uninterrupted...");
+
+        // Smoothly fade to black over 2.0s without touching audio, then load Credits scene
+        ScreenFader.TransitionToScene("Credits", 2.0f, shouldFadeAudio: false);
+    }
+
+    public void RestartGame()
+    {
+        Debug.Log("[ClassroomEnding] Restart clicked - transitioning to MoroccanBeach.");
+        IsEndingActive = false;
+        Time.timeScale = 1f;
+        ScreenFader.TransitionToScene("MoroccanBeach", 2.0f);
+    }
+
+    [ContextMenu("Debug: Force Trigger Ending")]
+    public void DebugForceEnding()
+    {
+        IsEndingActive = true;
+        StartCoroutine(PlayEndingSequence());
+    }
+}

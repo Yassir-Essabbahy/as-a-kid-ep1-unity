@@ -24,7 +24,7 @@ public class DialogueTrigger : MonoBehaviour, IInteractable
     [Header("Events")]
     public UnityEvent onDialogueCompleted;
 
-    public string PromptMessage => "Talk to " + (string.IsNullOrEmpty(speakerName) ? gameObject.name : speakerName);
+    public string PromptMessage => LocalizationManager.Resolve("prompt_tap_talk", "Tap to talk");
 
     public static bool isDialogueActive = false;
     private bool hasSpoken = false;

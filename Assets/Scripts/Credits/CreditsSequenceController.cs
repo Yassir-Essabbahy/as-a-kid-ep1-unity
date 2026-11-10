@@ -242,7 +242,8 @@ namespace Credits
             if (returnPromptText != null)
             {
                 returnPromptText.gameObject.SetActive(true);
-                returnPromptText.text = Story.MobileUIAdapter.AdaptPrompt("[ PRESS ANY KEY TO RETURN TO MAIN MENU ]");
+                string promptStr = LocalizationManager.Resolve("credits_return_prompt", Story.MobileUIAdapter.AdaptPrompt("[ PRESS ANY KEY TO RETURN TO MAIN MENU ]"));
+                LocalizationManager.ApplyText(returnPromptText, promptStr, preserveAlignment: true);
                 StartCoroutine(PulsePromptText(returnPromptText));
             }
 
@@ -283,19 +284,35 @@ namespace Credits
             if (vcamRaftOcean != null) vcamRaftOcean.Priority.Value = (targetCam == vcamRaftOcean) ? 100 : 10;
         }
 
+        private static readonly (string roleKey, string nameKey)[] SlideLocKeys = new (string, string)[]
+        {
+            ("credits_ep1_role", "credits_ep1_name"),
+            ("credits_dir_role", "credits_dir_name"),
+            ("credits_sys_role", "credits_sys_name"),
+            ("credits_thanks_role", "credits_thanks_name"),
+        };
+
         private void DisplaySlide(int index)
         {
             if (index < 0 || index >= slides.Count) return;
 
             var slide = slides[index];
+            string roleStr = slide.role;
+            string nameStr = slide.name;
+            if (index < SlideLocKeys.Length)
+            {
+                roleStr = LocalizationManager.Resolve(SlideLocKeys[index].roleKey, slide.role);
+                nameStr = LocalizationManager.Resolve(SlideLocKeys[index].nameKey, slide.name);
+            }
+
             if (creditRoleText != null)
             {
-                creditRoleText.text = slide.role;
-                creditRoleText.gameObject.SetActive(!string.IsNullOrEmpty(slide.role));
+                LocalizationManager.ApplyText(creditRoleText, roleStr, preserveAlignment: true);
+                creditRoleText.gameObject.SetActive(!string.IsNullOrEmpty(roleStr));
             }
             if (creditNameText != null)
             {
-                creditNameText.text = slide.name;
+                LocalizationManager.ApplyText(creditNameText, nameStr, preserveAlignment: true);
             }
         }
 
