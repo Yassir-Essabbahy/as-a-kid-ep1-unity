@@ -48,6 +48,8 @@ public class TrainArrivalSequence : MonoBehaviour
     private bool hasBlownHorn = false;
     private Coroutine passLoopCoroutine;
     private Coroutine audioFadeCoroutine;
+    private Rigidbody cachedRb;
+    private readonly WaitForFixedUpdate waitForFixedUpdate = new WaitForFixedUpdate();
 
     public bool IsMoving => isMoving;
     public int PassCount => passCount;
@@ -69,7 +71,7 @@ public class TrainArrivalSequence : MonoBehaviour
     {
         if (pointA != null)
         {
-            transform.position = pointA.position;
+            SnapToPosition(pointA.position);
         }
 
         if (audioSource != null && arrivalSound != null)
@@ -101,14 +103,29 @@ public class TrainArrivalSequence : MonoBehaviour
 
     private void EnsureKinematicRigidbody()
     {
-        var rb = GetComponent<Rigidbody>();
-        if (rb == null)
+        cachedRb = GetComponent<Rigidbody>();
+        if (cachedRb == null)
         {
-            rb = gameObject.AddComponent<Rigidbody>();
+            cachedRb = gameObject.AddComponent<Rigidbody>();
         }
-        rb.isKinematic = true;
-        rb.useGravity = false;
-        rb.interpolation = RigidbodyInterpolation.Interpolate;
+        cachedRb.isKinematic = true;
+        cachedRb.useGravity = false;
+        cachedRb.interpolation = RigidbodyInterpolation.Interpolate;
+    }
+
+    private void SnapToPosition(Vector3 targetPos)
+    {
+        if (cachedRb != null)
+        {
+            cachedRb.interpolation = RigidbodyInterpolation.None;
+            cachedRb.position = targetPos;
+            transform.position = targetPos;
+            Physics.SyncTransforms();
+        }
+        else
+        {
+            transform.position = targetPos;
+        }
     }
 
     private void SetupAudioSources()
@@ -198,8 +215,14 @@ public class TrainArrivalSequence : MonoBehaviour
     {
         if (pointA == null || pointB == null) yield break;
 
-        // Snap to start point offscreen
-        transform.position = pointA.position;
+        // Snap cleanly to start point offscreen with interpolation cleared so we never streak across the map
+        SnapToPosition(pointA.position);
+        yield return waitForFixedUpdate;
+        if (cachedRb != null)
+        {
+            cachedRb.interpolation = RigidbodyInterpolation.Interpolate;
+        }
+
         hasArrived = false;
         hasBlownHorn = false;
         isMoving = true;
@@ -210,12 +233,23 @@ public class TrainArrivalSequence : MonoBehaviour
 
         float totalDistance = Vector3.Distance(pointA.position, pointB.position);
         float midDistance = totalDistance * 0.45f;
+        Vector3 currentPos = pointA.position;
 
         while (isMoving && !hasArrived)
         {
-            transform.position = Vector3.MoveTowards(transform.position, pointB.position, speed * Time.deltaTime);
+            yield return waitForFixedUpdate;
 
-            float currentDistFromStart = Vector3.Distance(transform.position, pointA.position);
+            currentPos = Vector3.MoveTowards(currentPos, pointB.position, speed * Time.fixedDeltaTime);
+            if (cachedRb != null)
+            {
+                cachedRb.MovePosition(currentPos);
+            }
+            else
+            {
+                transform.position = currentPos;
+            }
+
+            float currentDistFromStart = Vector3.Distance(currentPos, pointA.position);
 
             // Trigger horn as train approaches the platform
             if (!hasBlownHorn && currentDistFromStart >= midDistance)
@@ -225,20 +259,18 @@ public class TrainArrivalSequence : MonoBehaviour
             }
 
             // Check if arrived at end tunnel point
-            if (Vector3.Distance(transform.position, pointB.position) < 0.2f)
+            if (Vector3.Distance(currentPos, pointB.position) < 0.2f)
             {
                 hasArrived = true;
                 isMoving = false;
             }
-
-            yield return null;
         }
 
         // Stop audio with smooth fade-out
         StopMoveAudio();
 
         // Snap back to Point A deep in tunnel so train is hidden during the wait
-        transform.position = pointA.position;
+        SnapToPosition(pointA.position);
     }
 
     private void StartMoveAudio()

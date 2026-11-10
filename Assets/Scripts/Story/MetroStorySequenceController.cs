@@ -198,6 +198,7 @@ public class MetroStorySequenceController : MonoBehaviour
     public TextMeshProUGUI objectiveText;
 
     private bool sequenceBusy = false;
+    private bool hasMetTeddyFirstTime = false;
     private string _lastObjectiveKey = "obj_find_teddy";
     private string _lastObjectiveFallback = "Find Teddy...";
 
@@ -240,6 +241,7 @@ public class MetroStorySequenceController : MonoBehaviour
         neighborSpoken = false;
         shopOwnerSpoken = false;
         sequenceBusy = false;
+        hasMetTeddyFirstTime = false;
 
         if (!transitPassCollected)
         {
@@ -294,6 +296,30 @@ public class MetroStorySequenceController : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.R))
             {
                 RestartSequence();
+            }
+            return;
+        }
+
+        // Grounded first encounter with Teddy sitting on the metro bench (no mid-air snapping)
+        if (Application.isPlaying &&
+            currentPhase == StoryPhase.Floor1_Exploration &&
+            !hasMetTeddyFirstTime &&
+            !sequenceBusy &&
+            !IsTeddyCarried &&
+            teddyBearObject != null &&
+            teddyBearObject.activeInHierarchy &&
+            fpsController != null)
+        {
+            Vector3 pPos = fpsController.transform.position;
+            Vector3 tPos = teddyBearObject.transform.position;
+            float flatDist = Vector2.Distance(new Vector2(pPos.x, pPos.z), new Vector2(tPos.x, tPos.z));
+            if (flatDist <= 2.3f && Mathf.Abs(pPos.y - tPos.y) <= 2.5f)
+            {
+                var dm = NpcDialogueManager.Instance ?? FindAnyObjectByType<NpcDialogueManager>();
+                if (dm == null || !dm.IsDialogueRunning)
+                {
+                    StartFirstTeddyMeeting();
+                }
             }
         }
     }
@@ -749,6 +775,35 @@ public class MetroStorySequenceController : MonoBehaviour
         }
     }
 
+    private void StartFirstTeddyMeeting()
+    {
+        if (hasMetTeddyFirstTime) return;
+        hasMetTeddyFirstTime = true;
+
+        var tt = GameObject.Find("TeddyTrigger");
+        if (tt != null)
+        {
+            var dtz = tt.GetComponent<DialogueTriggerZone>();
+            if (dtz != null)
+            {
+                dtz.MarkTriggered();
+                dtz.enabled = false;
+            }
+        }
+        if (teddyConversation != null)
+        {
+            teddyConversation.HasPlayed = true;
+        }
+
+        // Teddy remains seated on the bench while talking for the first time, then is picked up afterward
+        StartCoroutine(PlaySimpleTeddyLines(
+            new string[] {
+                GetLoc("teddy_metro_01"),
+                GetLoc("teddy_metro_02")
+            },
+            advanceObjectiveAfterFirstTalk: true));
+    }
+
     public bool TryHandleTeddyInteraction()
     {
         var dm = NpcDialogueManager.Instance ?? FindAnyObjectByType<NpcDialogueManager>();
@@ -763,14 +818,14 @@ public class MetroStorySequenceController : MonoBehaviour
             return true;
         }
 
-        EnsureTeddyCarried();
-
         if (currentPhase == StoryPhase.Floor1_Exploration || currentPhase == StoryPhase.Floor1_ElevatorReady)
         {
             if (!IsElevatorUnlocked)
             {
                 if (isPowerRestored)
                 {
+                    hasMetTeddyFirstTime = true;
+                    EnsureTeddyCarried();
                     StartCoroutine(PlaySimpleTeddyLines(new string[] {
                         GetLoc("teddy_metro_03"),
                         GetLoc("teddy_metro_04")
@@ -778,29 +833,25 @@ public class MetroStorySequenceController : MonoBehaviour
                 }
                 else
                 {
-                    var tt = GameObject.Find("TeddyTrigger");
-                    if (tt != null)
+                    if (!hasMetTeddyFirstTime && !IsTeddyCarried)
                     {
-                        var dtz = tt.GetComponent<DialogueTriggerZone>();
-                        if (dtz != null)
-                        {
-                            dtz.MarkTriggered();
-                            dtz.enabled = false;
-                        }
+                        StartFirstTeddyMeeting();
                     }
-                    if (teddyConversation != null)
+                    else
                     {
-                        teddyConversation.HasPlayed = true;
+                        EnsureTeddyCarried();
+                        StartCoroutine(PlaySimpleTeddyLines(new string[] {
+                            GetLoc("teddy_metro_01"),
+                            GetLoc("teddy_metro_02")
+                        }));
                     }
-                    StartCoroutine(PlaySimpleTeddyLines(new string[] {
-                        GetLoc("teddy_metro_01"),
-                        GetLoc("teddy_metro_02")
-                    }));
                 }
                 return true;
             }
             else
             {
+                hasMetTeddyFirstTime = true;
+                EnsureTeddyCarried();
                 StartCoroutine(PlaySimpleTeddyLines(new string[] {
                     GetLoc("teddy_metro_06")
                 }));
@@ -809,6 +860,7 @@ public class MetroStorySequenceController : MonoBehaviour
         }
         else if (currentPhase == StoryPhase.Floor3_Arrival || currentPhase == StoryPhase.Floor3_NpcEncounter || bullySpoken)
         {
+            EnsureTeddyCarried();
             if (!bullySpoken)
             {
                 StartCoroutine(PlaySimpleTeddyLines(new string[] {
@@ -831,7 +883,7 @@ public class MetroStorySequenceController : MonoBehaviour
         return false;
     }
 
-    private IEnumerator PlaySimpleTeddyLines(string[] rawLines)
+    private IEnumerator PlaySimpleTeddyLines(string[] rawLines, bool advanceObjectiveAfterFirstTalk = false)
     {
         sequenceBusy = true;
         if (fpsController != null) fpsController.SetControlLocked(true);
@@ -843,14 +895,18 @@ public class MetroStorySequenceController : MonoBehaviour
             dialogueFont: null
         ));
 
-        // If teddy is not carried yet, pick it up into hands
-        if (teddyCarryable != null && !teddyCarryable.IsBeingCarried && fpsController != null)
+        // After first grounded talk on the bench, pick Teddy up cleanly into the player's hands
+        EnsureTeddyCarried();
+
+        if (advanceObjectiveAfterFirstTalk && currentPhase == StoryPhase.Floor1_Exploration && !IsElevatorUnlocked)
         {
-            var cp = fpsController.GetComponentInChildren<Camera>()?.transform.Find("CarryPoint") ?? fpsController.transform.Find("CarryPoint");
-            if (cp != null)
-            {
-                teddyCarryable.StartCarrying(cp);
-            }
+            if (isPowerRestored)
+                SetObjective("objective_search_trash", "Search the trash cans for a train ticket...");
+            else if (fuseBoxInspected)
+                SetObjective(neighborGaveAdvice ? "obj_restore_circuit" : "obj_neighbor_knows",
+                             neighborGaveAdvice ? "Restore the circuit..." : "The neighbor might know...");
+            else
+                SetObjective("obj_need_ticket", "Need a ticket...");
         }
 
         if (fpsController != null) fpsController.SetControlLocked(false);
@@ -1071,33 +1127,32 @@ public class MetroStorySequenceController : MonoBehaviour
     {
         switch (index)
         {
-            case 0: // Teacher: "It's getting worse."
+            case 0: // Teacher: opening about coming back from hospital
                 SwitchDialogueCamera(interrogationTeacherVCam);
                 break;
-            case 1: // Mother: "What do we do?"
+            case 1: // Mother: hospital doctors said lungs cleared / physically fine
                 SwitchDialogueCamera(interrogationMotherVCam);
                 break;
-            case 2: // Teacher: "He keeps talking to someone."
-                SwitchDialogueCamera(interrogationTeacherVCam);
-                break;
-            case 3: // Father: "Who?"
+            case 2: // Father: wakes up crying / asking forgiveness
                 SwitchDialogueCamera(interrogationFatherVCam);
                 break;
-            case 4: // Teacher: "He calls him by a name."
-            case 5: // Teacher: "But there is nobody there."
+            case 3: // Teacher: asking what happened before hospital
                 SwitchDialogueCamera(interrogationTeacherVCam);
                 break;
-            case 6: // Mother: "No... please..."
+            case 4: // Father: someone went back in to help him / ambulance brought him back
+                SwitchDialogueCamera(interrogationFatherVCam);
+                break;
+            case 5: // Mother: since waking in hospital he thinks it's all his fault
                 SwitchDialogueCamera(interrogationMotherVCam);
                 break;
-            case 7: // Teacher: "He keeps saying that someone is waiting for him."
+            case 6: // Teacher: hears crying outside the door
                 SwitchDialogueCamera(interrogationTeacherVCam);
                 break;
-            case 8: // Teacher: "He keeps screaming that name." -> Wide establishing shot
+            case 7: // Child reaction outside door -> Wide shot
                 SwitchDialogueCamera(interrogationWideVCam);
                 break;
-            case 9: // Child scream 1
-            case 10: // Child scream 2
+            case 8: // Teddy reassuring child -> Dramatic overhead/wide
+            case 9: // Child scream
                 SwitchDialogueCamera(interrogationDramaticVCam);
                 break;
             default:

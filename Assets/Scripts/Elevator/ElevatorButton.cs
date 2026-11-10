@@ -76,6 +76,31 @@ public class ElevatorButton : MonoBehaviour
         {
             isPowered = MetroStorySequenceController.Instance.isPowerRestored;
         }
+
+        PrewarmVoidTrainAndAudio();
+    }
+
+    private void PrewarmVoidTrainAndAudio()
+    {
+        PrewarmClip(doorCloseSound);
+        PrewarmClip(elevatorSong);
+        PrewarmClip(doorOpenSound);
+        PrewarmClip(trainApproachSound);
+        PrewarmClip(trainHornSound);
+
+        ResolveVoidTrainReferences();
+        if (voidTrainObject != null)
+        {
+            voidTrainObject.gameObject.SetActive(false);
+        }
+    }
+
+    private static void PrewarmClip(AudioClip clip)
+    {
+        if (clip != null && clip.loadState == AudioDataLoadState.Unloaded)
+        {
+            clip.LoadAudioData();
+        }
     }
 
     public void OnPowerRestored()
@@ -84,6 +109,11 @@ public class ElevatorButton : MonoBehaviour
     }
 
     private bool isRunning;
+    private Rigidbody voidTrainRb;
+    private readonly WaitForFixedUpdate waitForFixedUpdate = new WaitForFixedUpdate();
+    private Transform activeShakeTransform;
+    private Vector3 shakeOriginalLocalPos;
+    private bool hasActiveShakeOrigin = false;
 
     public bool CanAcceptDoorZoneRequest => !isRunning && 
         (isPowered || (MetroStorySequenceController.Instance != null && MetroStorySequenceController.Instance.isPowerRestored)) &&
@@ -221,8 +251,7 @@ public class ElevatorButton : MonoBehaviour
 
         if (voidTrainObject != null)
         {
-            voidTrainObject.position = trainStartPosition;
-            voidTrainObject.rotation = Quaternion.Euler(0f, -90f, 0f);
+            SnapVoidTrain(trainStartPosition, Quaternion.Euler(0f, -90f, 0f));
             voidTrainObject.gameObject.SetActive(true);
         }
         SetTrainHeadlights(false, 0f);
@@ -397,6 +426,33 @@ public class ElevatorButton : MonoBehaviour
         }
     }
 
+    void EnsureVoidTrainRigidbody()
+    {
+        if (voidTrainObject == null) return;
+        voidTrainRb = voidTrainObject.GetComponent<Rigidbody>();
+        if (voidTrainRb == null)
+        {
+            voidTrainRb = voidTrainObject.gameObject.AddComponent<Rigidbody>();
+        }
+        voidTrainRb.isKinematic = true;
+        voidTrainRb.useGravity = false;
+        voidTrainRb.interpolation = RigidbodyInterpolation.Interpolate;
+    }
+
+    void SnapVoidTrain(Vector3 pos, Quaternion rot)
+    {
+        if (voidTrainObject == null) return;
+        EnsureVoidTrainRigidbody();
+        if (voidTrainRb != null)
+        {
+            voidTrainRb.interpolation = RigidbodyInterpolation.None;
+            voidTrainRb.position = pos;
+            voidTrainRb.rotation = rot;
+        }
+        voidTrainObject.SetPositionAndRotation(pos, rot);
+        Physics.SyncTransforms();
+    }
+
     IEnumerator MoveTrainRoutine(float duration)
     {
         if (voidTrainObject == null)
@@ -405,22 +461,44 @@ public class ElevatorButton : MonoBehaviour
             yield break;
         }
 
+        EnsureVoidTrainRigidbody();
+        yield return waitForFixedUpdate;
+        if (voidTrainRb != null)
+        {
+            voidTrainRb.interpolation = RigidbodyInterpolation.Interpolate;
+        }
+
         float elapsed = 0f;
         while (elapsed < duration)
         {
-            float t = elapsed / duration;
-            // Accelerate down the tunnel towards the elevator
-            float smoothT = Mathf.Lerp(t, t * t, 0.5f);
-            voidTrainObject.position = Vector3.Lerp(trainStartPosition, trainEndPosition, smoothT);
+            yield return waitForFixedUpdate;
+            elapsed += Time.fixedDeltaTime;
+            float t = Mathf.Clamp01(elapsed / duration);
+            // Smooth continuous acceleration down the tunnel towards the elevator
+            float smoothT = Mathf.Lerp(t, t * t, 0.35f);
+            Vector3 nextPos = Vector3.Lerp(trainStartPosition, trainEndPosition, smoothT);
+
+            if (voidTrainRb != null)
+            {
+                voidTrainRb.MovePosition(nextPos);
+            }
+            else
+            {
+                voidTrainObject.position = nextPos;
+            }
 
             float intensity = Mathf.Lerp(15f, 40f, smoothT);
             UpdateHeadlightsIntensity(intensity);
-
-            elapsed += Time.deltaTime;
-            yield return null;
         }
 
-        voidTrainObject.position = trainEndPosition;
+        if (voidTrainRb != null)
+        {
+            voidTrainRb.MovePosition(trainEndPosition);
+        }
+        else
+        {
+            voidTrainObject.position = trainEndPosition;
+        }
     }
 
     void ResolveVoidTrainReferences()
@@ -431,8 +509,7 @@ public class ElevatorButton : MonoBehaviour
             if (train != null)
             {
                 voidTrainObject = train;
-                voidTrainObject.position = trainStartPosition;
-                voidTrainObject.rotation = Quaternion.Euler(0f, -90f, 0f);
+                SnapVoidTrain(trainStartPosition, Quaternion.Euler(0f, -90f, 0f));
                 var hl = voidTrainObject.Find("Headlights");
                 if (hl != null) { hl.localPosition = new Vector3(1.166f, 2.0f, 13.85f); hl.localRotation = Quaternion.identity; }
                 var cg = voidTrainObject.Find("CabinGlow");
@@ -455,6 +532,7 @@ public class ElevatorButton : MonoBehaviour
                         c.isTrigger = true;
                     }
                     SetLayerRecursively(instance, 3);
+                    EnsureVoidTrainRigidbody();
                 }
             }
         }
@@ -570,6 +648,21 @@ public class ElevatorButton : MonoBehaviour
         }
     }
 
+    private Transform GetEffectiveShakeTarget()
+    {
+        if (shakeTarget == null) return null;
+
+        // Avoid mutating a dynamic Rigidbody transform (causes physics vs Update judder on the player capsule)
+        var rb = shakeTarget.GetComponent<Rigidbody>();
+        if (rb != null && !rb.isKinematic)
+        {
+            var cam = shakeTarget.GetComponentInChildren<Camera>(true);
+            if (cam != null) return cam.transform;
+        }
+
+        return shakeTarget;
+    }
+
     IEnumerator Shake(float duration)
     {
         yield return StartCoroutine(Shake(duration, shakeIntensity, shakeSpeed));
@@ -577,36 +670,42 @@ public class ElevatorButton : MonoBehaviour
 
     IEnumerator Shake(float duration, float intensity, float speed)
     {
-        if (shakeTarget == null)
+        Transform target = GetEffectiveShakeTarget();
+        if (target == null)
         {
             yield return new WaitForSeconds(duration);
             yield break;
         }
 
-        Vector3 original = shakeTarget.localPosition;
+        activeShakeTransform = target;
+        shakeOriginalLocalPos = target.localPosition;
+        hasActiveShakeOrigin = true;
         float elapsed = 0f;
 
         while (elapsed < duration)
         {
             float x = (Mathf.PerlinNoise(Time.time * speed, 0f) - 0.5f) * intensity;
             float y = (Mathf.PerlinNoise(0f, Time.time * speed) - 0.5f) * intensity;
-            shakeTarget.localPosition = original + new Vector3(x, y, 0f);
+            target.localPosition = shakeOriginalLocalPos + new Vector3(x, y, 0f);
             elapsed += Time.deltaTime;
             yield return null;
         }
 
-        shakeTarget.localPosition = original;
+        ResetShakeTarget();
     }
 
     IEnumerator ShakeRamp(float duration, float startIntensity, float endIntensity, float speed)
     {
-        if (shakeTarget == null)
+        Transform target = GetEffectiveShakeTarget();
+        if (target == null)
         {
             yield return new WaitForSeconds(duration);
             yield break;
         }
 
-        Vector3 original = shakeTarget.localPosition;
+        activeShakeTransform = target;
+        shakeOriginalLocalPos = target.localPosition;
+        hasActiveShakeOrigin = true;
         float elapsed = 0f;
 
         while (elapsed < duration)
@@ -615,17 +714,21 @@ public class ElevatorButton : MonoBehaviour
             float currentIntensity = Mathf.Lerp(startIntensity, endIntensity, t);
             float x = (Mathf.PerlinNoise(Time.time * speed, 0f) - 0.5f) * currentIntensity;
             float y = (Mathf.PerlinNoise(0f, Time.time * speed) - 0.5f) * currentIntensity;
-            shakeTarget.localPosition = original + new Vector3(x, y, 0f);
+            target.localPosition = shakeOriginalLocalPos + new Vector3(x, y, 0f);
             elapsed += Time.deltaTime;
             yield return null;
         }
 
-        shakeTarget.localPosition = original;
+        ResetShakeTarget();
     }
 
     void ResetShakeTarget()
     {
-        // safety hook if a shake coroutine is ever cut early; currently unused
-        // since all Shake() calls run to natural completion and self-reset.
+        if (hasActiveShakeOrigin && activeShakeTransform != null)
+        {
+            activeShakeTransform.localPosition = shakeOriginalLocalPos;
+        }
+        hasActiveShakeOrigin = false;
+        activeShakeTransform = null;
     }
 }
