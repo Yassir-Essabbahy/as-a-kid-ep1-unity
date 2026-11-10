@@ -16,8 +16,8 @@ public class DialogueTrigger : MonoBehaviour, IInteractable
     public string choiceA = "Ah";
     public string choiceB = "La";
 
-    [Header("Typing Sound")]
-    public AudioClip typingTrack;
+    [Header("Typing Sound (Disabled - Visual Only)")]
+    [HideInInspector] public AudioClip typingTrack;
     public AudioSource audioSource;
     [Range(0f, 1f)] public float typingVolume = 0.8f;
 
@@ -52,13 +52,7 @@ public class DialogueTrigger : MonoBehaviour, IInteractable
 
     public void StartVoice()
     {
-        if (typingTrack != null && audioSource != null)
-        {
-            audioSource.clip = typingTrack;
-            audioSource.loop = true;
-            audioSource.volume = typingVolume;
-            audioSource.Play();
-        }
+        // Typing sound intentionally disabled (visual typewriter only).
     }
 
     public void StopVoice()
@@ -78,7 +72,7 @@ public class DialogueTrigger : MonoBehaviour, IInteractable
         Color speakerColor = NpcDialogueManager.GetSpeakerColor(speakerName);
         TMP_FontAsset font = NpcDialogueManager.DefaultDialogueFont;
 
-        AudioClip[] clips = typingTrack != null ? new AudioClip[] { typingTrack } : null;
+        AudioClip[] clips = null;
 
         if (NpcDialogueManager.Instance != null)
         {

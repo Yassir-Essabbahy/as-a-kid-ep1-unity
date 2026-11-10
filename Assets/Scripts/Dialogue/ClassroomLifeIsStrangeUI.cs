@@ -34,30 +34,13 @@ public class ClassroomLifeIsStrangeUI : MonoBehaviour
     [Header("Dialogue Text (Inside Bottom Band)")]
     [SerializeField] private TextMeshProUGUI dialogueText;
 
-    [Header("Typing Effect")]
+    [Header("Typing Effect (Visual Only)")]
     public float charactersPerSecond = 25f;
-    public AudioClip typingSound;
-    public AudioSource typingSource;
+    [HideInInspector] public AudioClip typingSound;
+    [HideInInspector] public AudioSource typingSource;
 
-    private void EnsureTypingAudio()
-    {
-        if (typingSource == null)
-        {
-            typingSource = GetComponent<AudioSource>();
-            if (typingSource == null)
-            {
-                typingSource = gameObject.AddComponent<AudioSource>();
-            }
-            typingSource.playOnAwake = false;
-            typingSource.loop = true;
-            typingSource.spatialBlend = 0f;
-            typingSource.volume = 0.35f;
-        }
-        if (typingSound == null)
-        {
-            typingSound = NpcDialogueManager.DefaultTypingSound;
-        }
-    }
+    public bool IsTyping { get; private set; }
+    public int LastTypingEndFrame { get; private set; } = -100;
 
     private TextMeshProUGUI _thoughtText;
     private Coroutine _thoughtRoutine;
@@ -95,6 +78,7 @@ public class ClassroomLifeIsStrangeUI : MonoBehaviour
         // Matches Image 2: Press 'E' To Talk / Press 'E' To Look
         string promptString = Story.MobileUIAdapter.AdaptPrompt($"Press '{displayKey}' To {displayAction}");
 
+        promptText.isRightToLeftText = LocalizationManager.ContainsArabic(promptString);
         promptText.text = LocalizationManager.FixRTL(promptString);
         promptBox.SetActive(true);
 
@@ -147,61 +131,30 @@ public class ClassroomLifeIsStrangeUI : MonoBehaviour
         _thoughtRoutine = StartCoroutine(ThoughtRoutine(line, duration));
     }
 
-    private IEnumerator TypeOutText(TextMeshProUGUI targetText, string displayLine, float totalDuration)
+    private IEnumerator TypeOutText(TextMeshProUGUI targetText, string rawLine, float totalDuration, bool isMainDialogue, bool preserveAlignment)
     {
-        if (targetText == null) yield break;
-
-        EnsureTypingAudio();
-
-        targetText.text = displayLine;
-        if (charactersPerSecond <= 0f || !Application.isPlaying)
+        if (targetText == null)
         {
-            targetText.maxVisibleCharacters = int.MaxValue;
             yield return new WaitForSeconds(totalDuration);
             yield break;
         }
 
-        targetText.maxVisibleCharacters = 0;
-        targetText.ForceMeshUpdate();
-
-        int totalChars = (targetText.textInfo != null && targetText.textInfo.characterCount > 0)
-            ? targetText.textInfo.characterCount
-            : displayLine.Length;
-
-        if (typingSource != null && typingSound != null)
-        {
-            typingSource.clip = typingSound;
-            typingSource.loop = true;
-            typingSource.volume = 0.35f;
-            typingSource.Play();
-        }
-
-        float delay = 1f / charactersPerSecond;
+        if (isMainDialogue) IsTyping = true;
         float elapsed = 0f;
-        int startFrame = Time.frameCount;
 
-        for (int i = 1; i <= totalChars; i++)
+        yield return StartCoroutine(DialogueTypewriterUtility.TypeTextRoutine(
+            targetText,
+            rawLine,
+            charactersPerSecond,
+            allowSkip: true,
+            preserveAlignment: preserveAlignment,
+            onElapsedSeconds: e => elapsed = e
+        ));
+
+        if (isMainDialogue)
         {
-            if (Time.frameCount > startFrame &&
-                (Input.GetMouseButtonDown(0) ||
-                 Input.GetKeyDown(KeyCode.Space) ||
-                 Input.GetKeyDown(KeyCode.E) ||
-                 (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)))
-            {
-                targetText.maxVisibleCharacters = int.MaxValue;
-                break;
-            }
-
-            targetText.maxVisibleCharacters = i;
-            yield return new WaitForSeconds(delay);
-            elapsed += delay;
-        }
-
-        targetText.maxVisibleCharacters = int.MaxValue;
-
-        if (typingSource != null && typingSource.isPlaying)
-        {
-            typingSource.Stop();
+            IsTyping = false;
+            LastTypingEndFrame = Time.frameCount;
         }
 
         float remaining = Mathf.Max(0.2f, totalDuration - elapsed);
@@ -212,9 +165,12 @@ public class ClassroomLifeIsStrangeUI : MonoBehaviour
     {
         string thought = line.Trim();
         if (!(thought.StartsWith("(") && thought.EndsWith(")"))) thought = "(" + thought + ")";
-        string fixedThought = LocalizationManager.FixRTL(thought);
-        yield return StartCoroutine(TypeOutText(_thoughtText, fixedThought, duration));
-        if (_thoughtText != null) _thoughtText.text = "";
+        yield return StartCoroutine(TypeOutText(_thoughtText, thought, duration, isMainDialogue: false, preserveAlignment: true));
+        if (_thoughtText != null)
+        {
+            _thoughtText.maxVisibleCharacters = int.MaxValue;
+            _thoughtText.text = "";
+        }
         _thoughtRoutine = null;
     }
 
@@ -236,11 +192,7 @@ public class ClassroomLifeIsStrangeUI : MonoBehaviour
                 formatted = line;
             }
 
-            bool isAr = LocalizationManager.ContainsArabic(formatted);
-            dialogueText.alignment = isAr ? TextAlignmentOptions.TopRight : TextAlignmentOptions.TopLeft;
-            string displayLine = LocalizationManager.FixRTL(formatted);
-
-            yield return StartCoroutine(TypeOutText(dialogueText, displayLine, duration));
+            yield return StartCoroutine(TypeOutText(dialogueText, formatted, duration, isMainDialogue: true, preserveAlignment: false));
         }
         else
         {
@@ -249,23 +201,26 @@ public class ClassroomLifeIsStrangeUI : MonoBehaviour
 
         if (dialogueText != null)
         {
+            dialogueText.maxVisibleCharacters = int.MaxValue;
             dialogueText.text = "";
         }
         _dialogueRoutine = null;
     }
 
-    public void ClearDialogue()
-    {
-        if (_dialogueRoutine != null)
-        {
-            StopCoroutine(_dialogueRoutine);
-            _dialogueRoutine = null;
-        }
-
-        if (dialogueText != null)
-        {
-            dialogueText.text = "";
-        }
+    public void ClearDialogue()
+    {
+        IsTyping = false;
+        if (_dialogueRoutine != null)
+        {
+            StopCoroutine(_dialogueRoutine);
+            _dialogueRoutine = null;
+        }
+
+        if (dialogueText != null)
+        {
+            dialogueText.maxVisibleCharacters = int.MaxValue;
+            dialogueText.text = "";
+        }
     }
 
     /// <summary>

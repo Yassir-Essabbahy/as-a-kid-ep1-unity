@@ -72,7 +72,7 @@ public class UIManager : MonoBehaviour
         dialoguePanel.SetActive(true);
 
         if (speakerName != null)
-            speakerName.text = speaker;
+            speakerName.text = DialogueTypewriterUtility.PrepareDisplayText(speakerName, speaker, preserveAlignment: true);
 
         if (typewriterCoroutine != null)
             StopCoroutine(typewriterCoroutine);
@@ -82,18 +82,17 @@ public class UIManager : MonoBehaviour
 
     private IEnumerator TypewriterRoutine(string line)
     {
-        dialogueText.text = "";
-
-        currentTrigger?.StartVoice();
-
-        foreach (char c in line)
+        if (dialogueText != null)
         {
-            dialogueText.text += c;
-
-            yield return new WaitForSeconds(typewriterSpeed);
+            float cps = typewriterSpeed > 0f ? 1f / typewriterSpeed : DialogueTypewriterUtility.DefaultCharactersPerSecond;
+            yield return StartCoroutine(DialogueTypewriterUtility.TypeTextRoutine(
+                dialogueText,
+                line,
+                cps,
+                allowSkip: true,
+                preserveAlignment: true
+            ));
         }
-
-        currentTrigger?.StopVoice();
 
         typewriterCoroutine = null;
     }
@@ -104,6 +103,12 @@ public class UIManager : MonoBehaviour
         {
             StopCoroutine(typewriterCoroutine);
             typewriterCoroutine = null;
+        }
+
+        if (dialogueText != null)
+        {
+            dialogueText.maxVisibleCharacters = int.MaxValue;
+            dialogueText.text = "";
         }
 
         currentTrigger?.StopVoice();
@@ -128,21 +133,16 @@ public class UIManager : MonoBehaviour
 
         if (messageText != null)
         {
-            messageText.text = message;
-            messageText.maxVisibleCharacters = 0;
-            messageText.ForceMeshUpdate();
-            int totalChars = messageText.textInfo != null && messageText.textInfo.characterCount > 0
-                ? messageText.textInfo.characterCount
-                : message.Length;
-
+            float cps = typewriterSpeed > 0f ? 1f / typewriterSpeed : DialogueTypewriterUtility.DefaultCharactersPerSecond;
             float elapsed = 0f;
-            for (int i = 1; i <= totalChars; i++)
-            {
-                messageText.maxVisibleCharacters = i;
-                yield return new WaitForSeconds(typewriterSpeed);
-                elapsed += typewriterSpeed;
-            }
-            messageText.maxVisibleCharacters = int.MaxValue;
+            yield return StartCoroutine(DialogueTypewriterUtility.TypeTextRoutine(
+                messageText,
+                message,
+                cps,
+                allowSkip: false,
+                preserveAlignment: true,
+                onElapsedSeconds: e => elapsed = e
+            ));
             yield return new WaitForSeconds(Mathf.Max(0.2f, duration - elapsed));
         }
         else

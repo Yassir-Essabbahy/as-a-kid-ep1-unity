@@ -17414,7 +17414,7 @@ MonoBehaviour:
   slideDuration: 0.45
   continueButton: {fileID: 1657727567}
   charactersPerSecond: 25
-  typingSound: {fileID: 8300000, guid: 98eb4b57593803048b3d3626936acdac, type: 3}
+  typingSound: {fileID: 0}
   typingSource: {fileID: 0}
   lastChoiceIndex: 0
 --- !u!4 &835160607 stripped

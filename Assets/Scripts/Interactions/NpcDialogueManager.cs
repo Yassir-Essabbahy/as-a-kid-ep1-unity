@@ -38,11 +38,11 @@ public class NpcDialogueManager : MonoBehaviour
     [Header("Buttons")]
     public Button continueButton;
 
-    [Header("Typing")]
+    [Header("Typing (Visual Only)")]
     [Min(0f)]
     public float charactersPerSecond = 25f;
-    public AudioClip typingSound;
-    public AudioSource typingSource;
+    [HideInInspector] public AudioClip typingSound;
+    [HideInInspector] public AudioSource typingSource;
 
     [Header("Choice")]
     public int lastChoiceIndex;
@@ -71,55 +71,6 @@ public class NpcDialogueManager : MonoBehaviour
             }
             return _defaultFont;
         }
-    }
-
-    private static AudioClip _defaultTypingSound;
-    public static AudioClip DefaultTypingSound
-    {
-        get
-        {
-            if (_defaultTypingSound == null)
-            {
-                _defaultTypingSound = Resources.Load<AudioClip>("Sounds/TypingSound");
-#if UNITY_EDITOR
-                if (_defaultTypingSound == null)
-                {
-                    _defaultTypingSound = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Sounds/TypingSound.wav");
-                }
-#endif
-                if (_defaultTypingSound == null)
-                {
-                    _defaultTypingSound = CreateFallbackTypingSound();
-                }
-            }
-            return _defaultTypingSound;
-        }
-    }
-
-    private static AudioClip CreateFallbackTypingSound()
-    {
-        int sampleRate = 44100;
-        float duration = 0.055f;
-        int samples = (int)(sampleRate * duration);
-        float[] data = new float[samples];
-        for (int i = 0; i < samples; i++)
-        {
-            float t = (float)i / sampleRate;
-            float normT = (float)i / samples;
-            if (normT < 0.35f)
-            {
-                float env = Mathf.Exp(-normT * 28f);
-                float tone = Mathf.Sin(2f * Mathf.PI * 680f * t) * 0.6f + Mathf.Sin(2f * Mathf.PI * 1360f * t) * 0.25f;
-                data[i] = tone * env * 0.45f;
-            }
-            else
-            {
-                data[i] = 0f;
-            }
-        }
-        var clip = AudioClip.Create("PSX_TypingTick", samples, 1, sampleRate, false);
-        clip.SetData(data, 0);
-        return clip;
     }
 
     private Color currentDialogueColor = Color.white;
@@ -226,24 +177,6 @@ public class NpcDialogueManager : MonoBehaviour
         }
 
         Instance = this;
-
-        if (typingSource == null)
-        {
-            typingSource = GetComponent<AudioSource>();
-            if (typingSource == null)
-            {
-                typingSource = gameObject.AddComponent<AudioSource>();
-            }
-            typingSource.playOnAwake = false;
-            typingSource.loop = true;
-            typingSource.spatialBlend = 0f;
-            typingSource.volume = 0.35f;
-        }
-
-        if (typingSound == null)
-        {
-            typingSound = DefaultTypingSound;
-        }
 
         EnsureBandsBound();
         ResetBandsOffscreen();
@@ -430,6 +363,8 @@ public class NpcDialogueManager : MonoBehaviour
             if (f != null) dialogueText.font = f;
         }
 
+        dialogueText.text = "";
+        dialogueText.maxVisibleCharacters = 0;
         dialogueText.fontSize = STANDARD_FONT_SIZE;
         dialogueText.color = ResolveColorForLine(lines[0], dialogueColor);
 
@@ -594,6 +529,14 @@ public class NpcDialogueManager : MonoBehaviour
         activeInteractableRoutine = null;
         slideCoroutine = null;
         dialogueRunning = false;
+        isTyping = false;
+        skipTypingRequested = false;
+        continueClicked = false;
+        if (dialogueText != null)
+        {
+            dialogueText.text = "";
+            dialogueText.maxVisibleCharacters = int.MaxValue;
+        }
         ResetBandsOffscreen();
         if (talkPanel != null) talkPanel.SetActive(false);
     }
@@ -621,8 +564,10 @@ public class NpcDialogueManager : MonoBehaviour
 
         if (dialogueText != null)
         {
+            dialogueText.text = "";
+            dialogueText.maxVisibleCharacters = 0;
             dialogueText.fontSize = STANDARD_FONT_SIZE;
-            dialogueText.color = textColor;
+            dialogueText.color = ResolveColorForLine(message, textColor);
             if (dialogueText.font == null || dialogueText.font.name.Contains("Liberation"))
             {
                 var f = DefaultDialogueFont;
@@ -634,28 +579,27 @@ public class NpcDialogueManager : MonoBehaviour
         if (slideCoroutine != null) StopCoroutine(slideCoroutine);
         yield return StartCoroutine(SlideBandsRoutine(slideIn: true));
 
-        // Type out the message line
+        // Type out the message line visually (no typing sound)
         yield return StartCoroutine(TypeText(message));
 
         // Wait for player tap / click / press E / continue button, OR auto-dismiss after autoDismissDuration
         float timer = 0f;
         continueClicked = false;
+        int waitStartFrame = Time.frameCount;
         while (timer < autoDismissDuration)
         {
             timer += Time.unscaledDeltaTime;
 
-            bool advanceInput = continueClicked ||
-                                Input.GetMouseButtonDown(0) ||
-                                Input.GetKeyDown(KeyCode.Space) ||
-                                Input.GetKeyDown(KeyCode.E) ||
-                                (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began) ||
-                                ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame;
-
-            // Give a 0.25s grace period so the triggering keypress/tap doesn't immediately dismiss
-            if (timer > 0.25f && advanceInput)
+            if (timer > 0.25f && Time.frameCount > waitStartFrame)
             {
-                continueClicked = false;
-                break;
+                bool advanceInput = continueClicked ||
+                                    DialogueTypewriterUtility.IsAdvanceOrSkipInputPressed(continueButton);
+
+                if (advanceInput)
+                {
+                    continueClicked = false;
+                    break;
+                }
             }
 
             yield return null;
@@ -785,72 +729,17 @@ public class NpcDialogueManager : MonoBehaviour
         isTyping = true;
         skipTypingRequested = false;
 
-        bool isArabic = LocalizationManager.ContainsArabic(line);
-        string displayLine = isArabic ? LocalizationManager.FixRTL(line) : line;
+        yield return StartCoroutine(DialogueTypewriterUtility.TypeTextRoutine(
+            dialogueText,
+            line,
+            charactersPerSecond,
+            allowSkip: true,
+            externalSkipCheck: () => skipTypingRequested,
+            ignorePointerOverButton: continueButton,
+            preserveAlignment: false
+        ));
 
-        if (dialogueText != null)
-        {
-            dialogueText.alignment = isArabic ? TextAlignmentOptions.TopRight : TextAlignmentOptions.TopLeft;
-        }
-
-        if (charactersPerSecond <= 0f)
-        {
-            if (dialogueText != null)
-            {
-                dialogueText.text = displayLine;
-                dialogueText.maxVisibleCharacters = int.MaxValue;
-            }
-            isTyping = false;
-            yield break;
-        }
-
-        if (dialogueText != null)
-        {
-            dialogueText.text = displayLine;
-            dialogueText.maxVisibleCharacters = 0;
-            dialogueText.ForceMeshUpdate();
-        }
-
-        int totalChars = (dialogueText != null && dialogueText.textInfo != null) ? dialogueText.textInfo.characterCount : displayLine.Length;
-
-        // Play typing audio
-        if (typingSound == null) typingSound = DefaultTypingSound;
-        if (typingSource != null && typingSound != null)
-        {
-            typingSource.clip = typingSound;
-            typingSource.loop = true;
-            typingSource.volume = 0.35f;
-            typingSource.Play();
-        }
-
-        float delay = 1f / charactersPerSecond;
-
-        for (int i = 1; i <= totalChars; i++)
-        {
-            // Allow skipping typewriter text on continue button, Space, E, Left Click, or Touch tap
-            if (skipTypingRequested ||
-                Input.GetMouseButtonDown(0) || 
-                Input.GetKeyDown(KeyCode.Space) || 
-                Input.GetKeyDown(KeyCode.E) ||
-                (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began))
-            {
-                if (dialogueText != null) dialogueText.maxVisibleCharacters = int.MaxValue;
-                skipTypingRequested = false;
-                break;
-            }
-
-            if (dialogueText != null) dialogueText.maxVisibleCharacters = i;
-            yield return new WaitForSeconds(delay);
-        }
-
-        if (dialogueText != null) dialogueText.maxVisibleCharacters = int.MaxValue;
-
-        // Stop typing audio when finished typing
-        if (typingSource != null && typingSource.isPlaying)
-        {
-            typingSource.Stop();
-        }
-
+        skipTypingRequested = false;
         isTyping = false;
     }
 
@@ -864,35 +753,24 @@ public class NpcDialogueManager : MonoBehaviour
         bool voiceWasPlaying)
     {
         continueClicked = false;
+        int startFrame = Time.frameCount;
+
         if (continueButton != null)
             continueButton.gameObject.SetActive(true);
 
-        bool voiceFinished =
-            !voiceWasPlaying ||
-            voiceSource == null;
-
         while (true)
         {
-            // If voice was playing, wait until it finishes.
-            if (voiceWasPlaying &&
-                voiceSource != null &&
-                !voiceSource.isPlaying)
+            if (Time.frameCount > startFrame)
             {
-                voiceFinished = true;
-            }
+                bool advanceInput = continueClicked ||
+                                    DialogueTypewriterUtility.IsAdvanceOrSkipInputPressed(continueButton);
 
-            bool advanceInput = continueClicked ||
-                                Input.GetMouseButtonDown(0) || 
-                                Input.GetKeyDown(KeyCode.Space) || 
-                                Input.GetKeyDown(KeyCode.E) ||
-                                (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began);
-
-            // Advance with continue button, left mouse click, Space, E, or Touch
-            if (advanceInput)
-            {
-                continueClicked = false;
-                StopVoice(voiceSource);
-                yield break;
+                if (advanceInput)
+                {
+                    continueClicked = false;
+                    StopVoice(voiceSource);
+                    yield break;
+                }
             }
 
             yield return null;
@@ -991,6 +869,7 @@ public class NpcDialogueManager : MonoBehaviour
         {
             string cleanA = optionA.Replace("<size=70%><color=#8E9EAB>[1]</color></size>  ", "").Replace("[1]", "").Trim();
             string textA = Story.MobileUIAdapter.IsMobile ? cleanA.ToUpper() : $"[1]  {cleanA.ToUpper()}";
+            yesLabel.isRightToLeftText = LocalizationManager.ContainsArabic(textA);
             yesLabel.text = LocalizationManager.FixRTL(textA);
             yesLabel.color = Color.white;
         }
@@ -1000,6 +879,7 @@ public class NpcDialogueManager : MonoBehaviour
         {
             string cleanB = optionB.Replace("<size=70%><color=#8E9EAB>[2]</color></size>  ", "").Replace("[2]", "").Trim();
             string textB = Story.MobileUIAdapter.IsMobile ? cleanB.ToUpper() : $"[2]  {cleanB.ToUpper()}";
+            noLabel.isRightToLeftText = LocalizationManager.ContainsArabic(textB);
             noLabel.text = LocalizationManager.FixRTL(textB);
             noLabel.color = Color.white;
         }
@@ -1118,11 +998,6 @@ public class NpcDialogueManager : MonoBehaviour
 
     private void StopVoice(AudioSource voiceSource)
     {
-        if (typingSource != null && typingSource.isPlaying)
-        {
-            typingSource.Stop();
-        }
-
         if (voiceSource == null)
             return;
 

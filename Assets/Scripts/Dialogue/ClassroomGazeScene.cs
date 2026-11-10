@@ -571,11 +571,16 @@ public class ClassroomGazeScene : MonoBehaviour
     private IEnumerator WaitForSelfTalkAdvance(float autoDuration)
     {
         float timer = 0f;
+        int startFrame = Time.frameCount;
         while (timer < autoDuration)
         {
             timer += Time.deltaTime;
-            // Allow skipping/advancing line with Space, E, or Mouse Click after a short grace period
-            if (timer > 0.8f && (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.E) || Input.GetMouseButtonDown(0)))
+            var ui = ClassroomLifeIsStrangeUI.Instance;
+            bool typingActive = ui != null && (ui.IsTyping || Time.frameCount <= ui.LastTypingEndFrame + 1);
+
+            // Only advance to next line after typing has completed (first click skips typing, next click advances)
+            if (!typingActive && Time.frameCount > startFrame && timer > 0.3f &&
+                DialogueTypewriterUtility.IsAdvanceOrSkipInputPressed())
             {
                 break;
             }

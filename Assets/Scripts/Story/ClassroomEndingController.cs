@@ -265,6 +265,7 @@ public class ClassroomEndingController : MonoBehaviour
 
             if (s1Diag.speakerText != null)
             {
+                s1Diag.speakerText.isRightToLeftText = LocalizationManager.ContainsArabic(speakerTitle);
                 s1Diag.speakerText.text = LocalizationManager.FixRTL(speakerTitle);
                 s1Diag.speakerText.color = teacherColor;
                 s1Diag.speakerText.fontSize = NpcDialogueManager.STANDARD_FONT_SIZE;
