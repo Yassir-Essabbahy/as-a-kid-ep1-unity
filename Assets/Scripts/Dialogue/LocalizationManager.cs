@@ -108,7 +108,17 @@ public class LocalizationManager : MonoBehaviour
         Load();
     }
 
-    private void Load()
+    public void Reload()
+    {
+        if (table != null)
+            table.Clear();
+        else
+            table = new Dictionary<string, Dictionary<string, string>>();
+        Load();
+        OnLanguageChanged?.Invoke(CurrentLanguage);
+    }
+
+    public void Load()
     {
         TextAsset csv = Resources.Load<TextAsset>($"Localization/{csvFileName}");
         if (csv == null)

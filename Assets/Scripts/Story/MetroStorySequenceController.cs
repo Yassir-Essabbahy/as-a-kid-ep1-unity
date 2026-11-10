@@ -828,8 +828,8 @@ public class MetroStorySequenceController : MonoBehaviour
             if (!bullySpoken)
             {
                 StartCoroutine(PlaySimpleTeddyLines(new string[] {
-                    "Teddy: Someone is standing down this platform...",
-                    "Teddy: Go see who it is."
+                    GetLoc("teddy_floor3_hint_01"),
+                    GetLoc("teddy_floor3_hint_02")
                 }));
                 return true;
             }
