@@ -163,6 +163,11 @@ public class HouseWakingCinematic : MonoBehaviour
             {
                 var m = player.transform.Find("MobileControlsCanvas");
                 if (m != null) mobileControlsCanvas = m.GetComponent<Canvas>();
+                if (mobileControlsCanvas == null)
+                {
+                    var mtc = FindFirstObjectByType<ModularFirstPersonController.MobileTouchControls>(FindObjectsInactive.Include);
+                    if (mtc != null) mobileControlsCanvas = mtc.GetComponentInParent<Canvas>(true);
+                }
             }
         }
 
@@ -248,16 +253,21 @@ public class HouseWakingCinematic : MonoBehaviour
     private void Update()
     {
         if (!isCinematicActive) return;
+        if (Story.MobilePauseMenu.Instance != null && Story.MobilePauseMenu.Instance.isPaused) return;
 
-        // Keep cursor strictly locked and hidden during cinematic
-        if (Cursor.lockState != CursorLockMode.Locked)
-            Cursor.lockState = CursorLockMode.Locked;
-        if (Cursor.visible)
-            Cursor.visible = false;
+        // Keep cursor strictly locked and hidden during cinematic on desktop
+        if (!Application.isMobilePlatform && !Story.MobileUIAdapter.IsMobile)
+        {
+            if (Cursor.lockState != CursorLockMode.Locked)
+                Cursor.lockState = CursorLockMode.Locked;
+            if (Cursor.visible)
+                Cursor.visible = false;
+        }
 
-        // Skip detection: Space, Escape, or screen tap
-        if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Escape) ||
-            (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began))
+        // Skip detection: Space, Escape, or screen tap (ignoring Pause button)
+        bool touchSkip = Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began &&
+                         !DialogueTypewriterUtility.IsPointerOverPauseButton();
+        if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Escape) || touchSkip)
         {
             SkipCinematic();
         }
@@ -679,8 +689,11 @@ public class HouseWakingCinematic : MonoBehaviour
         if (mobileControlsCanvas != null)
             mobileControlsCanvas.gameObject.SetActive(true);
 
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        if (!Application.isMobilePlatform && !Story.MobileUIAdapter.IsMobile)
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
 
         // 5. Update objectives
         if (HouseObjectiveController.Instance != null && !HouseObjectiveController.Instance.hasWashedFace)

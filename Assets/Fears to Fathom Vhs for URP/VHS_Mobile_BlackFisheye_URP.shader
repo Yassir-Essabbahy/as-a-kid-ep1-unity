@@ -36,6 +36,7 @@ HLSLPROGRAM
 
             TEXTURE2D(_BlitTexture);SAMPLER(sampler_BlitTexture);
             TEXTURE2D(_NoiseTex);       SAMPLER(sampler_NoiseTex);
+float4 _BlitScaleBias;
 float _BleedAmount;
 float _NoiseAmount;
 float _FisheyeBend;
@@ -83,13 +84,16 @@ half4 frag(Varyings input) : SV_Target
     }
 
                 // ----- Chromatic Bleed -----
-    float2 rUV = uv + float2(_BleedAmount, 0);
-    float2 gUV = uv;
-    float2 bUV = uv - float2(_BleedAmount, 0);
+    float2 rUV = clamp(uv + float2(_BleedAmount, 0), 0.0005, 0.9995);
+    float2 gUV = clamp(uv, 0.0005, 0.9995);
+    float2 bUV = clamp(uv - float2(_BleedAmount, 0), 0.0005, 0.9995);
 
-    half r = SAMPLE_TEXTURE2D(_BlitTexture, sampler_BlitTexture, rUV).r;
-    half g = SAMPLE_TEXTURE2D(_BlitTexture, sampler_BlitTexture, gUV).g;
-    half b = SAMPLE_TEXTURE2D(_BlitTexture, sampler_BlitTexture, bUV).b;
+    float2 scaleBiasScale = (_BlitScaleBias.x == 0.0 && _BlitScaleBias.y == 0.0) ? float2(1.0, 1.0) : _BlitScaleBias.xy;
+    float2 scaleBiasOffset = _BlitScaleBias.zw;
+
+    half r = SAMPLE_TEXTURE2D(_BlitTexture, sampler_BlitTexture, rUV * scaleBiasScale + scaleBiasOffset).r;
+    half g = SAMPLE_TEXTURE2D(_BlitTexture, sampler_BlitTexture, gUV * scaleBiasScale + scaleBiasOffset).g;
+    half b = SAMPLE_TEXTURE2D(_BlitTexture, sampler_BlitTexture, bUV * scaleBiasScale + scaleBiasOffset).b;
     half4 col = half4(r, g, b, 1.0);
 
                 // ----- Scrolling Noise -----

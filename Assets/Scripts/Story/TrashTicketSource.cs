@@ -241,7 +241,8 @@ public class TrashTicketSource : MonoBehaviour
     {
         if (Input.GetKeyDown(interactKey) ||
             Input.GetKeyDown(KeyCode.Return) ||
-            Input.GetKeyDown(KeyCode.JoystickButton0))
+            Input.GetKeyDown(KeyCode.JoystickButton0) ||
+            ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame)
         {
             return true;
         }

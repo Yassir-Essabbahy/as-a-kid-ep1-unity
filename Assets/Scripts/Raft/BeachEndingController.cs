@@ -514,6 +514,7 @@ public class BeachEndingController : MonoBehaviour
         // If player dropped Teddy (e.g. Q key), allow picking him back up
         if (teddyCarry != null && !teddyCarry.IsBeingCarried)
         {
+            if (input != null) input.SetDropAvailable(false);
             float distToTeddy = GetEffectiveDistanceToTeddy();
             if (distToTeddy <= teddyPickupDistance)
             {
@@ -537,13 +538,12 @@ public class BeachEndingController : MonoBehaviour
             return;
         }
 
-        // Teddy is carried: allow dropping with Q key
+        // Teddy is carried: allow dropping with Q key or mobile Drop button
+        if (input != null) input.SetDropAvailable(true, DropTeddyFromMobile);
+
         if (Input.GetKeyDown(playerInteraction.dropKey))
         {
-            Vector3 dropPos = playerController.transform.position + playerController.transform.forward * 0.8f;
-            teddyCarry.Drop(dropPos, playerController.transform.forward);
-            ClearPrompt();
-            if (input != null) input.SetInteractionAvailable(false);
+            DropTeddyFromMobile();
             return;
         }
 
@@ -560,7 +560,11 @@ public class BeachEndingController : MonoBehaviour
             if (CheckInteractPressed(input))
             {
                 ClearPrompt();
-                if (input != null) input.SetInteractionAvailable(false);
+                if (input != null)
+                {
+                    input.SetInteractionAvailable(false);
+                    input.SetDropAvailable(false);
+                }
 
                 teddyState = TeddyEndingState.Sending;
                 currentPhase = "PlacingTeddy";
@@ -574,6 +578,20 @@ public class BeachEndingController : MonoBehaviour
 
             ClearPrompt();
             if (input != null) input.SetInteractionAvailable(false);
+        }
+    }
+
+    private void DropTeddyFromMobile()
+    {
+        if (playerController == null || teddyCarry == null || !teddyCarry.IsBeingCarried) return;
+        Vector3 dropPos = playerController.transform.position + playerController.transform.forward * 0.8f;
+        teddyCarry.Drop(dropPos, playerController.transform.forward);
+        ClearPrompt();
+        var input = playerInteraction != null ? playerInteraction.interactInput : null;
+        if (input != null)
+        {
+            input.SetInteractionAvailable(false);
+            input.SetDropAvailable(false);
         }
     }
 

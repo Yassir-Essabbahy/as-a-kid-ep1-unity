@@ -122,6 +122,15 @@ public class ClassroomLifeIsStrangeUI : MonoBehaviour
         }
     }
 
+    private void HandlePromptButtonClicked()
+    {
+        var gazeScene = FindAnyObjectByType<ClassroomGazeScene>();
+        if (gazeScene != null)
+        {
+            gazeScene.TriggerCurrentHoverInteraction();
+        }
+    }
+
     /// <summary>
     /// Displays a dialogue line directly inside the bottom letterbox band:
     /// "<Speaker>: <Text>" matching Image 1.
@@ -325,7 +334,7 @@ public class ClassroomLifeIsStrangeUI : MonoBehaviour
             {
                 promptBox = pbObj.gameObject;
                 promptBoxRect = pbObj.GetComponent<RectTransform>();
-                promptText = pbObj.GetComponentInChildren<TextMeshProUGUI>();
+                promptText = pbObj.GetComponentInChildren<TextMeshProUGUI>(true);
             }
             else
             {
@@ -336,12 +345,11 @@ public class ClassroomLifeIsStrangeUI : MonoBehaviour
                 promptBoxRect.anchorMin = new Vector2(0.5f, 0.28f);
                 promptBoxRect.anchorMax = new Vector2(0.5f, 0.28f);
                 promptBoxRect.pivot = new Vector2(0.5f, 0.5f);
-                promptBoxRect.sizeDelta = new Vector2(210f, 38f);
+                promptBoxRect.sizeDelta = new Vector2(210f, 44f);
                 promptBoxRect.anchoredPosition = Vector2.zero;
 
                 var img = go.GetComponent<Image>();
                 img.color = Color.black;
-                img.raycastTarget = false;
 
                 // Child text
                 var textGo = new GameObject("InteractText", typeof(RectTransform), typeof(TextMeshProUGUI));
@@ -362,6 +370,16 @@ public class ClassroomLifeIsStrangeUI : MonoBehaviour
 
                 promptBox.SetActive(false);
             }
+        }
+
+        if (promptBox != null)
+        {
+            var pbImg = promptBox.GetComponent<Image>();
+            if (pbImg != null) pbImg.raycastTarget = true;
+            var pbBtn = promptBox.GetComponent<Button>();
+            if (pbBtn == null) pbBtn = promptBox.AddComponent<Button>();
+            pbBtn.onClick.RemoveListener(HandlePromptButtonClicked);
+            pbBtn.onClick.AddListener(HandlePromptButtonClicked);
         }
 
         // 3. Cinematic Letterbox Bands (Solid Black Top & Bottom)

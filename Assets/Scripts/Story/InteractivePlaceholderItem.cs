@@ -98,7 +98,7 @@ public class InteractivePlaceholderItem : MonoBehaviour
                     LocalizationManager.ApplyText(interactUI, currentPrompt, preserveAlignment: true);
                 }
 
-                if (Input.GetKeyDown(KeyCode.E))
+                if (Input.GetKeyDown(KeyCode.E) || ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame)
                 {
                     TriggerInteraction();
                 }

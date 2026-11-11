@@ -1329,7 +1329,6 @@ GameObject:
   - component: {fileID: 554528880}
   - component: {fileID: 554528879}
   - component: {fileID: 554528878}
-  - component: {fileID: 554528882}
   - component: {fileID: 554528881}
   m_Layer: 0
   m_Name: CreditsCanvas
@@ -1438,20 +1437,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Story.MobileUIAdapter
   adaptChildTexts: 1
---- !u!114 &554528882
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 554528876}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4b5dc683af7da3e40b58098300a6a40f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Story.SafeAreaHandler
-  applyHorizontal: 1
-  applyVertical: 1
 --- !u!1 &607917055
 GameObject:
   m_ObjectHideFlags: 0

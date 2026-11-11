@@ -35,6 +35,8 @@ namespace Story
         public Button mainMenuButton;
 
         private float _previousTimeScale = 1f;
+        private bool _prePausePlayerCanMove = true;
+        private bool _prePauseCameraCanMove = true;
         private List<GameObject> _indicators = new List<GameObject>();
         private TextMeshProUGUI _titleTmp;
         private TextMeshProUGUI _subtitleTmp;
@@ -172,6 +174,8 @@ namespace Story
             var fpc = FirstPersonController.ActiveInstance ?? FindAnyObjectByType<FirstPersonController>();
             if (fpc != null)
             {
+                _prePausePlayerCanMove = fpc.playerCanMove;
+                _prePauseCameraCanMove = fpc.cameraCanMove;
                 fpc.playerCanMove = false;
                 fpc.cameraCanMove = false;
             }
@@ -206,8 +210,8 @@ namespace Story
             var fpc = FirstPersonController.ActiveInstance ?? FindAnyObjectByType<FirstPersonController>();
             if (fpc != null)
             {
-                fpc.playerCanMove = true;
-                fpc.cameraCanMove = true;
+                fpc.playerCanMove = _prePausePlayerCanMove;
+                fpc.cameraCanMove = _prePauseCameraCanMove;
             }
         }
 
@@ -253,36 +257,53 @@ namespace Story
             if (canvas == null) return;
 
             var font = Resources.Load<TMP_FontAsset>("Fonts/FriendlySans-Regular SDF");
-            Sprite buttonSprite = null;
-#if UNITY_EDITOR
-            buttonSprite = UnityEditor.AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UISprite.psd");
-#endif
+
+            // Safe area wrapper for top-right pause button (avoids notch/punch-hole clipping on phones)
+            Transform buttonParent = transform;
+            var existingSafeRoot = transform.Find("PauseButtonSafeArea");
+            GameObject safeRootObj = existingSafeRoot != null ? existingSafeRoot.gameObject : null;
+            if (safeRootObj == null)
+            {
+                safeRootObj = new GameObject("PauseButtonSafeArea", typeof(RectTransform));
+                safeRootObj.transform.SetParent(transform, false);
+                var srt = safeRootObj.GetComponent<RectTransform>();
+                srt.anchorMin = Vector2.zero;
+                srt.anchorMax = Vector2.one;
+                srt.offsetMin = Vector2.zero;
+                srt.offsetMax = Vector2.zero;
+                safeRootObj.AddComponent<SafeAreaHandler>();
+            }
+            buttonParent = safeRootObj.transform;
 
             // 1. Mobile Pause Button (Top-Right during gameplay)
             if (pauseButtonObj == null)
             {
-                var existingBtn = transform.Find("MobilePauseButton");
+                var existingBtn = buttonParent.Find("MobilePauseButton") ?? transform.Find("MobilePauseButton");
                 if (existingBtn != null)
                 {
+                    existingBtn.SetParent(buttonParent, false);
                     pauseButtonObj = existingBtn.gameObject;
                 }
                 else
                 {
                     pauseButtonObj = new GameObject("MobilePauseButton", typeof(RectTransform));
-                    pauseButtonObj.transform.SetParent(transform, false);
+                    pauseButtonObj.transform.SetParent(buttonParent, false);
 
                     var rt = pauseButtonObj.GetComponent<RectTransform>();
                     rt.anchorMin = new Vector2(1f, 1f);
                     rt.anchorMax = new Vector2(1f, 1f);
                     rt.pivot = new Vector2(1f, 1f);
-                    rt.anchoredPosition = new Vector2(-36f, -36f);
-                    rt.sizeDelta = new Vector2(56f, 56f); // 56dp touch target
+                    rt.anchoredPosition = new Vector2(-28f, -24f);
+                    rt.sizeDelta = new Vector2(64f, 64f); // >=56dp comfortable mobile touch target
 
                     var img = pauseButtonObj.AddComponent<Image>();
-                    img.sprite = buttonSprite;
-                    img.type = buttonSprite != null ? Image.Type.Sliced : Image.Type.Simple;
-                    img.color = new Color(0.10f, 0.10f, 0.12f, 0.72f);
+                    img.type = Image.Type.Simple;
+                    img.color = new Color(0.08f, 0.08f, 0.10f, 0.78f);
                     img.raycastTarget = true;
+
+                    var outline = pauseButtonObj.AddComponent<Outline>();
+                    outline.effectColor = new Color(1f, 1f, 1f, 0.35f);
+                    outline.effectDistance = new Vector2(1.5f, -1.5f);
 
                     var btn = pauseButtonObj.AddComponent<Button>();
                     btn.targetGraphic = img;
@@ -293,15 +314,15 @@ namespace Story
                     btn.colors = colors;
                     btn.onClick.AddListener(TogglePause);
 
-                    // Crisp Vector Pause Icon (two vertical bars, independent of font glyphs)
+                    // Crisp Vector Pause Icon (two vertical bars, independent of font glyphs or built-in editor sprites)
                     var bar1 = new GameObject("Bar1", typeof(RectTransform), typeof(Image));
                     bar1.transform.SetParent(pauseButtonObj.transform, false);
                     var b1Rt = bar1.GetComponent<RectTransform>();
                     b1Rt.anchorMin = new Vector2(0.5f, 0.5f);
                     b1Rt.anchorMax = new Vector2(0.5f, 0.5f);
                     b1Rt.pivot = new Vector2(0.5f, 0.5f);
-                    b1Rt.anchoredPosition = new Vector2(-5f, 0f);
-                    b1Rt.sizeDelta = new Vector2(5f, 22f);
+                    b1Rt.anchoredPosition = new Vector2(-6f, 0f);
+                    b1Rt.sizeDelta = new Vector2(5f, 24f);
                     var b1Img = bar1.GetComponent<Image>();
                     b1Img.color = Color.white;
                     b1Img.raycastTarget = false;
@@ -312,8 +333,8 @@ namespace Story
                     b2Rt.anchorMin = new Vector2(0.5f, 0.5f);
                     b2Rt.anchorMax = new Vector2(0.5f, 0.5f);
                     b2Rt.pivot = new Vector2(0.5f, 0.5f);
-                    b2Rt.anchoredPosition = new Vector2(5f, 0f);
-                    b2Rt.sizeDelta = new Vector2(5f, 22f);
+                    b2Rt.anchoredPosition = new Vector2(6f, 0f);
+                    b2Rt.sizeDelta = new Vector2(5f, 24f);
                     var b2Img = bar2.GetComponent<Image>();
                     b2Img.color = Color.white;
                     b2Img.raycastTarget = false;

@@ -2859,6 +2859,7 @@ GameObject:
   m_Component:
   - component: {fileID: 519969155}
   - component: {fileID: 519969156}
+  - component: {fileID: 519969157}
   m_Layer: 5
   m_Name: CreditsMenu
   m_TagString: Untagged
@@ -2910,6 +2911,20 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &519969157
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 519969154}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4b5dc683af7da3e40b58098300a6a40f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Story.SafeAreaHandler
+  applyHorizontal: 1
+  applyVertical: 1
 --- !u!1 &594032204
 GameObject:
   m_ObjectHideFlags: 0
@@ -3783,6 +3798,7 @@ GameObject:
   m_Component:
   - component: {fileID: 794881404}
   - component: {fileID: 794881405}
+  - component: {fileID: 794881406}
   m_Layer: 5
   m_Name: OptionsMenu
   m_TagString: Untagged
@@ -3834,6 +3850,20 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &794881406
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 794881403}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4b5dc683af7da3e40b58098300a6a40f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Story.SafeAreaHandler
+  applyHorizontal: 1
+  applyVertical: 1
 --- !u!1 &822261376
 GameObject:
   m_ObjectHideFlags: 0
@@ -4938,6 +4968,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1095928089}
   - component: {fileID: 1095928090}
+  - component: {fileID: 1095928091}
   m_Layer: 5
   m_Name: EpisodesMenu
   m_TagString: Untagged
@@ -4990,6 +5021,20 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1095928091
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1095928088}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4b5dc683af7da3e40b58098300a6a40f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Story.SafeAreaHandler
+  applyHorizontal: 1
+  applyVertical: 1
 --- !u!1 &1104723673
 GameObject:
   m_ObjectHideFlags: 0
@@ -6696,6 +6741,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1399436036}
   - component: {fileID: 1399436037}
+  - component: {fileID: 1399436038}
   m_Layer: 5
   m_Name: MainMenu
   m_TagString: Untagged
@@ -6747,6 +6793,20 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1399436038
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1399436035}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4b5dc683af7da3e40b58098300a6a40f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Story.SafeAreaHandler
+  applyHorizontal: 1
+  applyVertical: 1
 --- !u!1 &1417490377
 GameObject:
   m_ObjectHideFlags: 0
@@ -7527,7 +7587,6 @@ GameObject:
   - component: {fileID: 1583087554}
   - component: {fileID: 1583087553}
   - component: {fileID: 1583087552}
-  - component: {fileID: 1583087557}
   - component: {fileID: 1583087556}
   m_Layer: 5
   m_Name: Canvas
@@ -7638,20 +7697,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Story.MobileUIAdapter
   adaptChildTexts: 1
---- !u!114 &1583087557
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1583087551}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4b5dc683af7da3e40b58098300a6a40f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Story.SafeAreaHandler
-  applyHorizontal: 1
-  applyVertical: 1
 --- !u!1 &1594357600
 GameObject:
   m_ObjectHideFlags: 0

@@ -323,7 +323,9 @@ public class FirstPersonController : MonoBehaviour
         // On PC, clicking in the game window re-locks and hides the cursor during active gameplay
         if (!Application.isMobilePlatform && lockCursor && cameraCanMove && playerCanMove && Input.GetMouseButtonDown(0))
         {
-            if (Story.MobilePauseMenu.Instance == null || !Story.MobilePauseMenu.Instance.isPaused)
+            bool pointerOverUI = UnityEngine.EventSystems.EventSystem.current != null &&
+                                 UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject();
+            if (!pointerOverUI && (Story.MobilePauseMenu.Instance == null || !Story.MobilePauseMenu.Instance.isPaused))
             {
                 if (Cursor.lockState != CursorLockMode.Locked)
                 {
@@ -338,16 +340,26 @@ public class FirstPersonController : MonoBehaviour
         // Control camera movement
         if(cameraCanMove)
         {
-            yaw = transform.localEulerAngles.y + Input.GetAxis("Mouse X") * mouseSensitivity;
+            float lookDeltaX = mobileLookDelta.x;
+            float lookDeltaY = mobileLookDelta.y;
+            mobileLookDelta = Vector2.zero;
+
+            if (!Application.isMobilePlatform && (!lockCursor || Cursor.lockState == CursorLockMode.Locked))
+            {
+                lookDeltaX += Input.GetAxis("Mouse X") * mouseSensitivity;
+                lookDeltaY += Input.GetAxis("Mouse Y") * mouseSensitivity;
+            }
+
+            yaw = transform.localEulerAngles.y + lookDeltaX;
 
             if (!invertCamera)
             {
-                pitch -= mouseSensitivity * Input.GetAxis("Mouse Y");
+                pitch -= lookDeltaY;
             }
             else
             {
                 // Inverted Y
-                pitch += mouseSensitivity * Input.GetAxis("Mouse Y");
+                pitch += lookDeltaY;
             }
 
             // Clamp pitch between lookAngle
@@ -356,10 +368,14 @@ public class FirstPersonController : MonoBehaviour
             transform.localEulerAngles = new Vector3(0, yaw, 0);
             playerCamera.transform.localEulerAngles = new Vector3(pitch, 0, 0);
         }
+        else
+        {
+            mobileLookDelta = Vector2.zero;
+        }
 
         #region Camera Zoom
 
-        if (enableZoom && cameraCanMove)
+        if (!Application.isMobilePlatform && enableZoom && cameraCanMove)
         {
             // Changes isZoomed when key is pressed
             // Behavior for toogle zoom

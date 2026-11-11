@@ -9,6 +9,7 @@ public class MetroFuseBoxPuzzle : MonoBehaviour
 {
     private static MetroFuseBoxPuzzle _instance;
     public static MetroFuseBoxPuzzle Instance => _instance;
+    public static bool IsAnyInspecting => _instance != null && _instance.isInspecting;
 
     [Header("Cabinet Model & Door")]
     public Transform cabinetDoorTransform; // Cube.001_1
@@ -334,7 +335,7 @@ public class MetroFuseBoxPuzzle : MonoBehaviour
                     LocalizationManager.ApplyText(interactUI, prompt, preserveAlignment: true);
                 }
 
-                if (Input.GetKeyDown(KeyCode.E))
+                if (Input.GetKeyDown(KeyCode.E) || ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame)
                 {
                     OpenInspection();
                 }
@@ -368,6 +369,9 @@ public class MetroFuseBoxPuzzle : MonoBehaviour
 
     private void HandleInspectionInput()
     {
+        if (Story.MobilePauseMenu.Instance != null && Story.MobilePauseMenu.Instance.isPaused)
+            return;
+
         if (isTransitioning) return;
 
         // Block all fuse box interaction and closing while dialogue is playing
@@ -404,7 +408,7 @@ public class MetroFuseBoxPuzzle : MonoBehaviour
             if (t.phase == TouchPhase.Began)
             {
                 // Verify touch isn't over UI
-                if (EventSystem.current == null || !EventSystem.current.IsPointerOverGameObject(t.fingerId))
+                if (!DialogueTypewriterUtility.IsScreenPointOverUI(t.position))
                 {
                     pointerClicked = true;
                     pointerPos = t.position;

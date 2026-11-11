@@ -35,7 +35,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 70, y: 70}
+  m_SizeDelta: {x: 114, y: 114}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2006470687816364699
 CanvasRenderer:
@@ -822,7 +822,7 @@ GameObject:
   - component: {fileID: 3370484491945753616}
   - component: {fileID: 7786098295987500322}
   - component: {fileID: 5958210824859186260}
-  - component: {fileID: 7073083044848691215}
+  - component: {fileID: 8973942549018526138}
   m_Layer: 0
   m_Name: RightLookZone
   m_TagString: Untagged
@@ -887,7 +887,7 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &7073083044848691215
+--- !u!114 &8973942549018526138
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -896,7 +896,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 5742533290601771805}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: c6a5535f8e2626741964035084035163, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ModularFirstPersonController.MobileLookZone
   controls: {fileID: 5825195629020417014}
@@ -964,7 +964,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 0
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 15
+  m_SortingOrder: 5
   m_TargetDisplay: 0
 --- !u!114 &8269572201032708404
 MonoBehaviour:
@@ -1036,13 +1036,14 @@ MonoBehaviour:
   joystickBase: {fileID: 523116764857959082}
   joystickHandle: {fileID: 5263888379754495429}
   joystickCanvasGroup: {fileID: 6025976408919406739}
-  maxJoystickRadius: 75
+  maxJoystickRadius: 105
   dynamicJoystick: 1
-  idleAlpha: 0.28
-  activeAlpha: 0.7
+  idleAlpha: 0.48
+  activeAlpha: 0.88
   rightLookArea: {fileID: 3370484491945753616}
   lookSensitivityX: 0.18
   lookSensitivityY: 0.14
+  interactButtonRect: {fileID: 0}
 --- !u!1 &7607025932875767302
 GameObject:
   m_ObjectHideFlags: 0
@@ -1054,7 +1055,7 @@ GameObject:
   - component: {fileID: 6090962875375548203}
   - component: {fileID: 6558097497838280997}
   - component: {fileID: 9114341927925151226}
-  - component: {fileID: 5510807908555558011}
+  - component: {fileID: 4767658983812580893}
   m_Layer: 0
   m_Name: LeftTouchZone
   m_TagString: Untagged
@@ -1120,7 +1121,7 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &5510807908555558011
+--- !u!114 &4767658983812580893
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1129,7 +1130,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 7607025932875767302}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: bda17ad5cac29f5479c21aaba976d5bd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ModularFirstPersonController.MobileJoystickZone
   controls: {fileID: 5825195629020417014}
@@ -1169,8 +1170,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 160, y: 160}
-  m_SizeDelta: {x: 160, y: 160}
+  m_AnchoredPosition: {x: 280, y: 240}
+  m_SizeDelta: {x: 260, y: 260}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &5747412431527704722
 CanvasRenderer:
@@ -1193,7 +1194,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.35}
+  m_Color: {r: 1, g: 1, b: 1, a: 0.48}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1

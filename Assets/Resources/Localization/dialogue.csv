@@ -236,6 +236,7 @@ prompt_inspect_vending,Tap to inspect Vending Machine,Appuyez pour inspecter le 
 prompt_listen_intercom,Tap to listen to Intercom,Appuyez pour écouter l'interphone,المس للاستماع إلى مكبر الصوت,ورك باش تسمع المكبر
 prompt_read_departure_board,Tap to read Departure Board,Appuyez pour lire le tableau des départs,المس لقراءة لوحة المغادرة,ورك باش تقرا لوحة المواعيد
 prompt_take_teddy_ribbon,Tap to take Teddy's Ribbon,Appuyez pour prendre le ruban,المس لأخذ شريط دودو,ورك باش تاخد ربطة دودو
+prompt_press_elevator_button,Tap to Call Elevator,Appuyez pour appeler l'ascenseur,المس لطلب المصعد,ورك باش تعيط للاسانسور
 item_200_dh,200 DH,200 DH,200 درهم,200 درهم
 obj_find_teddy,Find Teddy...,Trouve Doudou...,ابحث عن دبدوبك...,قلب على دودو...
 obj_restore_circuit,Restore the circuit...,Rétablis le circuit...,أعد تشغيل الدائرة الكهربائية...,رجع الضو...

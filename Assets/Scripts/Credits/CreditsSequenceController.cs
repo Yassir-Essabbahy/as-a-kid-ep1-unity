@@ -242,7 +242,8 @@ namespace Credits
             if (returnPromptText != null)
             {
                 returnPromptText.gameObject.SetActive(true);
-                string promptStr = LocalizationManager.Resolve("credits_return_prompt", Story.MobileUIAdapter.AdaptPrompt("[ PRESS ANY KEY TO RETURN TO MAIN MENU ]"));
+                string resolved = LocalizationManager.Resolve("credits_return_prompt", "[ PRESS ANY KEY TO RETURN TO MAIN MENU ]");
+                string promptStr = Story.MobileUIAdapter.AdaptPrompt(resolved);
                 LocalizationManager.ApplyText(returnPromptText, promptStr, preserveAlignment: true);
                 StartCoroutine(PulsePromptText(returnPromptText));
             }

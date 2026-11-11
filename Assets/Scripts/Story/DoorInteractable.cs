@@ -70,7 +70,7 @@ public class DoorInteractable : MonoBehaviour
                 string doorPrompt = LocalizationManager.Resolve("prompt_open_door_f3", "Tap to open door");
                 if (NpcInteractionText.Instance != null)
                 {
-                    NpcInteractionText.Instance.SetPrompt(doorPrompt);
+                    NpcInteractionText.Instance.SetPrompt(doorPrompt, InteractWithDoor);
                 }
                 else if (interactText != null)
                 {
@@ -80,9 +80,7 @@ public class DoorInteractable : MonoBehaviour
 
                 if (Input.GetKeyDown(interactKey) || ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame)
                 {
-                    if (NpcInteractionText.Instance != null) NpcInteractionText.Instance.ClearPrompt();
-                    if (interactText != null) { interactText.text = ""; interactText.gameObject.SetActive(false); }
-                    MetroStorySequenceController.Instance.OnDoorInteracted();
+                    InteractWithDoor();
                 }
                 return;
             }
@@ -96,6 +94,19 @@ public class DoorInteractable : MonoBehaviour
         }
     }
 
+    public void InteractWithDoor()
+    {
+        if (MetroStorySequenceController.Instance == null ||
+            MetroStorySequenceController.Instance.currentPhase != MetroStorySequenceController.StoryPhase.DoorWaiting)
+        {
+            return;
+        }
+
+        if (NpcInteractionText.Instance != null) NpcInteractionText.Instance.ClearPrompt();
+        if (interactText != null) { interactText.text = ""; interactText.gameObject.SetActive(false); }
+        MetroStorySequenceController.Instance.OnDoorInteracted();
+    }
+
     private void OnTriggerEnter(Collider other)
     {
         if (!other.CompareTag("Player")) return;
@@ -105,7 +116,7 @@ public class DoorInteractable : MonoBehaviour
             string doorPrompt = LocalizationManager.Resolve("prompt_open_door_f3", "Tap to open door");
             if (NpcInteractionText.Instance != null)
             {
-                NpcInteractionText.Instance.SetPrompt(doorPrompt);
+                NpcInteractionText.Instance.SetPrompt(doorPrompt, InteractWithDoor);
             }
             else if (interactText != null)
             {

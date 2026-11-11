@@ -28,6 +28,9 @@ public class DialogueInputAdvancer : MonoBehaviour
 
     private void Update()
     {
+        if (Story.MobilePauseMenu.Instance != null && Story.MobilePauseMenu.Instance.isPaused)
+            return;
+
         if (IsLocked) return;
 
         if (DialogueManager.Instance == null || !DialogueManager.Instance.IsPlaying)
@@ -36,7 +39,9 @@ public class DialogueInputAdvancer : MonoBehaviour
         bool pointerDown = Input.GetMouseButtonDown(0) ||
                            (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began);
         bool advancePressed = Input.GetKeyDown(advanceKey) ||
-                              (pointerDown && !DialogueTypewriterUtility.IsPointerOverButton(DialogueManager.Instance.continueButton));
+                              (pointerDown &&
+                               !DialogueTypewriterUtility.IsPointerOverButton(DialogueManager.Instance.continueButton) &&
+                               !DialogueTypewriterUtility.IsPointerOverPauseButton());
 
         if (advancePressed)
         {

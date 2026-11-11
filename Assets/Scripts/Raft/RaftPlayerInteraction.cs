@@ -136,11 +136,19 @@ public class RaftPlayerInteraction : MonoBehaviour
 
     private void Update()
     {
+        if (Story.MobilePauseMenu.Instance != null && Story.MobilePauseMenu.Instance.isPaused)
+            return;
+
         // 1. Handle Drop Input
         if (currentHeldPiece != null && Input.GetKeyDown(dropKey))
         {
             DropCurrentPiece();
             return;
+        }
+
+        if (interactInput != null)
+        {
+            interactInput.SetDropAvailable(currentHeldPiece != null, DropCurrentPiece);
         }
 
         // 2. Raycast & SphereCast to detect interactive objects
@@ -299,6 +307,11 @@ public class RaftPlayerInteraction : MonoBehaviour
         if (currentHeldPiece != null)
         {
             SetPrompt(LocalizationManager.Resolve("raft_prompt_drop_short", $"{dropKey} to drop"));
+            if (interactInput != null && interactInput.WasPressed)
+            {
+                interactInput.ConsumePress();
+                DropCurrentPiece();
+            }
         }
         else
         {

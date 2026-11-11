@@ -72,6 +72,24 @@ public class ElevatorButton : MonoBehaviour
 
     void Start()
     {
+        if (playerTransform == null)
+        {
+            if (FirstPersonController.ActiveInstance != null)
+            {
+                playerTransform = FirstPersonController.ActiveInstance.transform;
+            }
+            else
+            {
+                var playerObj = GameObject.FindWithTag("Player");
+                if (playerObj != null) playerTransform = playerObj.transform;
+                else
+                {
+                    var fpc = FindAnyObjectByType<FirstPersonController>();
+                    if (fpc != null) playerTransform = fpc.transform;
+                }
+            }
+        }
+
         if (MetroStorySequenceController.Instance != null)
         {
             isPowered = MetroStorySequenceController.Instance.isPowerRestored;
@@ -109,6 +127,7 @@ public class ElevatorButton : MonoBehaviour
     }
 
     private bool isRunning;
+    private bool playerInRange;
     private Rigidbody voidTrainRb;
     private readonly WaitForFixedUpdate waitForFixedUpdate = new WaitForFixedUpdate();
     private Transform activeShakeTransform;
@@ -157,64 +176,137 @@ public class ElevatorButton : MonoBehaviour
         }
     }
 
+    void OnDisable()
+    {
+        playerInRange = false;
+        ClearPromptIfOurs();
+    }
+
+    private string GetLocalizedButtonPrompt()
+    {
+        return LocalizationManager.Resolve("prompt_press_elevator_button", "Press 'E' to Call Elevator");
+    }
+
+    private bool IsPlayerWithinRange()
+    {
+        if (playerTransform == null)
+        {
+            if (FirstPersonController.ActiveInstance != null)
+            {
+                playerTransform = FirstPersonController.ActiveInstance.transform;
+            }
+            else
+            {
+                var playerObj = GameObject.FindWithTag("Player");
+                if (playerObj != null) playerTransform = playerObj.transform;
+            }
+        }
+        if (playerTransform == null) return false;
+
+        float effectiveDist = Mathf.Max(interactDistance, 2.2f);
+        if (Vector3.Distance(transform.position, playerTransform.position) <= effectiveDist)
+            return true;
+
+        Camera cam = Camera.main;
+        return cam != null && Vector3.Distance(transform.position, cam.transform.position) <= effectiveDist;
+    }
+
+    private void ClearPromptIfOurs()
+    {
+        if (NpcInteractionText.Instance == null) return;
+        string p = GetLocalizedButtonPrompt();
+        string cur = NpcInteractionText.Instance.GetCurrentPrompt();
+        if (cur == p || cur == Story.MobileUIAdapter.AdaptPrompt(p))
+        {
+            NpcInteractionText.Instance.ClearPrompt();
+        }
+    }
+
     void Update()
     {
-        if (isRunning) return;
-        if (playerTransform == null) return;
+        bool paused = Story.MobilePauseMenu.Instance != null && Story.MobilePauseMenu.Instance.isPaused;
+        bool dialogueRunning = NpcDialogueManager.Instance != null && NpcDialogueManager.Instance.IsDialogueRunning;
 
-        float dist = Vector3.Distance(transform.position, playerTransform.position);
-        if (dist <= interactDistance && Input.GetKeyDown(interactKey))
+        if (isRunning || paused || dialogueRunning)
         {
-            bool powerReady = isPowered || (MetroStorySequenceController.Instance != null && MetroStorySequenceController.Instance.isPowerRestored);
-            bool storyUnlocked = MetroStorySequenceController.Instance == null || MetroStorySequenceController.Instance.IsElevatorUnlocked;
-            bool questCompleted = currentFloorQuest == null || currentFloorQuest.questCompleted;
-
-            if (!powerReady)
+            if (playerInRange)
             {
-                if (NpcDialogueManager.Instance != null && !NpcDialogueManager.Instance.IsDialogueRunning)
-                {
-                    StartCoroutine(NpcDialogueManager.Instance.ShowDialogue(
-                        new string[] { MetroStorySequenceController.GetLoc("elevator_btn_no_power") },
-                        false,
-                        Color.white,
-                        null
-                    ));
-                }
-                return;
+                playerInRange = false;
+                ClearPromptIfOurs();
             }
-
-            if (!storyUnlocked || !questCompleted)
-            {
-                if (NpcDialogueManager.Instance != null && !NpcDialogueManager.Instance.IsDialogueRunning)
-                {
-                    StartCoroutine(NpcDialogueManager.Instance.ShowDialogue(
-                        new string[] { MetroStorySequenceController.GetLoc("elevator_btn_no_ticket") },
-                        false,
-                        Color.white,
-                        null
-                    ));
-                }
-                return;
-            }
-
-            if (MetroStorySequenceController.Instance != null && !MetroStorySequenceController.Instance.IsTeddyCarried)
-            {
-                if (NpcDialogueManager.Instance != null && !NpcDialogueManager.Instance.IsDialogueRunning)
-                {
-                    StartCoroutine(NpcDialogueManager.Instance.ShowDialogue(
-                        new string[] { MetroStorySequenceController.GetLoc("elevator_btn_no_teddy") },
-                        false,
-                        Color.white,
-                        null
-                    ));
-                }
-                return;
-            }
-
-            if (FloorManager.Instance == null || !FloorManager.Instance.HasNextFloor()) return;
-
-            StartCoroutine(RunElevator());
+            return;
         }
+
+        if (IsPlayerWithinRange())
+        {
+            playerInRange = true;
+            if (NpcInteractionText.Instance != null)
+            {
+                NpcInteractionText.Instance.SetPrompt(GetLocalizedButtonPrompt(), TryActivateElevator);
+            }
+
+            if (Input.GetKeyDown(interactKey) || ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame)
+            {
+                TryActivateElevator();
+            }
+        }
+        else if (playerInRange)
+        {
+            playerInRange = false;
+            ClearPromptIfOurs();
+        }
+    }
+
+    public void TryActivateElevator()
+    {
+        if (isRunning) return;
+        if (Story.MobilePauseMenu.Instance != null && Story.MobilePauseMenu.Instance.isPaused) return;
+        if (NpcDialogueManager.Instance != null && NpcDialogueManager.Instance.IsDialogueRunning) return;
+        if (!IsPlayerWithinRange()) return;
+
+        playerInRange = false;
+        ClearPromptIfOurs();
+
+        bool powerReady = isPowered || (MetroStorySequenceController.Instance != null && MetroStorySequenceController.Instance.isPowerRestored);
+        bool storyUnlocked = MetroStorySequenceController.Instance == null || MetroStorySequenceController.Instance.IsElevatorUnlocked;
+        bool questCompleted = currentFloorQuest == null || currentFloorQuest.questCompleted;
+
+        if (!powerReady)
+        {
+            StartCoroutine(NpcDialogueManager.Instance.ShowDialogue(
+                new string[] { MetroStorySequenceController.GetLoc("elevator_btn_no_power") },
+                false,
+                Color.white,
+                null
+            ));
+            return;
+        }
+
+        if (!storyUnlocked || !questCompleted)
+        {
+            StartCoroutine(NpcDialogueManager.Instance.ShowDialogue(
+                new string[] { MetroStorySequenceController.GetLoc("elevator_btn_no_ticket") },
+                false,
+                Color.white,
+                null
+            ));
+            return;
+        }
+
+        if (MetroStorySequenceController.Instance != null && !MetroStorySequenceController.Instance.IsTeddyCarried)
+        {
+            StartCoroutine(NpcDialogueManager.Instance.ShowDialogue(
+                new string[] { MetroStorySequenceController.GetLoc("elevator_btn_no_teddy") },
+                false,
+                Color.white,
+                null
+            ));
+            return;
+        }
+
+        if (FloorManager.Instance == null || !FloorManager.Instance.HasNextFloor()) return;
+
+        StartCoroutine(RunElevator());
     }
 
     IEnumerator RunElevator()

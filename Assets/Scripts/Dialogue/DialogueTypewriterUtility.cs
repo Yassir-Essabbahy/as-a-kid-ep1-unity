@@ -1,7 +1,9 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 /// <summary>
@@ -53,6 +55,9 @@ public static class DialogueTypewriterUtility
     /// </summary>
     public static bool IsAdvanceOrSkipInputPressed(Button ignorePointerOverButton = null)
     {
+        if (Story.MobilePauseMenu.Instance != null && Story.MobilePauseMenu.Instance.isPaused)
+            return false;
+
         if (Input.GetKeyDown(KeyCode.Space) ||
             Input.GetKeyDown(KeyCode.E) ||
             ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame)
@@ -63,12 +68,39 @@ public static class DialogueTypewriterUtility
         bool pointerDown = Input.GetMouseButtonDown(0) ||
                            (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began);
 
-        if (pointerDown && !IsPointerOverButton(ignorePointerOverButton))
+        if (pointerDown && !IsPointerOverButton(ignorePointerOverButton) && !IsPointerOverPauseButton())
         {
             return true;
         }
 
         return false;
+    }
+
+    private static readonly List<RaycastResult> s_UiRaycastResults = new List<RaycastResult>(16);
+
+    /// <summary>
+    /// Returns true if the given screen position hits any raycastable UI element.
+    /// Reliable across both InputSystemUIInputModule and legacy input (avoids fingerId vs touchId mismatches).
+    /// </summary>
+    public static bool IsScreenPointOverUI(Vector2 screenPosition)
+    {
+        if (EventSystem.current == null)
+            return false;
+
+        var ped = new PointerEventData(EventSystem.current) { position = screenPosition };
+        s_UiRaycastResults.Clear();
+        EventSystem.current.RaycastAll(ped, s_UiRaycastResults);
+        return s_UiRaycastResults.Count > 0;
+    }
+
+    public static bool IsPointerOverPauseButton()
+    {
+        var pauseMenu = Story.MobilePauseMenu.Instance;
+        if (pauseMenu == null || pauseMenu.pauseButtonObj == null)
+            return false;
+
+        var pauseBtn = pauseMenu.pauseButtonObj.GetComponent<Button>();
+        return IsPointerOverButton(pauseBtn);
     }
 
     /// <summary>

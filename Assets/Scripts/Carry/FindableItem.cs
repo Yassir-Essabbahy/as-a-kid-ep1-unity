@@ -59,7 +59,7 @@ public class FindableItem : MonoBehaviour
                     NpcInteractionText.Instance.SetPrompt(GetLocalizedPrompt());
                 }
 
-                if (Input.GetKeyDown(KeyCode.E))
+                if (Input.GetKeyDown(KeyCode.E) || ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame)
                 {
                     Collect();
                 }

@@ -28,6 +28,9 @@ public class NpcInteractionText : MonoBehaviour
     private string currentPromptString = "";
     private IInteractable currentInteractable;
     private int lastDialogueFrame = -100;
+    private bool promptOwnedInternally = false;
+    private int lastExternalPromptFrame = -10;
+    private System.Action externalPromptClickAction;
 
     [Header("Cameras & Cinemachine")]
     public Transform playerCamera;
@@ -166,6 +169,21 @@ public class NpcInteractionText : MonoBehaviour
 
     public void SetPrompt(string text)
     {
+        SetPromptInternal(text, isInternal: false, onClick: null);
+    }
+
+    public void SetPrompt(string text, System.Action onClick)
+    {
+        SetPromptInternal(text, isInternal: false, onClick: onClick);
+    }
+
+    private void SetInternalPrompt(string text)
+    {
+        SetPromptInternal(text, isInternal: true, onClick: null);
+    }
+
+    private void SetPromptInternal(string text, bool isInternal, System.Action onClick)
+    {
         if (NpcDialogueManager.Instance != null && NpcDialogueManager.Instance.IsDialogueRunning)
         {
             ClearPrompt();
@@ -179,6 +197,17 @@ public class NpcInteractionText : MonoBehaviour
         {
             ClearPrompt();
             return;
+        }
+
+        promptOwnedInternally = isInternal;
+        if (!isInternal)
+        {
+            lastExternalPromptFrame = Time.frameCount;
+            externalPromptClickAction = onClick;
+        }
+        else
+        {
+            externalPromptClickAction = null;
         }
 
         // Remove all white text press e when interact
@@ -216,6 +245,9 @@ public class NpcInteractionText : MonoBehaviour
         currentPlaceholder = null;
         currentNpcConv = null;
  currentInteractable = null;
+        promptOwnedInternally = false;
+        lastExternalPromptFrame = -10;
+        externalPromptClickAction = null;
 
         if (InteractText != null && InteractText != promptBoxText && (promptBox == null || !InteractText.transform.IsChildOf(promptBox.transform)))
         {
@@ -285,6 +317,12 @@ public class NpcInteractionText : MonoBehaviour
             MetroFuseBoxPuzzle.Instance.OpenInspection();
             return;
         }
+
+        if (externalPromptClickAction != null)
+        {
+            externalPromptClickAction.Invoke();
+            return;
+        }
     }
 
     void Update()
@@ -329,7 +367,7 @@ public class NpcInteractionText : MonoBehaviour
                 currentPlaceholder = null;
                 currentNpcConv = null;
  currentInteractable = null;
-                SetPrompt(LocalizationManager.Resolve("prompt_tap_interact", "Tap to interact"));
+                SetInternalPrompt(LocalizationManager.Resolve("prompt_tap_interact", "Tap to interact"));
 
                 if (Input.GetKeyDown(KeyCode.E) || ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame)
                 {
@@ -344,7 +382,7 @@ public class NpcInteractionText : MonoBehaviour
                 currentPlaceholder = placeholder;
                 currentNpcConv = null;
  currentInteractable = null;
-                SetPrompt(LocalizationManager.Resolve("prompt_tap_interact", "Tap to interact"));
+                SetInternalPrompt(LocalizationManager.Resolve("prompt_tap_interact", "Tap to interact"));
 
                 if (Input.GetKeyDown(KeyCode.E) || ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame)
                 {
@@ -363,7 +401,7 @@ public class NpcInteractionText : MonoBehaviour
                     currentPlaceholder = null;
                     currentFindable = null;
                     currentNpcConv = null;
-                    SetPrompt(prompt);
+                    SetInternalPrompt(prompt);
 
                     if (Input.GetKeyDown(KeyCode.E) || ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame)
                     {
@@ -391,7 +429,7 @@ public class NpcInteractionText : MonoBehaviour
                     currentNpcLook = hit.collider.GetComponent<NpcLookAt>();
 
                     string prompt = (currentIsTeddy && !isCarried) ? LocalizationManager.Resolve("prompt_tap_interact", "Tap to interact") : LocalizationManager.Resolve("prompt_tap_talk", "Tap to talk");
-                    SetPrompt(prompt);
+                    SetInternalPrompt(prompt);
 
                     if (Input.GetKeyDown(KeyCode.E) || ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame)
                     {
@@ -411,7 +449,7 @@ public class NpcInteractionText : MonoBehaviour
             string prompt = MetroFuseBoxPuzzle.Instance.isPowerRestored
                 ? MetroFuseBoxPuzzle.Instance.promptPoweredText
                 : MetroFuseBoxPuzzle.Instance.promptOpenText;
-            SetPrompt(prompt);
+            SetInternalPrompt(prompt);
 
             if (Input.GetKeyDown(KeyCode.E) || ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame)
             {
@@ -423,7 +461,10 @@ public class NpcInteractionText : MonoBehaviour
         currentPlaceholder = null;
         currentNpcConv = null;
  currentInteractable = null;
-        ClearPrompt();
+        if (promptOwnedInternally || Time.frameCount > lastExternalPromptFrame + 1)
+        {
+            ClearPrompt();
+        }
     }
 
     private Vector3 GetTargetLookPosition(NpcConversation conv, Collider hitCol, Vector3 hitPoint)

@@ -100,6 +100,7 @@ public class TimingMinigameUI : MonoBehaviour
     private AudioClip _procFail;
 
     public bool IsActive => _isMinigameActive;
+    public static bool IsAnyMinigameActive => _instance != null && _instance._isMinigameActive;
 
     private void Awake()
     {
@@ -199,6 +200,9 @@ public class TimingMinigameUI : MonoBehaviour
 
     private void Update()
     {
+        if (Story.MobilePauseMenu.Instance != null && Story.MobilePauseMenu.Instance.isPaused)
+            return;
+
         if (!_isMinigameActive || _isHandlingFeedback)
             return;
 
@@ -231,6 +235,9 @@ public class TimingMinigameUI : MonoBehaviour
 
     private bool CheckStopInput()
     {
+        if (DialogueTypewriterUtility.IsPointerOverPauseButton())
+            return false;
+
         if (Input.GetKeyDown(KeyCode.E) ||
             Input.GetKeyDown(KeyCode.Space) ||
             Input.GetMouseButtonDown(0) ||

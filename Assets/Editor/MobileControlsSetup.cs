@@ -27,13 +27,16 @@ namespace Story
             // 1. Update FirstPersonController Prefab
             SetupPrefab(baseSprite, knobSprite);
 
-            // 2. Update Scenes
+            // 2. Update Active Build Scenes
             string[] scenePaths = new[]
             {
-                "Assets/Scenes/Gameplay3.unity",
-                "Assets/Scenes/Gameplay1.unity",
-                "Assets/Scenes/Gameplay2.unity",
-                "Assets/Scenes/Gameplay3 1.unity"
+                "Assets/Scenes/House_Export.unity",
+                "Assets/Scenes/Start.unity",
+                "Assets/Scenes/Story.unity",
+                "Assets/Scenes/MoroccanBeach.unity",
+                "Assets/Scenes/Ending.unity",
+                "Assets/Scenes/MainMenu.unity",
+                "Assets/Scenes/Credits.unity"
             };
 
             string activeScenePath = EditorSceneManager.GetActiveScene().path;
@@ -115,7 +118,7 @@ namespace Story
             var canvas = canvasObj.GetComponent<Canvas>();
             if (canvas == null) canvas = canvasObj.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 15; // Above world, under high-priority alerts
+            canvas.sortingOrder = 5; // Above world, under HUD/PromptBox/Dialogue/PauseMenu
 
             // Canvas Scaler
             var scaler = canvasObj.GetComponent<CanvasScaler>();
@@ -138,9 +141,9 @@ namespace Story
             controls.controller = fpc;
             controls.forceShowInEditor = true;
             controls.dynamicJoystick = true;
-            controls.maxJoystickRadius = 75f;
-            controls.idleAlpha = 0.28f;
-            controls.activeAlpha = 0.70f;
+            controls.maxJoystickRadius = 105f;
+            controls.idleAlpha = 0.48f;
+            controls.activeAlpha = 0.88f;
             controls.lookSensitivityX = 0.18f;
             controls.lookSensitivityY = 0.14f;
 
@@ -175,13 +178,13 @@ namespace Story
             baseRect.anchorMin = new Vector2(0f, 0f);
             baseRect.anchorMax = new Vector2(0f, 0f);
             baseRect.pivot = new Vector2(0.5f, 0.5f);
-            baseRect.anchoredPosition = new Vector2(160f, 160f);
-            baseRect.sizeDelta = new Vector2(160f, 160f);
+            baseRect.anchoredPosition = new Vector2(280f, 240f);
+            baseRect.sizeDelta = new Vector2(260f, 260f);
 
             var baseImage = baseObj.GetComponent<Image>();
             if (baseImage == null) baseImage = baseObj.AddComponent<Image>();
             baseImage.sprite = baseSprite;
-            baseImage.color = new Color(1f, 1f, 1f, 0.35f); // Subtle semi-transparent
+            baseImage.color = new Color(1f, 1f, 1f, 0.48f); // Visible semi-transparent ring
             baseImage.raycastTarget = false;
 
             var baseCg = baseObj.GetComponent<CanvasGroup>();
@@ -200,7 +203,7 @@ namespace Story
             handleRect.anchorMax = new Vector2(0.5f, 0.5f);
             handleRect.pivot = new Vector2(0.5f, 0.5f);
             handleRect.anchoredPosition = Vector2.zero;
-            handleRect.sizeDelta = new Vector2(70f, 70f);
+            handleRect.sizeDelta = new Vector2(114f, 114f);
 
             var handleImage = handleObj.GetComponent<Image>();
             if (handleImage == null) handleImage = handleObj.AddComponent<Image>();

@@ -25,6 +25,9 @@ public class VHSRendererFeature : ScriptableRendererFeature
 
     public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
     {
+        if (renderingData.cameraData.isPreviewCamera || renderingData.cameraData.cameraType == CameraType.Reflection)
+            return;
+
         if (settings.material == null)
         {
             Debug.LogWarning("VHSRendererFeature: Material is missing.");
@@ -76,6 +79,7 @@ public class VHSRendererFeature : ScriptableRendererFeature
 
             TextureDesc descriptor = cameraColor.GetDescriptor(renderGraph);
             descriptor.depthBufferBits = 0;
+            descriptor.msaaSamples = MSAASamples.None;
             descriptor.name = "_VHSTempRT";
             descriptor.clearBuffer = false;
             descriptor.useDynamicScale = true;

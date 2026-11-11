@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.EventSystems;
 using Unity.Cinemachine;
 
 /// <summary>
@@ -96,6 +97,15 @@ public class ClassroomGazeScene : MonoBehaviour
     private Coroutine _rotateCoroutine;
     private bool _transitionTriggered = false;
 
+    // Touch look & tap separation state
+    private int _lookTouchId = -999;
+    private Vector2 _lookTouchStartPos = Vector2.zero;
+    private float _lookTouchStartTime = 0f;
+    private bool _lookTouchMoved = false;
+    private bool _pendingWorldTapInteract = false;
+    private Vector2 _lastEditorDragPos = Vector2.zero;
+    private bool _editorDragActive = false;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -120,9 +130,17 @@ public class ClassroomGazeScene : MonoBehaviour
 
         if (playerRig != null) playerRig.SetActive(false);
 
-        // Lock cursor for natural first-person head rotation
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        // Lock cursor for natural first-person head rotation on desktop only
+        if (!Application.isMobilePlatform && !Story.MobileUIAdapter.IsMobile)
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
+        else
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
 
         // Position camera rig at seated eye position
         if (teacherVCam != null)
@@ -259,15 +277,21 @@ public class ClassroomGazeScene : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Escape))
+        if (Story.MobilePauseMenu.Instance != null && Story.MobilePauseMenu.Instance.isPaused)
+            return;
+
+        if (!Application.isMobilePlatform && !Story.MobileUIAdapter.IsMobile)
         {
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
-        }
-        else if (Input.GetMouseButtonDown(0) && Cursor.lockState != CursorLockMode.Locked)
-        {
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
+            }
+            else if (Input.GetMouseButtonDown(0) && Cursor.lockState != CursorLockMode.Locked && !IsPointerOverAnyUI())
+            {
+                Cursor.lockState = CursorLockMode.Locked;
+                Cursor.visible = false;
+            }
         }
 
         if (!isSeatedLookActive) return;
@@ -277,13 +301,101 @@ public class ClassroomGazeScene : MonoBehaviour
         HandleInteractionInput();
     }
 
+    private static bool IsPointerOverAnyUI(Vector2? screenPosition = null)
+    {
+        if (EventSystem.current == null) return false;
+        return screenPosition.HasValue
+            ? DialogueTypewriterUtility.IsScreenPointOverUI(screenPosition.Value)
+            : EventSystem.current.IsPointerOverGameObject();
+    }
+
     /// <summary>
-    /// Smooth, clamped mouse look while seated in the classroom chair.
+    /// Smooth, clamped mouse & touch look while seated in the classroom chair.
     /// </summary>
     private void HandleSeatedMouseLook()
     {
-        float mouseX = (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Moved) ? (Input.GetTouch(0).deltaPosition.x * 0.15f * mouseSensitivity) : (Input.GetAxis("Mouse X") * mouseSensitivity);
-        float mouseY = (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Moved) ? (Input.GetTouch(0).deltaPosition.y * 0.15f * mouseSensitivity) : (Input.GetAxis("Mouse Y") * mouseSensitivity);
+        float mouseX = 0f;
+        float mouseY = 0f;
+        _pendingWorldTapInteract = false;
+
+        if (Input.touchCount > 0)
+        {
+            for (int i = 0; i < Input.touchCount; i++)
+            {
+                Touch t = Input.GetTouch(i);
+                if (t.phase == TouchPhase.Began && _lookTouchId == -999 && !IsPointerOverAnyUI(t.position))
+                {
+                    _lookTouchId = t.fingerId;
+                    _lookTouchStartPos = t.position;
+                    _lookTouchStartTime = Time.time;
+                    _lookTouchMoved = false;
+                }
+                else if (t.fingerId == _lookTouchId)
+                {
+                    if (t.phase == TouchPhase.Moved || t.phase == TouchPhase.Stationary)
+                    {
+                        if ((t.position - _lookTouchStartPos).sqrMagnitude > 18f * 18f)
+                        {
+                            _lookTouchMoved = true;
+                        }
+                        if (t.phase == TouchPhase.Moved)
+                        {
+                            float lookSens = GameSettingsManager.Instance != null
+                                ? GameSettingsManager.Instance.MobileLookSensitivityX
+                                : (0.15f * mouseSensitivity);
+                            mouseX += t.deltaPosition.x * lookSens;
+                            mouseY += t.deltaPosition.y * lookSens;
+                        }
+                    }
+                    else if (t.phase == TouchPhase.Ended || t.phase == TouchPhase.Canceled)
+                    {
+                        if (t.phase == TouchPhase.Ended && !_lookTouchMoved && (Time.time - _lookTouchStartTime) < 0.35f)
+                        {
+                            _pendingWorldTapInteract = true;
+                        }
+                        _lookTouchId = -999;
+                        _lookTouchMoved = false;
+                    }
+                }
+            }
+        }
+        else if (Story.MobileUIAdapter.IsMobile)
+        {
+            // Editor mobile preview: drag with mouse button held without locking cursor
+            if (Input.GetMouseButtonDown(0) && !IsPointerOverAnyUI())
+            {
+                _editorDragActive = true;
+                _lastEditorDragPos = Input.mousePosition;
+                _lookTouchStartPos = Input.mousePosition;
+                _lookTouchStartTime = Time.time;
+                _lookTouchMoved = false;
+            }
+            else if (_editorDragActive && Input.GetMouseButton(0))
+            {
+                Vector2 cur = Input.mousePosition;
+                Vector2 delta = cur - _lastEditorDragPos;
+                _lastEditorDragPos = cur;
+                if ((cur - _lookTouchStartPos).sqrMagnitude > 12f * 12f)
+                    _lookTouchMoved = true;
+                float lookSens = GameSettingsManager.Instance != null
+                    ? GameSettingsManager.Instance.MobileLookSensitivityX
+                    : 0.18f;
+                mouseX = delta.x * lookSens;
+                mouseY = delta.y * lookSens;
+            }
+            else if (_editorDragActive && Input.GetMouseButtonUp(0))
+            {
+                if (!_lookTouchMoved && (Time.time - _lookTouchStartTime) < 0.35f)
+                    _pendingWorldTapInteract = true;
+                _editorDragActive = false;
+                _lookTouchMoved = false;
+            }
+        }
+        else
+        {
+            mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
+            mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
+        }
 
         _targetYaw = Mathf.Clamp(_targetYaw + mouseX, minYaw, maxYaw);
         _targetPitch = Mathf.Clamp(_targetPitch - mouseY, minPitch, maxPitch);
@@ -338,13 +450,30 @@ public class ClassroomGazeScene : MonoBehaviour
     }
 
     /// <summary>
-    /// Processes player input (E key or mouse click) to inspect hovered desk items or the book.
+    /// Processes player input (E key, desktop click, or stationary mobile tap) to inspect hovered desk items or the book.
     /// </summary>
     private void HandleInteractionInput()
     {
-        bool interactPressed = Input.GetKeyDown(KeyCode.E) || Input.GetMouseButtonDown(0) || ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame;
+        bool mouseClickInteract = !Application.isMobilePlatform && !Story.MobileUIAdapter.IsMobile &&
+                                  Input.GetMouseButtonDown(0) && !IsPointerOverAnyUI();
 
-        if (interactPressed && _currentHoverItem != null)
+        bool interactPressed = Input.GetKeyDown(KeyCode.E) ||
+                               ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame ||
+                               _pendingWorldTapInteract ||
+                               mouseClickInteract;
+        _pendingWorldTapInteract = false;
+
+        if (interactPressed)
+        {
+            TriggerCurrentHoverInteraction();
+        }
+    }
+
+    public void TriggerCurrentHoverInteraction()
+    {
+        if (!isSeatedLookActive || _currentHoverItem == null) return;
+        if (Story.MobilePauseMenu.Instance != null && Story.MobilePauseMenu.Instance.isPaused) return;
+
         {
             if (_currentHoverItem == bookInteractable)
             {
