@@ -206,6 +206,7 @@ public class HouseWakingCinematic : MonoBehaviour
 
         if (alarmAudioSource != null)
         {
+            alarmAudioSource.playOnAwake = false;
             alarmLowPass = alarmAudioSource.GetComponent<AudioLowPassFilter>();
             if (alarmLowPass == null) alarmLowPass = alarmAudioSource.gameObject.AddComponent<AudioLowPassFilter>();
         }
@@ -455,7 +456,7 @@ public class HouseWakingCinematic : MonoBehaviour
             ambientAudioSource.clip = morningAmbienceClip;
             ambientAudioSource.volume = 0f;
             ambientAudioSource.Play();
-            StartCoroutine(FadeAmbienceVolume(0.4f, 2.5f));
+            StartCoroutine(FadeAmbienceVolume(0.08f, 2.5f));
         }
 
         // 8. GETTING UP FROM THIS PERSPECTIVE (fluid, continuous 5s get-up motion)
