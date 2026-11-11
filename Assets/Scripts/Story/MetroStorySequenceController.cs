@@ -713,11 +713,18 @@ public class MetroStorySequenceController : MonoBehaviour
         if (doorObject != null)
             doorObject.SetActive(true);
 
+        var f1 = GameObject.Find("Floor1");
+        if (f1 != null && f1.activeSelf)
+            f1.SetActive(false);
+
         var f3 = GameObject.Find("Floor3");
         if (f3 != null)
         {
+            if (!f3.activeSelf) f3.SetActive(true);
             var doorInF3 = f3.transform.Find("Door_Behind");
             if (doorInF3 != null) doorInF3.gameObject.SetActive(true);
+            var interrog = f3.transform.Find("interrogation");
+            if (interrog != null) interrog.gameObject.SetActive(true);
         }
     }
 
@@ -1051,6 +1058,10 @@ public class MetroStorySequenceController : MonoBehaviour
             crosshairAndStamina.SetActive(false);
         }
 
+        // Ensure Floor 1 station meshes are hidden so Floor 3 interrogation room renders cleanly
+        var f1 = GameObject.Find("Floor1");
+        if (f1 != null && f1.activeSelf) f1.SetActive(false);
+
         // Silence outside ambience completely upon room entry
         SilenceOutsideAmbience();
 
@@ -1078,7 +1089,8 @@ public class MetroStorySequenceController : MonoBehaviour
             onLineStarted: OnBehindDoorCinematicLineStarted
         ));
 
-        yield return StartCoroutine(ChildEpisodeRoutine());
+        // Adults remain unaware of the child; transition straight into the Dark Room Teddy reveal
+        yield return StartCoroutine(DarkRoomRoutine());
     }
 
     public void SwitchDialogueCamera(CinemachineCamera targetVcam)
@@ -1145,7 +1157,7 @@ public class MetroStorySequenceController : MonoBehaviour
             case 5: // Mother: since waking in hospital he thinks it's all his fault
                 SwitchDialogueCamera(interrogationMotherVCam);
                 break;
-            case 6: // Teacher: hears crying outside the door
+            case 6: // Teacher: staying focused on the parents' account (unaware of the boy outside)
                 SwitchDialogueCamera(interrogationTeacherVCam);
                 break;
             case 7: // Child reaction outside door -> Wide shot
@@ -1159,51 +1171,6 @@ public class MetroStorySequenceController : MonoBehaviour
                 SwitchDialogueCamera(interrogationWideVCam);
                 break;
         }
-    }
-
-    private void OnChildEpisodeLineStarted(int index, string line)
-    {
-        switch (index)
-        {
-            case 0: // Teacher: "It's happening again!"
-                SwitchDialogueCamera(interrogationTeacherVCam);
-                break;
-            case 1: // Mother: "My son!"
-                SwitchDialogueCamera(interrogationMotherVCam);
-                break;
-            case 2: // Father: "Hold him!"
-                SwitchDialogueCamera(interrogationFatherVCam);
-                break;
-            case 3: // Child: "{TEDDY_NAME}!"
-                SwitchDialogueCamera(interrogationDramaticVCam);
-                break;
-            default:
-                SwitchDialogueCamera(interrogationWideVCam);
-                break;
-        }
-    }
-
-    private IEnumerator ChildEpisodeRoutine()
-    {
-        currentPhase = StoryPhase.ChildEpisode;
-
-        string[] episodeLines = new string[] {
-            GetLoc("episode_01"),
-            GetLoc("episode_02"),
-            GetLoc("episode_03"),
-            GetLoc("episode_04")
-        };
-
-        yield return StartCoroutine(SafeShowDialogue(
-            episodeLines,
-            hasChoice: false,
-            dialogueColor: new Color(1f, 0.85f, 0.85f),
-            dialogueFont: null,
-            onLineStarted: OnChildEpisodeLineStarted
-        ));
-
-        // After seizure episode, continue directly into the Dark Room Teddy reveal
-        yield return StartCoroutine(DarkRoomRoutine());
     }
 
     public IEnumerator DarkRoomRoutine()
@@ -1383,7 +1350,7 @@ public class MetroStorySequenceController : MonoBehaviour
     [ContextMenu("Debug: Trigger Episode")]
     public void DebugTriggerEpisode()
     {
-        StartCoroutine(ChildEpisodeRoutine());
+        StartCoroutine(DarkRoomRoutine());
     }
 
     [ContextMenu("Debug: Trigger Final Teddy Moment")]

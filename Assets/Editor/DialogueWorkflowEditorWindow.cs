@@ -174,8 +174,7 @@ public class DialogueWorkflowEditorWindow : EditorWindow
         ("turn_0", false, WorkflowStage.Scene4_MetroFloor3AndDarkRoom, "4.3 Teddy Turn ('Wake Up')", 421),
         ("cinematic_0", false, WorkflowStage.Scene4_MetroFloor3AndDarkRoom, "4.4 Behind the Door — Interrogation Cinematic", 430),
         ("scream_0", false, WorkflowStage.Scene4_MetroFloor3AndDarkRoom, "4.4 Behind the Door — Interrogation Cinematic", 435),
-        ("episode_0", false, WorkflowStage.Scene4_MetroFloor3AndDarkRoom, "4.5 Child Panic Episode", 440),
-        ("final_teddy_0", false, WorkflowStage.Scene4_MetroFloor3AndDarkRoom, "4.5 Child Panic Episode", 445),
+        ("final_teddy_0", false, WorkflowStage.Scene4_MetroFloor3AndDarkRoom, "4.4 Behind the Door — Interrogation Cinematic", 445),
         ("darkroom_0", false, WorkflowStage.Scene4_MetroFloor3AndDarkRoom, "4.6 Dark Room Reveal (Transition to Beach)", 450),
 
         // --- SCENE 5: MOROCCAN BEACH ---
