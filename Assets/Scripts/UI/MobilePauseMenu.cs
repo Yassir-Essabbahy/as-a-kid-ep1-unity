@@ -37,6 +37,8 @@ namespace Story
         private float _previousTimeScale = 1f;
         private bool _prePausePlayerCanMove = true;
         private bool _prePauseCameraCanMove = true;
+        private CursorLockMode _prePauseCursorLockState = CursorLockMode.Locked;
+        private bool _prePauseCursorVisible = false;
         private List<GameObject> _indicators = new List<GameObject>();
         private TextMeshProUGUI _titleTmp;
         private TextMeshProUGUI _subtitleTmp;
@@ -162,6 +164,8 @@ namespace Story
             // Set first item (Resume) active indicator by default, matching Main Menu
             HighlightIndicator(0);
 
+            _prePauseCursorLockState = Cursor.lockState;
+            _prePauseCursorVisible = Cursor.visible;
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
 
@@ -197,8 +201,8 @@ namespace Story
 
             if (!Application.isMobilePlatform)
             {
-                Cursor.lockState = CursorLockMode.Locked;
-                Cursor.visible = false;
+                Cursor.lockState = _prePauseCursorLockState;
+                Cursor.visible = _prePauseCursorVisible;
             }
 
             var touchControls = FindAnyObjectByType<MobileTouchControls>();

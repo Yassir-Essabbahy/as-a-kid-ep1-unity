@@ -1,17 +1,17 @@
 # House Scene Migration Report
 
 ## 1. Executive Summary
-The house scene (`House_Export.unitypackage`) has been successfully migrated, cleaned, restyled, and integrated into `as-a-kid-ep1-unity` (Unity 6 URP, PC + Android). The scene now serves as the opening chapter of Episode 1, seamlessly handing off into the classroom scene (`Start.unity`).
+The house scene (`House_Export.unitypackage`) has been migrated, cleaned, restyled, and integrated into `as-a-kid-ep1-unity` (Unity 6 URP, PC + Android). The scene serves as the opening playable chapter of Episode 1 (`MainMenu` -> `House_Export` -> `Start`).
 
-* **Branch**: `migrate-house-scene`
-* **Scene Path**: `Assets/House/Scenes/House_Export.unity`
-* **Target Build Platforms**: PC & Android
-* **Key Commits**:
+* **Initial Integration Branch**: `migrate-house-scene` *(later merged; active maintenance continues on `remove-truth-or-dare`)*
+* **Current Active Scene Path**: `Assets/Scenes/House_Export.unity` *(initially imported at `Assets/House/Scenes/House_Export.unity`)*
+* **Target Build Platforms**: PC & Android (`QualitySettings`: `Mobile` = 0, `PC` = 1)
+* **Initial Migration Commits (`migrate-house-scene`)**:
   - `32de515`: Initial migration, asset import, and mobile player rig setup.
   - `994617d`: Fix black wall rendering artifacts (camera culling mask & realtime point lights).
   - `17ba916`: Standardize interaction prompts to `"tap to interact"` and `"tap to talk"`, suppress legacy white text.
   - `87a5633`: Style all interactable messages with widescreen cinematic letterbox borders (`Canvas/TalkPanel`).
-  - `1c9a405`: Implement morning narrative loop (Doctor's Certificate, 200 DH, and school transition).
+  - `1c9a405`: Implement morning narrative loop *(originally included Doctor's Certificate & `200 DH`; money pickup was later deprecated)* and school transition.
   - `3b3b68a`: Connect Main Menu play button to `House_Export` as the Episode 1 starting scene.
 
 ---
@@ -76,11 +76,22 @@ The game flow for Episode 1 now flows seamlessly:
 
 ---
 
-## 6. Verification Checklist
+## 6. Verification Checklist (Initial `migrate-house-scene` Milestone)
 - [x] Zero compilation errors across `Assembly-CSharp`.
 - [x] Verified wall rendering in Play mode (no black wall artifacts).
 - [x] Verified interaction prompts (`"tap to interact"` & `"tap to talk"`).
 - [x] Verified cinematic letterbox slide-in and typewriter on interactables.
-- [x] Verified door locked gates until Mama & money objectives are complete.
+- [x] Verified door locked gates until Mama & initial morning objectives are complete.
 - [x] Verified scene transition into `Start.unity`.
-- [x] All commits pushed to `origin/migrate-house-scene`.
+- [x] All initial migration commits pushed to `origin/migrate-house-scene`.
+
+---
+
+## 7. Post-Migration Updates (`remove-truth-or-dare`)
+
+Subsequent Episode 1 updates refined the migrated House scene at `Assets/Scenes/House_Export.unity`:
+
+* **Simplified Morning Narrative Loop:** `HouseObjectiveController.OnMoneyPickedUp` is now deprecated (`"money objective removed per story flow"`). The required progression is: `WashFace` (`HouseWashBasinInteractable`) -> `Wardrobe & Backpack` (`HouseWardrobeInteractable`, `HouseBackpackInteractable`) -> Talk to Mama (`HouseMamaDialogue`, Doctor's Certificate) -> Leave through `HouseOutsideDoor` into `Start`.
+* **Audio Polish:** Morning exterior/window ambience uses a low-volume `Assets/Assets/Episode 1/Sounds/Birds.mp3` loop, and the brief startup alarm burst was removed (`alarmAudioSource.playOnAwake = false` in `HouseWakingCinematic`).
+* **Localization & Naming:** Expanded from 3 languages to 4 (`en`, `fr`, `ar`, `darija`) with non-Latin Arabic/Darija canvases and tap prompts, and standardized the plush bear's name to **`Doudou`** (`{TEDDY_NAME}`).
+* **Mobile Controls & Shaders:** Active `House_Export` build supports `MobileTouchControls` (`260x260` `JoystickBase` with `ActivePointer` validation) and `Mobile_Renderer.asset` URP shader features (`VHSRendererFeature` + `ScreenSpaceAmbientOcclusion`).

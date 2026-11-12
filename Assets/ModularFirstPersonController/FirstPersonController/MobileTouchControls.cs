@@ -113,6 +113,8 @@ namespace ModularFirstPersonController
                 return true;
             if (MetroFuseBoxPuzzle.IsAnyInspecting)
                 return true;
+            if (AsAKid.Conversation.ConversationUI.IsAnyActive)
+                return true;
             return false;
         }
 

@@ -1,5 +1,8 @@
 # MIGRATION PLAN: House Scene Integration
 
+> [!NOTE]
+> Initial House scene integration is complete. Active maintenance now lives at `Assets/Scenes/House_Export.unity` on branch `remove-truth-or-dare`. In subsequent story/polish updates, the early `200dhs` pickup objective was deprecated (`HouseObjectiveController.OnMoneyPickedUp`), morning ambience switched to `Assets/Assets/Episode 1/Sounds/Birds.mp3`, and localization expanded to `en`, `fr`, `ar`, and `darija`. See [`MIGRATION_REPORT.md`](MIGRATION_REPORT.md) and [`Assets/DEVLOG.md`](Assets/DEVLOG.md) for current details.
+
 ## Project Specifications & Environment
 - **Target Project**: `as-a-kid-ep1-unity`
 - **Unity Version**: Unity 6 (`6000.4.4f1`)

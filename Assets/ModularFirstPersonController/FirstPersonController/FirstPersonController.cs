@@ -179,6 +179,31 @@ public class FirstPersonController : MonoBehaviour
         }
     }
 
+    private Image FindCrosshairImage()
+    {
+        Image fallback = null;
+        Image[] images = GetComponentsInChildren<Image>(true);
+        for (int i = 0; i < images.Length; i++)
+        {
+            Image img = images[i];
+            if (img == null || img.GetComponentInParent<ModularFirstPersonController.MobileTouchControls>() != null)
+            {
+                continue;
+            }
+
+            if (img.gameObject.name == "Reticle" || img.gameObject.name == "Crosshair")
+            {
+                return img;
+            }
+
+            if (fallback == null)
+            {
+                fallback = img;
+            }
+        }
+        return fallback;
+    }
+
     /// <summary>
     /// Shows or hides the player's crosshair UI.
     /// </summary>
@@ -186,7 +211,7 @@ public class FirstPersonController : MonoBehaviour
     {
         if (crosshairObject == null)
         {
-            crosshairObject = GetComponentInChildren<Image>(true);
+            crosshairObject = FindCrosshairImage();
         }
         if (crosshairObject != null)
         {
@@ -221,7 +246,7 @@ public class FirstPersonController : MonoBehaviour
         ActiveInstance = this;
         rb = GetComponent<Rigidbody>();
 
-        crosshairObject = GetComponentInChildren<Image>();
+        crosshairObject = FindCrosshairImage();
 
         // Set internal variables
         if (playerCamera != null)
@@ -274,21 +299,28 @@ public class FirstPersonController : MonoBehaviour
             }
         }
 
-        if(crosshair)
+        if (crosshairObject != null)
         {
-            crosshairObject.sprite = crosshairImage;
-            crosshairObject.color = crosshairColor;
-        }
-        else
-        {
-            crosshairObject.gameObject.SetActive(false);
+            if (crosshair)
+            {
+                crosshairObject.sprite = crosshairImage;
+                crosshairObject.color = crosshairColor;
+            }
+            else
+            {
+                crosshairObject.gameObject.SetActive(false);
+            }
         }
 
         #region Sprint Bar
 
-        sprintBarCG = GetComponentInChildren<CanvasGroup>();
+        sprintBarCG = sprintBarBG != null ? sprintBarBG.GetComponentInParent<CanvasGroup>() : null;
+        if (sprintBarCG != null && sprintBarCG.GetComponent<ModularFirstPersonController.MobileTouchControls>() != null)
+        {
+            sprintBarCG = null;
+        }
 
-        if(useSprintBar)
+        if (useSprintBar && sprintBarBG != null && sprintBar != null)
         {
             sprintBarBG.gameObject.SetActive(true);
             sprintBar.gameObject.SetActive(true);
@@ -302,15 +334,15 @@ public class FirstPersonController : MonoBehaviour
             sprintBarBG.rectTransform.sizeDelta = new Vector3(sprintBarWidth, sprintBarHeight, 0f);
             sprintBar.rectTransform.sizeDelta = new Vector3(sprintBarWidth - 2, sprintBarHeight - 2, 0f);
 
-            if(hideBarWhenFull)
+            if (hideBarWhenFull && sprintBarCG != null)
             {
                 sprintBarCG.alpha = 0;
             }
         }
         else
         {
-            sprintBarBG.gameObject.SetActive(false);
-            sprintBar.gameObject.SetActive(false);
+            if (sprintBarBG != null) sprintBarBG.gameObject.SetActive(false);
+            if (sprintBar != null) sprintBar.gameObject.SetActive(false);
         }
 
         #endregion
@@ -461,7 +493,7 @@ public class FirstPersonController : MonoBehaviour
             }
 
             // Handles sprintBar 
-            if(useSprintBar && !unlimitedSprint)
+            if(useSprintBar && !unlimitedSprint && sprintBar != null)
             {
                 float sprintRemainingPercent = sprintRemaining / sprintDuration;
                 sprintBar.transform.localScale = new Vector3(sprintRemainingPercent, 1f, 1f);
@@ -559,7 +591,7 @@ public class FirstPersonController : MonoBehaviour
                         Crouch();
                     }
 
-                    if (hideBarWhenFull && !unlimitedSprint)
+                    if (hideBarWhenFull && !unlimitedSprint && sprintBarCG != null)
                     {
                         sprintBarCG.alpha += 5 * Time.deltaTime;
                     }
@@ -572,7 +604,7 @@ public class FirstPersonController : MonoBehaviour
             {
                 isSprinting = false;
 
-                if (hideBarWhenFull && sprintRemaining == sprintDuration)
+                if (hideBarWhenFull && sprintRemaining == sprintDuration && sprintBarCG != null)
                 {
                     sprintBarCG.alpha -= 3 * Time.deltaTime;
                 }

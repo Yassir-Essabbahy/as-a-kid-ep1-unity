@@ -163,6 +163,8 @@ public class DialogueWorkflowEditorWindow : EditorWindow
         ("elevator_train_reaction_02", true, WorkflowStage.Scene3_MetroFloor1AndElevator, "3.6 Boarding Elevator & Void Train False-Stop", 356),
         ("elevator_train_reaction_03", true, WorkflowStage.Scene3_MetroFloor1AndElevator, "3.6 Boarding Elevator & Void Train False-Stop", 357),
         ("teddy_reaction_train_01", true, WorkflowStage.Scene3_MetroFloor1AndElevator, "3.6 Boarding Elevator & Void Train False-Stop", 358),
+        ("npc_", false, WorkflowStage.Scene3_MetroFloor1AndElevator, "3.7 Waiting Platform Conversations (Ask Questions)", 370),
+        ("doudou_", false, WorkflowStage.Scene3_MetroFloor1AndElevator, "3.7 Waiting Platform Conversations (Ask Questions)", 375),
 
         // --- SCENE 4: STORY (METRO FLOOR 3, INTERROGATION & DARK ROOM) ---
         ("departure_board_01", true, WorkflowStage.Scene4_MetroFloor3AndDarkRoom, "4.1 Floor 3 Arrival & Clues", 400),
@@ -251,7 +253,7 @@ public class DialogueWorkflowEditorWindow : EditorWindow
             string line;
             while ((line = reader.ReadLine()) != null)
             {
-                if (string.IsNullOrWhiteSpace(line)) continue;
+                if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("#")) continue;
                 string[] fields = ParseCsvLine(line);
                 if (fields.Length == 0) continue;
 
@@ -763,12 +765,14 @@ public class DialogueWorkflowEditorWindow : EditorWindow
             return "Baba / Father";
         if (en.StartsWith("Teacher:", StringComparison.OrdinalIgnoreCase) || key.StartsWith("classroom_intro", StringComparison.OrdinalIgnoreCase) || key.StartsWith("teacher_", StringComparison.OrdinalIgnoreCase))
             return "Teacher";
-        if (en.StartsWith("Old Traveler:", StringComparison.OrdinalIgnoreCase) || en.StartsWith("Neighbor:", StringComparison.OrdinalIgnoreCase) || key.StartsWith("neighbor_", StringComparison.OrdinalIgnoreCase) || key.StartsWith("begger_", StringComparison.OrdinalIgnoreCase))
+        if (en.StartsWith("Old Traveler:", StringComparison.OrdinalIgnoreCase) || en.StartsWith("Neighbor:", StringComparison.OrdinalIgnoreCase) || key.StartsWith("neighbor_", StringComparison.OrdinalIgnoreCase) || key.StartsWith("npc_neighbor_", StringComparison.OrdinalIgnoreCase) || key.StartsWith("begger_", StringComparison.OrdinalIgnoreCase))
             return "Old Traveler / Neighbor";
         if (en.StartsWith("Shop Owner:", StringComparison.OrdinalIgnoreCase) || key.StartsWith("shop_", StringComparison.OrdinalIgnoreCase))
             return "Shop Owner";
         if (en.StartsWith("Bully:", StringComparison.OrdinalIgnoreCase) || key.StartsWith("bully_", StringComparison.OrdinalIgnoreCase))
             return "Bully";
+        if (key.StartsWith("npc_", StringComparison.OrdinalIgnoreCase))
+            return "Waiting Platform NPC";
 
         return "Prompts / Objectives / UI";
     }

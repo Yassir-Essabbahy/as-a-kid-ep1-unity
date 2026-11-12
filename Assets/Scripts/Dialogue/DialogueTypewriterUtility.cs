@@ -147,7 +147,8 @@ public static class DialogueTypewriterUtility
         Button ignorePointerOverButton = null,
         bool preserveAlignment = false,
         Action<float> onElapsedSeconds = null,
-        Action<bool> onWasSkipped = null)
+        Action<bool> onWasSkipped = null,
+        Action<int, int> onVisibleCharactersChanged = null)
     {
         if (targetText == null)
         {
@@ -162,6 +163,9 @@ public static class DialogueTypewriterUtility
         {
             targetText.text = displayLine;
             targetText.maxVisibleCharacters = int.MaxValue;
+            targetText.ForceMeshUpdate();
+            int instantTotal = targetText.textInfo != null ? targetText.textInfo.characterCount : displayLine.Length;
+            onVisibleCharactersChanged?.Invoke(instantTotal, instantTotal);
             onElapsedSeconds?.Invoke(0f);
             onWasSkipped?.Invoke(false);
             yield break;
@@ -176,9 +180,12 @@ public static class DialogueTypewriterUtility
             ? targetText.textInfo.characterCount
             : displayLine.Length;
 
+        onVisibleCharactersChanged?.Invoke(0, totalChars);
+
         if (totalChars <= 0)
         {
             targetText.maxVisibleCharacters = int.MaxValue;
+            onVisibleCharactersChanged?.Invoke(0, 0);
             onElapsedSeconds?.Invoke(0f);
             onWasSkipped?.Invoke(false);
             yield break;
@@ -207,12 +214,14 @@ public static class DialogueTypewriterUtility
             {
                 visibleCount = targetVisible;
                 targetText.maxVisibleCharacters = visibleCount;
+                onVisibleCharactersChanged?.Invoke(visibleCount, totalChars);
             }
 
             yield return null;
         }
 
         targetText.maxVisibleCharacters = int.MaxValue;
+        onVisibleCharactersChanged?.Invoke(totalChars, totalChars);
         onElapsedSeconds?.Invoke(elapsed);
         onWasSkipped?.Invoke(wasSkipped);
     }

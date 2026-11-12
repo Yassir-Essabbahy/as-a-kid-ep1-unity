@@ -2,6 +2,8 @@ using UnityEngine;
 using TMPro;
 using System.Collections;
 using Unity.Cinemachine;
+using AsAKid.Conversation;
+using AsAKid.UI;
 
 public class NpcInteractionText : MonoBehaviour
 {
@@ -11,6 +13,8 @@ public class NpcInteractionText : MonoBehaviour
     public RectTransform promptBoxRect;
     public TextMeshProUGUI promptBoxText;
     public UnityEngine.UI.Button promptButton;
+    public bool usePromptBox = true;
+    public CenterInteractionReticle centerReticle;
     public float InteractionDistance = 5f;
     private bool CanInteract = true;
 
@@ -22,6 +26,7 @@ public class NpcInteractionText : MonoBehaviour
     private bool currentIsTeddy;
     private CarryableItem currentCarryable;
     private NpcConversation currentNpcConv;
+    private NpcQuestionSet currentNpcQuestionSet;
     private NpcLookAt currentNpcLook;
     private Collider currentHitCol;
     private Vector3 currentHitPoint;
@@ -163,9 +168,27 @@ public class NpcInteractionText : MonoBehaviour
             promptButton.onClick.RemoveListener(TriggerCurrentInteraction);
             promptButton.onClick.AddListener(TriggerCurrentInteraction);
         }
+
+        if (centerReticle == null)
+        {
+            centerReticle = FindAnyObjectByType<CenterInteractionReticle>(FindObjectsInactive.Include);
+        }
+
+        if (!usePromptBox && promptBox != null)
+        {
+            promptBox.SetActive(false);
+        }
     }
 
     public string GetCurrentPrompt() => currentPromptString;
+
+    private void OnDestroy()
+    {
+        if (Instance == this)
+        {
+            Instance = null;
+        }
+    }
 
     public void SetPrompt(string text)
     {
@@ -184,7 +207,8 @@ public class NpcInteractionText : MonoBehaviour
 
     private void SetPromptInternal(string text, bool isInternal, System.Action onClick)
     {
-        if (NpcDialogueManager.Instance != null && NpcDialogueManager.Instance.IsDialogueRunning)
+        if ((NpcDialogueManager.Instance != null && NpcDialogueManager.Instance.IsDialogueRunning) ||
+            ConversationUI.IsAnyActive)
         {
             ClearPrompt();
             return;
@@ -217,6 +241,24 @@ public class NpcInteractionText : MonoBehaviour
             InteractText.gameObject.SetActive(false);
         }
 
+        if (centerReticle == null)
+        {
+            centerReticle = FindAnyObjectByType<CenterInteractionReticle>(FindObjectsInactive.Include);
+        }
+        if (centerReticle != null)
+        {
+            centerReticle.SetInteractable(true, TriggerCurrentInteraction);
+        }
+
+        if (!usePromptBox)
+        {
+            if (promptBox != null && promptBox.activeSelf)
+            {
+                promptBox.SetActive(false);
+            }
+            return;
+        }
+
         if (promptBox != null)
         {
             promptBox.SetActive(true);
@@ -244,7 +286,9 @@ public class NpcInteractionText : MonoBehaviour
         currentFindable = null;
         currentPlaceholder = null;
         currentNpcConv = null;
- currentInteractable = null;
+        currentNpcQuestionSet = null;
+        currentNpcLook = null;
+        currentInteractable = null;
         promptOwnedInternally = false;
         lastExternalPromptFrame = -10;
         externalPromptClickAction = null;
@@ -259,6 +303,22 @@ public class NpcInteractionText : MonoBehaviour
         {
             promptBox.SetActive(false);
         }
+
+        if (centerReticle != null)
+        {
+            centerReticle.SetInteractable(false, null);
+        }
+    }
+
+    private static bool IsInteractTriggeredThisFrame()
+    {
+        if (Input.GetKeyDown(KeyCode.E) || ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame)
+            return true;
+
+        if (!Application.isMobilePlatform && Cursor.lockState == CursorLockMode.Locked && Input.GetMouseButtonDown(0))
+            return true;
+
+        return false;
     }
 
     public void TriggerCurrentInteraction()
@@ -270,7 +330,8 @@ public class NpcInteractionText : MonoBehaviour
             target.Interact();
             return;
         }
-        if (NpcDialogueManager.Instance != null && NpcDialogueManager.Instance.IsDialogueRunning)
+        if ((NpcDialogueManager.Instance != null && NpcDialogueManager.Instance.IsDialogueRunning) ||
+            ConversationUI.IsAnyActive)
             return;
 
         if (currentFindable != null)
@@ -283,6 +344,26 @@ public class NpcInteractionText : MonoBehaviour
         if (currentPlaceholder != null)
         {
             currentPlaceholder.TriggerInteraction();
+            return;
+        }
+
+        if (currentNpcQuestionSet != null)
+        {
+            if (currentNpcQuestionSet.AreAllAsked && !currentNpcQuestionSet.HasDoneLine())
+                return;
+
+            var convUI = ConversationUI.Instance ?? FindAnyObjectByType<ConversationUI>();
+            if (convUI != null)
+            {
+                var targetNpc = currentNpcQuestionSet;
+                var targetLook = currentNpcLook;
+                ClearPrompt();
+                convUI.StartConversation(targetNpc, targetLook);
+            }
+            else
+            {
+                Debug.LogWarning("[NpcInteractionText] No ConversationUI found in the scene. Drag Assets/Prefabs/UI/ConversationUI.prefab into your scene.");
+            }
             return;
         }
 
@@ -327,8 +408,9 @@ public class NpcInteractionText : MonoBehaviour
 
     void Update()
     {
-        // Keep the prompt box hidden whenever any dialogue is running
-        if (NpcDialogueManager.Instance != null && NpcDialogueManager.Instance.IsDialogueRunning)
+        // Keep the prompt box hidden whenever any dialogue or conversation UI is running
+        if ((NpcDialogueManager.Instance != null && NpcDialogueManager.Instance.IsDialogueRunning) ||
+            ConversationUI.IsAnyActive)
         {
             lastDialogueFrame = Time.frameCount;
             ClearPrompt();
@@ -366,10 +448,11 @@ public class NpcInteractionText : MonoBehaviour
                 currentFindable = findable;
                 currentPlaceholder = null;
                 currentNpcConv = null;
- currentInteractable = null;
+                currentNpcQuestionSet = null;
+                currentInteractable = null;
                 SetInternalPrompt(LocalizationManager.Resolve("prompt_tap_interact", "Tap to interact"));
 
-                if (Input.GetKeyDown(KeyCode.E) || ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame)
+                if (IsInteractTriggeredThisFrame())
                 {
                     TriggerCurrentInteraction();
                 }
@@ -381,10 +464,11 @@ public class NpcInteractionText : MonoBehaviour
             {
                 currentPlaceholder = placeholder;
                 currentNpcConv = null;
- currentInteractable = null;
+                currentNpcQuestionSet = null;
+                currentInteractable = null;
                 SetInternalPrompt(LocalizationManager.Resolve("prompt_tap_interact", "Tap to interact"));
 
-                if (Input.GetKeyDown(KeyCode.E) || ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame)
+                if (IsInteractTriggeredThisFrame())
                 {
                     TriggerCurrentInteraction();
                 }
@@ -401,14 +485,40 @@ public class NpcInteractionText : MonoBehaviour
                     currentPlaceholder = null;
                     currentFindable = null;
                     currentNpcConv = null;
+                    currentNpcQuestionSet = null;
                     SetInternalPrompt(prompt);
 
-                    if (Input.GetKeyDown(KeyCode.E) || ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame)
+                    if (IsInteractTriggeredThisFrame())
                     {
                         TriggerCurrentInteraction();
                     }
                     return;
                 }
+            }
+
+            var questionSet = hit.collider.GetComponent<NpcQuestionSet>() ?? hit.collider.GetComponentInParent<NpcQuestionSet>();
+            if (questionSet != null && questionSet.isActiveAndEnabled)
+            {
+                currentPlaceholder = null;
+                currentFindable = null;
+                currentInteractable = null;
+                currentNpcConv = null;
+                currentNpcQuestionSet = questionSet;
+                currentNpcLook = hit.collider.GetComponent<NpcLookAt>() ?? hit.collider.GetComponentInParent<NpcLookAt>();
+                currentHitCol = hit.collider;
+                currentHitPoint = hit.point;
+
+                bool canTalk = !questionSet.AreAllAsked || questionSet.HasDoneLine();
+                string prompt = questionSet.AreAllAsked
+                    ? LocalizationManager.Resolve("ui_conv_nothing_more", "Nothing more to say")
+                    : LocalizationManager.Resolve("prompt_tap_talk", "Tap to talk");
+                SetInternalPrompt(prompt);
+
+                if (canTalk && IsInteractTriggeredThisFrame())
+                {
+                    TriggerCurrentInteraction();
+                }
+                return;
             }
 
             if (hit.collider.CompareTag("InteractNPC"))
@@ -431,7 +541,7 @@ public class NpcInteractionText : MonoBehaviour
                     string prompt = (currentIsTeddy && !isCarried) ? LocalizationManager.Resolve("prompt_tap_interact", "Tap to interact") : LocalizationManager.Resolve("prompt_tap_talk", "Tap to talk");
                     SetInternalPrompt(prompt);
 
-                    if (Input.GetKeyDown(KeyCode.E) || ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame)
+                    if (IsInteractTriggeredThisFrame())
                     {
                         TriggerCurrentInteraction();
                     }
@@ -445,7 +555,8 @@ public class NpcInteractionText : MonoBehaviour
         {
             currentPlaceholder = null;
             currentNpcConv = null;
- currentInteractable = null;
+            currentNpcQuestionSet = null;
+            currentInteractable = null;
             string prompt = MetroFuseBoxPuzzle.Instance.isPowerRestored
                 ? MetroFuseBoxPuzzle.Instance.promptPoweredText
                 : MetroFuseBoxPuzzle.Instance.promptOpenText;
@@ -460,7 +571,8 @@ public class NpcInteractionText : MonoBehaviour
 
         currentPlaceholder = null;
         currentNpcConv = null;
- currentInteractable = null;
+        currentNpcQuestionSet = null;
+        currentInteractable = null;
         if (promptOwnedInternally || Time.frameCount > lastExternalPromptFrame + 1)
         {
             ClearPrompt();

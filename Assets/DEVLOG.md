@@ -1,12 +1,14 @@
-# PSX Backrooms — Devlog
+# As A Kid — Episode 1 Devlog
 
 ### Project Overview
 
-A PSX-style horror game set in a school classroom. The game opens with a fully scripted cinematic sequence driven by a dialogue system before handing control to the player.
+A PSX-style first-person psychological narrative game (**Unity 6 `6000.4.4f1`**, **URP `17.4.0`**, **PC & Android**). Episode 1 spans `MainMenu` → `House_Export` → `Start` (Classroom) → `Story` (Underground Metro & Interrogation Room) → `MoroccanBeach` → `Ending` → `Credits` (see [`STORY.md`](../STORY.md)).
+
+*(The early `Scene: S1 (Classroom)` and `2025` entries below document the original prototype setup prior to Episode 1 expansion.)*
 
 ---
 
-### Scene: S1 (Classroom)
+### Scene: S1 (Classroom — Early Prototype Notes)
 
 #### Cinematic Flow
 
@@ -109,12 +111,11 @@ All cameras are Cinemachine VCams managed by `ClassroomGazeScene.cs`.
 
 ---
 
-### Pending / Next Steps
+### Early S1 Checklist Status (Superseded by Later Milestones)
 
-- Wire `On Zoom Complete` to the next scene or transition effect
-- Fill in `fr` and `ar` translations for `teacher_2_01`, `lookback_book_01`, `lookback_book_02` in `dialogue.csv`
-- Position `BookZoomPoint` to frame the target picture in the book
-- Add voice clips to `DialogueLine` assets if needed
+- **Scene Transition**: `ClassroomGazeScene.cs` now handles seated desk clue inspection, opens Page 54, and transitions smoothly via `ScreenFader` into `Story.unity`.
+- **Localization**: Expanded `Assets/Resources/Localization/dialogue.csv` to 270 keys across `en`, `fr`, `ar`, and `darija`.
+- **Teacher Voice Clips**: Wired via `ClassroomGazeScene` / `TrafehVoiceLines`.
 
 
 ---
@@ -365,3 +366,57 @@ All cameras are Cinemachine VCams managed by `ClassroomGazeScene.cs`.
 
 - **Automated Editor Setup (`MetroAudioAndTrainSetup.cs`)**:
   - Added `Tools/Setup Metro Train & Sound System` menu tool to configure all audio sources, clips, and scene components cleanly across `Gameplay3`, `Gameplay1`, `Gameplay2`, and `Gameplay3 1`.
+
+
+---
+
+### 2026-11-08 — Full Doudou Narrative, Multilingual System & Arabic RTL Support
+
+- Implemented the Episode 1 psychological storyline across `House_Export`, `Start`, `Story`, `MoroccanBeach`, `Ending`, and `Credits`, keeping the child protagonist unnamed across all dialogue.
+- Extended `LocalizationManager.cs`, `NpcDialogueManager.cs`, and `ClassroomLifeIsStrangeUI.cs` with `RTLTMPro` shaping and fallback font handling for right-to-left Arabic rendering.
+- Wired `LanguageDropdownHandler.cs` in `MainMenu.unity` with persistent `PlayerPrefs` (`SelectedLanguage`).
+- Connected full playthrough flow from `House_Export` → `Start` → `Story` → `MoroccanBeach` → `Ending` → `Credits` with dual ending branches in `BeachEndingController.cs`.
+
+---
+
+### 2026-11-09 to 2026-11-10 — Truth or Dare Removal, Dialogue Workflow Editor & Darija Language
+
+- **Truth or Dare Removal (`TRUTH_OR_DARE_REMOVAL.md`)**: Stripped the obsolete Floor 3 Truth/Dare prompt, choice gate, table/paper drawing mini-game, and `PlatformEndTrigger` in favor of a continuous flow from `Bully_NPC` → `TeddyTurnRoutine()` ("Wake up") → `DoorWaiting` → interrogation room cinematic.
+- **Workflow Editor (`DialogueWorkflowEditorWindow.cs`)**: Added **Tools → Dialogue & Translation Manager** (`Window → Dialogue & Translation Manager`) to inspect, filter by speaker/stage, edit, and add rows in `Assets/Resources/Localization/dialogue.csv` in chronological playthrough order.
+- **Darija Localization & Arabic Script Standardization**: Added the `darija` column alongside `en`, `fr`, and `ar` across all 270 keys in `dialogue.csv`, standardized pure Arabic script (avoiding Latin characters inside Arabic/Darija dialogue and canvas UI), and wired `LocalizeStaticSceneUI()` across menus, prompts, HUDs, pause overlay, and credits.
+- **Visual-Only Typewriter**: Disabled per-character typing sound effects across playthrough scenes while keeping clean visual typewriter presentation.
+
+---
+
+### 2026-11-10 to 2026-11-11 — Story Staging, Interrogation Room Integration & House Birds Ambience
+
+- **Train Motion & Grounded Teddy Intro (`TrainArrivalSequence.cs`, `MetroStorySequenceController.cs`)**: Smoothed train movement timing/interpolation and updated the Floor 1 Teddy intro so `Doudou` remains seated on the bench while first speaking (`teddy_metro_01`–`02`), then transfers to `CarryPoint` once the dialogue finishes.
+- **Interrogation Room Behind Floor 3 Door (`Story.unity`, `MetroStorySequenceController.cs`)**:
+  - Replaced capsule placeholders for parents with seated character models (`ParentsSitting.controller`) and scaled interrogation furniture, characters, and camera framing to realistic fit.
+  - Attached the `interrogation` room directly behind `Floor3/Door_Behind` and rewrote `cinematic_01`–`09` so `Teacher`, `Mother`, and `Father` remain unaware of the child outside while discussing the post-hospital fallout, the drowning rescue, and the boy's survivor guilt before transitioning into `DarkRoomRoutine()` → `MoroccanBeach`.
+- **House Morning Ambience (`HouseWakingCinematic.cs`, `House_Export.unity`)**: Replaced the house morning ambience clip with quiet birds ambience (`Assets/Assets/Episode 1/Sounds/Birds.mp3`, low-pass filtered on `AmbianceAudioSource`) and cleared unintended startup one-shot audio (`alarmAudioSource.playOnAwake = false`).
+
+---
+
+### 2026-11-11 — Static Occlusion Culling, URP Pipeline Optimization & FPS Benchmark
+
+- **Static Occlusion Culling & Batching**: Tagged static architecture/props across all 5 active gameplay/menu scenes (`MainMenu`, `House_Export`, `Start`, `Story`, `MoroccanBeach`), tightened camera `farClipPlane` (`120`–`350`), excluded Floor 3 interrogation/doorway geometry from destructive occluders, and baked `OcclusionCullingData.asset` in each scene's folder.
+- **URP, SSAO, Lighting & Material Instancing**:
+  - `PC_RPAsset.asset`: Disabled unnecessary `m_RequireOpaqueTexture` and `m_RequireDepthTexture`, set `m_ShadowCascadeCount = 2` and `m_ShadowDistance = 35`, `m_AdditionalLightsShadowmapResolution = 1024`, and enabled dynamic batching.
+  - `PC_Renderer.asset`: Enabled SSAO `Downsample = 1` and `BlurQuality = Medium`.
+  - `Story.unity`: Converted `Interrogation_MainLight` from a shadow-casting Point Light (6 shadow passes) to a downward Spot Light (`spotAngle = 128`, `range = 14`, `intensity = 3.2`), eliminating shadow atlas overflow warnings, and tightened `85.5m` station point lights to `26m`.
+  - Enabled GPU instancing (`enableInstancing = true`) across `228` URP materials and disabled shadow casting on non-caster surfaces/tiny clutter.
+- **Measured Result (`1563x879`, Uncapped PC Quality, 11 fixed camera viewpoints)**: Mean FPS improved from `189.84 FPS` to `265.80 FPS` (`+40.0%`), with draw calls reduced up to `-37.1%` in `House_Export` (`LivingRoom_East`) and `-95.3%` on `MainMenu`.
+
+---
+
+### 2026-11-11 — Mobile Shaders, Enlarged Multi-Touch Analog Controls & Elevator Button Prompt
+
+- **Mobile Shader Pipeline (`VHSPostProcessFeature.cs`, `VHS_Mobile_BlackFisheye_URP.shader`, `Mobile_Renderer.asset`)**: Skipped preview/reflection cameras, forced `msaaSamples = MSAASamples.None` on temp RenderGraph RT, added clamped `_BlitScaleBias` sampling in `VHS_Mobile_BlackFisheye_URP.shader`, and enabled SSAO + `VHSRendererFeature` on `Mobile_Renderer.asset` alongside `Android` batching and landscape orientation lock.
+- **Mobile Touch Controls Overhaul (`MobileTouchControls.cs`, `FirstPersonController.cs`, `MobileControlsSetup.cs`, `FirstPersonController.prefab`)**:
+  - Added `ActivePointer` pointer validation (`InputSystem` `Touchscreen.current.touches` / `Mouse.current` and legacy `UnityEngine.Touch`), focus/pause reset guards, safe-area/parent clamping, fixed anchor-origin/pivot math in `OnLeftPointerDown`, and guarded desktop zoom with `!Application.isMobilePlatform`.
+  - Removed broken missing scripts on `LeftTouchZone` and `RightLookZone` in `FirstPersonController.prefab` and applied an enlarged analog stick (`JoystickBase` `260x260` at `(280, 240)`, `JoystickHandle` `114x114`, `maxJoystickRadius = 105`, `idleAlpha = 0.48`, `activeAlpha = 0.88`) across `House_Export`, `Story`, and `MoroccanBeach` (`Start` and `Ending` remain cleanly without movement controls).
+  - Wired `GraphicRaycaster` and `interactButtonRect` in `MoroccanBeach.unity`.
+- **Elevator Button Prompt Canvas Fix (`NpcInteractionText.cs`, `ElevatorButton.cs`, `DoorInteractable.cs`, `dialogue.csv`)**:
+  - Root cause: `NpcInteractionText.Update()` called `ClearPrompt()` every frame when its raycast missed `IInteractable`/`InteractNPC`/`MetroFuseBoxPuzzle`, hiding `PromptBox` on the same frame `ElevatorButton.Update()` set it; additionally `prompt_press_elevator_button` was missing from `dialogue.csv`.
+  - Added an external prompt lease (`SetPrompt(text, onClick)`, `SetInternalPrompt(text)`, `lastExternalPromptFrame`, `externalPromptClickAction`) in `NpcInteractionText.cs`, added camera-range check (`Mathf.Max(interactDistance, 2.2f)`) and pause/dialogue guards in `ElevatorButton.cs`, wired `DoorInteractable.InteractWithDoor` cleanly, and added `prompt_press_elevator_button` across all 4 languages in `dialogue.csv`.

@@ -395,7 +395,7 @@ public class MetroStorySequenceController : MonoBehaviour
             var allBullys = Resources.FindObjectsOfTypeAll<NpcConversation>();
             foreach (var c in allBullys)
             {
-                if (c.gameObject.scene.name == "Gameplay3" && c.gameObject.name == "Bully_NPC")
+                if ((c.gameObject.scene == gameObject.scene || c.gameObject.scene.name == "Story" || c.gameObject.scene.name == "Gameplay3") && c.gameObject.name == "Bully_NPC")
                 {
                     bullyConversation = c;
                     break;
@@ -696,7 +696,7 @@ public class MetroStorySequenceController : MonoBehaviour
             var allBullys = Resources.FindObjectsOfTypeAll<NpcConversation>();
             foreach (var c in allBullys)
             {
-                if (c.gameObject.scene.name == "Gameplay3" && c.gameObject.name == "Bully_NPC")
+                if ((c.gameObject.scene == gameObject.scene || c.gameObject.scene.name == "Story" || c.gameObject.scene.name == "Gameplay3") && c.gameObject.name == "Bully_NPC")
                 {
                     bullyConversation = c;
                     break;

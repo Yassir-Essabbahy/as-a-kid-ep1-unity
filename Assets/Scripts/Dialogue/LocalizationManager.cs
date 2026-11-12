@@ -215,7 +215,7 @@ public class LocalizationManager : MonoBehaviour
         string line;
         while ((line = reader.ReadLine()) != null)
         {
-            if (string.IsNullOrWhiteSpace(line)) continue;
+            if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("#")) continue;
 
             string[] fields = ParseLine(line);
             if (fields.Length == 0) continue;
@@ -262,6 +262,28 @@ public class LocalizationManager : MonoBehaviour
 
         Debug.LogWarning($"[Localization] Key '{key}' missing language '{currentLanguage}'");
         return $"[{key}:{currentLanguage}]";
+    }
+
+    public bool HasKey(string key)
+    {
+        if (string.IsNullOrEmpty(key)) return false;
+        if (table == null || table.Count == 0)
+            Load();
+        return table != null && table.ContainsKey(key);
+    }
+
+    public static bool TryResolve(string key, out string text)
+    {
+        text = string.Empty;
+        if (string.IsNullOrEmpty(key) || Instance == null || !Instance.HasKey(key))
+            return false;
+
+        string resolved = Resolve(key, string.Empty);
+        if (string.IsNullOrEmpty(resolved))
+            return false;
+
+        text = resolved;
+        return true;
     }
 
     public static string Resolve(string key, string fallback = null)

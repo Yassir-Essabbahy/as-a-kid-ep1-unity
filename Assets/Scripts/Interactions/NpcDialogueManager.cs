@@ -345,9 +345,14 @@ public class NpcDialogueManager : MonoBehaviour
 
         if (dialogueText == null)
         {
-            Debug.LogError(
-                "NpcDialogueManager: Dialogue Text is not assigned."
-            );
+            if (talkPanel == null)
+            {
+                Debug.LogWarning("NpcDialogueManager: TalkPanel/DialogueText is not assigned in this scene. Skipping legacy dialogue.");
+            }
+            else
+            {
+                Debug.LogError("NpcDialogueManager: Dialogue Text is not assigned.");
+            }
 
             dialogueRunning = false;
             yield break;
