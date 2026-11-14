@@ -367,3 +367,7 @@ doudou_mama_whisper,"Her voice shakes too much, little one. She wants to tell yo
 doudou_mama_reaction,"Why didn't she say it before, little one? Maybe she's only trying to make you feel better.","Pourquoi ne l'a-t-elle pas dit avant, mon petit ? Peut-être qu'elle veut juste te rassurer.","لماذا لم تقلها من قبل يا صغيري؟ ربما تحاول فقط أن تهدئك.","علاش ما قالتهاش من قبل أ وليدي؟ يمكن باغية غير تهدنك."
 doudou_baba_whisper,"Don't wake his anger, little one. You know how quiet he gets.","Ne réveille pas sa colère, mon petit. Tu sais comme il se ferme.","لا توقظ غضبه يا صغيري. أنت تعرف كم يصبح صامتاً.","ما تفيقش غضبو أ وليدي. راك عارفو كيفاش كيسكت."
 doudou_baba_reaction,"Even he couldn't fix it, little one. Stay here where nobody blames anyone.","Même lui n'a rien pu faire, mon petit. Reste ici où personne n'accuse personne.","حتى هو لم يستطع تغيير شيء يا صغيري. ابقَ هنا حيث لا يلوم أحد أحداً.","حتى هو ما قدر يبدل والو أ وليدي. بقى هنا فين حتى واحد ما كيحاسب لاخر."
+
+# Fall Cutscene
+ui_skip,Skip,Passer,تخطي,دوز
+fall_objective_find_way_out,Find a way out,Trouve une sortie,ابحث عن مخرج,قلب على مخرج
