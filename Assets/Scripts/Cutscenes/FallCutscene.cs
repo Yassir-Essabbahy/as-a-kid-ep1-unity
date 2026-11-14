@@ -37,6 +37,12 @@ public class FallCutscene : MonoBehaviour
         Completed
     }
 
+    [Header("Mode Configuration")]
+    [Tooltip("If true, skips the sky fall and starts directly lying on the ground, waking up and getting up.")]
+    public bool skipFallSequence = false;
+    [Tooltip("If false, all sound effects, audio sources, and listener low-pass filters are disabled completely.")]
+    public bool enableSound = true;
+
     [Header("Current State")]
     [SerializeField] private CutsceneStage currentStage = CutsceneStage.Inactive;
     public CutsceneStage CurrentStage => currentStage;
@@ -194,6 +200,15 @@ public class FallCutscene : MonoBehaviour
         if (!isCinematicActive) return;
         if (Story.MobilePauseMenu.Instance != null && Story.MobilePauseMenu.Instance.isPaused) return;
 
+        // Keep player movement and look strictly locked during cinematic
+        if (fpc != null && (fpc.playerCanMove || fpc.cameraCanMove || fpc.enabled))
+        {
+            fpc.SetControlLocked(true);
+            fpc.enabled = false;
+            fpc.playerCanMove = false;
+            fpc.cameraCanMove = false;
+        }
+
         // Ensure cursor is locked on PC during cutscene
         if (!Application.isMobilePlatform && !Story.MobileUIAdapter.IsMobile)
         {
@@ -319,6 +334,7 @@ public class FallCutscene : MonoBehaviour
         // Named pose transforms in the scene (no hardcoded numbers in motion code):
         // "Fall_Start", "Land_Impact", "Land_Lying", "Land_Kneeling", "Land_Standing"
         Vector3 basePos = player != null ? player.transform.position : new Vector3(25.31f, 1.0f, 9.62f);
+        float baseYaw = player != null ? player.transform.eulerAngles.y : 0f;
 
         // Raycast down to find true ground height
         float groundY = 0f;
@@ -347,7 +363,7 @@ public class FallCutscene : MonoBehaviour
                 go = new GameObject("Fall_Start");
                 go.transform.SetParent(posesRoot.transform, false);
                 go.transform.position = new Vector3(basePos.x, groundY + 30f, basePos.z);
-                go.transform.rotation = Quaternion.Euler(15f, 90f, 0f);
+                go.transform.rotation = Quaternion.Euler(15f, baseYaw, 0f);
             }
             fallStartPose = go.transform;
         }
@@ -360,7 +376,7 @@ public class FallCutscene : MonoBehaviour
                 go = new GameObject("Land_Impact");
                 go.transform.SetParent(posesRoot.transform, false);
                 go.transform.position = new Vector3(basePos.x, groundY + 0.35f, basePos.z);
-                go.transform.rotation = Quaternion.Euler(85f, 90f, 0f); // Camera facing down at ground
+                go.transform.rotation = Quaternion.Euler(85f, baseYaw, 0f); // Camera facing down at ground
             }
             landImpactPose = go.transform;
         }
@@ -373,7 +389,7 @@ public class FallCutscene : MonoBehaviour
                 go = new GameObject("Land_Lying");
                 go.transform.SetParent(posesRoot.transform, false);
                 go.transform.position = new Vector3(basePos.x, groundY + 0.22f, basePos.z);
-                go.transform.rotation = Quaternion.Euler(-65f, 90f, 7f); // Lying on back, looking slightly up with 7 deg roll
+                go.transform.rotation = Quaternion.Euler(-65f, baseYaw, 7f); // Lying on back, looking slightly up with 7 deg roll
             }
             landLyingPose = go.transform;
         }
@@ -386,7 +402,7 @@ public class FallCutscene : MonoBehaviour
                 go = new GameObject("Land_Kneeling");
                 go.transform.SetParent(posesRoot.transform, false);
                 go.transform.position = new Vector3(basePos.x, groundY + 0.90f, basePos.z);
-                go.transform.rotation = Quaternion.Euler(28f, 88f, 2f); // Head hanging low, looking downward
+                go.transform.rotation = Quaternion.Euler(28f, baseYaw - 2f, 2f); // Head hanging low, looking downward
             }
             landKneelingPose = go.transform;
         }
@@ -400,7 +416,7 @@ public class FallCutscene : MonoBehaviour
                 go.transform.SetParent(posesRoot.transform, false);
                 // Eye level when player standing (player base at groundY + 1.0, joint at 0.75 -> eye at 1.75)
                 go.transform.position = new Vector3(basePos.x, groundY + 1.75f, basePos.z);
-                go.transform.rotation = Quaternion.Euler(0f, 90f, 0f); // Level horizon, looking forward into hallway
+                go.transform.rotation = Quaternion.Euler(0f, baseYaw, 0f); // Level horizon, looking forward
             }
             landStandingPose = go.transform;
         }
@@ -547,6 +563,8 @@ public class FallCutscene : MonoBehaviour
 
     private void EnsureAudioSources()
     {
+        if (!enableSound) return;
+
         windAudioSource = CreateAudioSource("Audio_WindRush", true, 0f);
         clothAudioSource = CreateAudioSource("Audio_ClothFlap", true, 0f);
         hissAudioSource = CreateAudioSource("Audio_AirHiss", true, 0f);
@@ -567,6 +585,8 @@ public class FallCutscene : MonoBehaviour
 
     private AudioSource CreateAudioSource(string name, bool loop, float spatialBlend)
     {
+        if (!enableSound) return null;
+
         var child = transform.Find(name);
         GameObject go;
         if (child == null)
@@ -586,6 +606,8 @@ public class FallCutscene : MonoBehaviour
 
     private void EnsureDustParticles()
     {
+        if (skipFallSequence) return;
+
         var pChild = transform.Find("DustParticles");
         if (pChild != null)
         {
@@ -633,11 +655,11 @@ public class FallCutscene : MonoBehaviour
     private IEnumerator FullCutsceneRoutine()
     {
         isCinematicActive = true;
-        currentStage = CutsceneStage.FallingBlack;
 
         // 1. Lock controls and hide UI
         if (fpc != null)
         {
+            fpc.SetControlLocked(true);
             fpc.enabled = false;
             fpc.playerCanMove = false;
             fpc.cameraCanMove = false;
@@ -665,245 +687,267 @@ public class FallCutscene : MonoBehaviour
         if (blackOverlay != null)
             blackOverlay.alpha = 1f;
 
-        // Initial camera placement at Fall_Start
-        Vector3 startPos = fallStartPose != null ? fallStartPose.position : new Vector3(25.31f, 30f, 9.62f);
-        Quaternion startRot = fallStartPose != null ? fallStartPose.rotation : Quaternion.Euler(15f, 90f, 0f);
+        Vector3 lyingPos = landLyingPose != null ? landLyingPose.position : (player != null ? player.transform.position + Vector3.up * 0.22f : new Vector3(25.31f, 0.22f, 9.62f));
+        Quaternion lyingRot = landLyingPose != null ? landLyingPose.rotation : Quaternion.Euler(-65f, (player != null ? player.transform.eulerAngles.y : 0f), 7f);
 
-        if (mainCamera != null)
+        if (skipFallSequence)
         {
-            mainCamera.transform.position = startPos;
-            mainCamera.transform.rotation = startRot;
+            // Direct ground wake-up: place camera on ground pose in black
+            currentStage = CutsceneStage.LyingDazed;
+            if (mainCamera != null)
+            {
+                mainCamera.transform.position = lyingPos;
+                mainCamera.transform.rotation = lyingRot;
+            }
+
+            yield return new WaitForSeconds(0.4f);
+
+            if (blackOverlay != null)
+                blackOverlay.alpha = 0f;
         }
-
-        yield return new WaitForSeconds(0.2f);
-
-        // Start breath gasp near the start
-        if (sfxAudioSource != null && breathGaspClip != null)
+        else
         {
-            sfxAudioSource.PlayOneShot(breathGaspClip, 0.85f);
-        }
-
-        // Start wind, cloth flap, air hiss, and fast heartbeat
-        if (windAudioSource != null && windRushClip != null)
-        {
-            windAudioSource.clip = windRushClip;
-            windAudioSource.volume = 0.15f;
-            windAudioSource.pitch = 0.85f;
-            windAudioSource.Play();
-        }
-
-        if (clothAudioSource != null && clothFlapClip != null)
-        {
-            clothAudioSource.clip = clothFlapClip;
-            clothAudioSource.volume = 0.1f;
-            clothAudioSource.Play();
-        }
-
-        if (hissAudioSource != null && airHissClip != null)
-        {
-            hissAudioSource.clip = airHissClip;
-            hissAudioSource.volume = 0.05f;
-            hissAudioSource.Play();
-        }
-
-        if (heartbeatAudioSource != null && heartbeatFastClip != null)
-        {
-            heartbeatAudioSource.clip = heartbeatFastClip;
-            heartbeatAudioSource.volume = 0.5f;
-            heartbeatAudioSource.Play();
-        }
-
-        if (dustParticles != null)
-        {
-            dustParticles.transform.position = startPos + Vector3.down * 1.5f;
-            dustParticles.Play();
-        }
-
-        // ---------------------------------------------------------------------
-        // PHASE 2: THE FALL (7.5s total in darkness, then 0.4s reveal)
-        // ---------------------------------------------------------------------
-        Vector3 impactPos = landImpactPose != null ? landImpactPose.position : new Vector3(25.31f, 0.35f, 9.62f);
-        Quaternion impactRot = landImpactPose != null ? landImpactPose.rotation : Quaternion.Euler(85f, 90f, 0f);
-
-        float elapsedFall = 0f;
-        float darkFallDuration = Mathf.Max(0.1f, fallDuration - groundRevealDuration);
-
-        while (elapsedFall < darkFallDuration)
-        {
-            elapsedFall += Time.deltaTime;
-            float rawT = Mathf.Clamp01(elapsedFall / fallDuration);
-            float t = fallCurve != null ? fallCurve.Evaluate(rawT) : (rawT * rawT);
-
-            // Interpolate position downward
-            Vector3 curPos = Vector3.Lerp(startPos, impactPos, t);
-
-            // Camera tumbles slowly and unevenly (Perlin noise roll and pitch drift)
-            float tumblePitch = (Mathf.PerlinNoise(Time.time * 0.9f, 0f) - 0.5f) * tumbleNoiseAmp;
-            float tumbleRoll = (Mathf.PerlinNoise(10f, Time.time * 0.8f) - 0.5f) * tumbleNoiseAmp;
-            float tumbleYaw = (Mathf.PerlinNoise(Time.time * 0.6f, 20f) - 0.5f) * (tumbleNoiseAmp * 0.5f);
-
-            // Fast tiny turbulence flutter that increases as speed builds
-            float flutterStrength = rawT * maxFlutterAmp;
-            float flutterX = (Mathf.PerlinNoise(Time.time * flutterFrequency, 0f) - 0.5f) * flutterStrength;
-            float flutterY = (Mathf.PerlinNoise(0f, Time.time * flutterFrequency) - 0.5f) * flutterStrength;
-            float flutterZ = (Mathf.PerlinNoise(50f, Time.time * flutterFrequency) - 0.5f) * flutterStrength;
-
-            Quaternion baseRot = Quaternion.Slerp(startRot, impactRot, t * 0.6f);
-            Quaternion tumbleRot = baseRot * Quaternion.Euler(tumblePitch + flutterX, tumbleYaw + flutterY, tumbleRoll + flutterZ);
+            // Initial camera placement at Fall_Start
+            currentStage = CutsceneStage.FallingBlack;
+            Vector3 startPos = fallStartPose != null ? fallStartPose.position : new Vector3(25.31f, 30f, 9.62f);
+            Quaternion startRot = fallStartPose != null ? fallStartPose.rotation : Quaternion.Euler(15f, 90f, 0f);
 
             if (mainCamera != null)
             {
-                mainCamera.transform.position = curPos;
-                mainCamera.transform.rotation = tumbleRot;
+                mainCamera.transform.position = startPos;
+                mainCamera.transform.rotation = startRot;
+            }
+
+            yield return new WaitForSeconds(0.2f);
+
+            // Start breath gasp near the start
+            if (enableSound && sfxAudioSource != null && breathGaspClip != null)
+            {
+                sfxAudioSource.PlayOneShot(breathGaspClip, 0.85f);
+            }
+
+            // Start wind, cloth flap, air hiss, and fast heartbeat
+            if (enableSound && windAudioSource != null && windRushClip != null)
+            {
+                windAudioSource.clip = windRushClip;
+                windAudioSource.volume = 0.15f;
+                windAudioSource.pitch = 0.85f;
+                windAudioSource.Play();
+            }
+
+            if (enableSound && clothAudioSource != null && clothFlapClip != null)
+            {
+                clothAudioSource.clip = clothFlapClip;
+                clothAudioSource.volume = 0.1f;
+                clothAudioSource.Play();
+            }
+
+            if (enableSound && hissAudioSource != null && airHissClip != null)
+            {
+                hissAudioSource.clip = airHissClip;
+                hissAudioSource.volume = 0.05f;
+                hissAudioSource.Play();
+            }
+
+            if (enableSound && heartbeatAudioSource != null && heartbeatFastClip != null)
+            {
+                heartbeatAudioSource.clip = heartbeatFastClip;
+                heartbeatAudioSource.volume = 0.5f;
+                heartbeatAudioSource.Play();
             }
 
             if (dustParticles != null)
             {
-                dustParticles.transform.position = curPos + Vector3.down * 1.5f;
+                dustParticles.transform.position = startPos + Vector3.down * 1.5f;
+                dustParticles.Play();
             }
 
-            // Audio crescendo and pitch rise
-            if (windAudioSource != null)
+            // ---------------------------------------------------------------------
+            // PHASE 2: THE FALL (7.5s total in darkness, then 0.4s reveal)
+            // ---------------------------------------------------------------------
+            Vector3 impactPos = landImpactPose != null ? landImpactPose.position : new Vector3(25.31f, 0.35f, 9.62f);
+            Quaternion impactRot = landImpactPose != null ? landImpactPose.rotation : Quaternion.Euler(85f, 90f, 0f);
+
+            float elapsedFall = 0f;
+            float darkFallDuration = Mathf.Max(0.1f, fallDuration - groundRevealDuration);
+
+            while (elapsedFall < darkFallDuration)
             {
-                windAudioSource.volume = Mathf.Lerp(0.15f, 0.9f, rawT);
-                windAudioSource.pitch = Mathf.Lerp(0.85f, 1.3f, rawT);
+                elapsedFall += Time.deltaTime;
+                float rawT = Mathf.Clamp01(elapsedFall / fallDuration);
+                float t = fallCurve != null ? fallCurve.Evaluate(rawT) : (rawT * rawT);
+
+                // Interpolate position downward
+                Vector3 curPos = Vector3.Lerp(startPos, impactPos, t);
+
+                // Camera tumbles slowly and unevenly (Perlin noise roll and pitch drift)
+                float tumblePitch = (Mathf.PerlinNoise(Time.time * 0.9f, 0f) - 0.5f) * tumbleNoiseAmp;
+                float tumbleRoll = (Mathf.PerlinNoise(10f, Time.time * 0.8f) - 0.5f) * tumbleNoiseAmp;
+                float tumbleYaw = (Mathf.PerlinNoise(Time.time * 0.6f, 20f) - 0.5f) * (tumbleNoiseAmp * 0.5f);
+
+                // Fast tiny turbulence flutter that increases as speed builds
+                float flutterStrength = rawT * maxFlutterAmp;
+                float flutterX = (Mathf.PerlinNoise(Time.time * flutterFrequency, 0f) - 0.5f) * flutterStrength;
+                float flutterY = (Mathf.PerlinNoise(0f, Time.time * flutterFrequency) - 0.5f) * flutterStrength;
+                float flutterZ = (Mathf.PerlinNoise(50f, Time.time * flutterFrequency) - 0.5f) * flutterStrength;
+
+                Quaternion baseRot = Quaternion.Slerp(startRot, impactRot, t * 0.6f);
+                Quaternion tumbleRot = baseRot * Quaternion.Euler(tumblePitch + flutterX, tumbleYaw + flutterY, tumbleRoll + flutterZ);
+
+                if (mainCamera != null)
+                {
+                    mainCamera.transform.position = curPos;
+                    mainCamera.transform.rotation = tumbleRot;
+                }
+
+                if (dustParticles != null)
+                {
+                    dustParticles.transform.position = curPos + Vector3.down * 1.5f;
+                }
+
+                // Audio crescendo and pitch rise
+                if (enableSound && windAudioSource != null)
+                {
+                    windAudioSource.volume = Mathf.Lerp(0.15f, 0.9f, rawT);
+                    windAudioSource.pitch = Mathf.Lerp(0.85f, 1.3f, rawT);
+                }
+                if (enableSound && clothAudioSource != null)
+                {
+                    clothAudioSource.volume = Mathf.Lerp(0.1f, 0.85f, rawT);
+                }
+                if (enableSound && hissAudioSource != null)
+                {
+                    hissAudioSource.volume = Mathf.Lerp(0.05f, 0.8f, rawT);
+                }
+                if (enableSound && heartbeatAudioSource != null)
+                {
+                    heartbeatAudioSource.volume = Mathf.Lerp(0.5f, 1.0f, rawT);
+                }
+
+                yield return null;
             }
-            if (clothAudioSource != null)
+
+            // ---------------------------------------------------------------------
+            // GROUND REVEAL (Final ~0.4s: Darkness reveals ground rushing into view too late)
+            // ---------------------------------------------------------------------
+            currentStage = CutsceneStage.GroundReveal;
+            float elapsedReveal = 0f;
+            Vector3 revealStartPos = mainCamera != null ? mainCamera.transform.position : Vector3.Lerp(startPos, impactPos, 0.85f);
+            Quaternion revealStartRot = mainCamera != null ? mainCamera.transform.rotation : impactRot;
+
+            while (elapsedReveal < groundRevealDuration)
             {
-                clothAudioSource.volume = Mathf.Lerp(0.1f, 0.85f, rawT);
-            }
-            if (hissAudioSource != null)
-            {
-                hissAudioSource.volume = Mathf.Lerp(0.05f, 0.8f, rawT);
-            }
-            if (heartbeatAudioSource != null)
-            {
-                heartbeatAudioSource.volume = Mathf.Lerp(0.5f, 1.0f, rawT);
-            }
+                elapsedReveal += Time.deltaTime;
+                float u = Mathf.Clamp01(elapsedReveal / groundRevealDuration);
+                float smoothU = u * u; // Snapping acceleration
 
-            yield return null;
-        }
+                Vector3 pos = Vector3.Lerp(revealStartPos, impactPos, smoothU);
 
-        // ---------------------------------------------------------------------
-        // GROUND REVEAL (Final ~0.4s: Darkness reveals ground rushing into view too late)
-        // ---------------------------------------------------------------------
-        currentStage = CutsceneStage.GroundReveal;
-        float elapsedReveal = 0f;
-        Vector3 revealStartPos = mainCamera != null ? mainCamera.transform.position : Vector3.Lerp(startPos, impactPos, 0.85f);
-        Quaternion revealStartRot = mainCamera != null ? mainCamera.transform.rotation : impactRot;
+                // Rapid pitch down to face the ground
+                Quaternion rot = Quaternion.Slerp(revealStartRot, impactRot, smoothU);
 
-        while (elapsedReveal < groundRevealDuration)
-        {
-            elapsedReveal += Time.deltaTime;
-            float u = Mathf.Clamp01(elapsedReveal / groundRevealDuration);
-            float smoothU = u * u; // Snapping acceleration
+                // Reveal ground silhouette through darkness
+                if (blackOverlay != null)
+                {
+                    blackOverlay.alpha = Mathf.Lerp(1.0f, 0.15f, u);
+                }
 
-            Vector3 pos = Vector3.Lerp(revealStartPos, impactPos, smoothU);
+                if (mainCamera != null)
+                {
+                    mainCamera.transform.position = pos;
+                    mainCamera.transform.rotation = rot;
+                }
 
-            // Rapid pitch down to face the ground
-            Quaternion rot = Quaternion.Slerp(revealStartRot, impactRot, smoothU);
+                if (enableSound && windAudioSource != null)
+                {
+                    windAudioSource.volume = Mathf.Lerp(0.9f, 1.0f, u);
+                    windAudioSource.pitch = Mathf.Lerp(1.3f, 1.45f, u);
+                }
 
-            // Reveal ground silhouette through darkness
-            if (blackOverlay != null)
-            {
-                blackOverlay.alpha = Mathf.Lerp(1.0f, 0.15f, u);
+                yield return null;
             }
 
+            // ---------------------------------------------------------------------
+            // PHASE 3: THE IMPACT (Hard cut, 2-3 frames near-white flash, then black)
+            // ---------------------------------------------------------------------
+            currentStage = CutsceneStage.ImpactFlash;
+
+            // Instantly stop fall audio & particles
+            if (windAudioSource != null) windAudioSource.Stop();
+            if (clothAudioSource != null) clothAudioSource.Stop();
+            if (hissAudioSource != null) hissAudioSource.Stop();
+            if (heartbeatAudioSource != null) heartbeatAudioSource.Stop();
+            if (dustParticles != null) dustParticles.Stop();
+
+            // Snap camera in one single frame to ground pose (Land_Lying) - NO BOUNCE OR FLOAT
             if (mainCamera != null)
             {
-                mainCamera.transform.position = pos;
-                mainCamera.transform.rotation = rot;
+                mainCamera.transform.position = lyingPos;
+                mainCamera.transform.rotation = lyingRot;
             }
 
-            if (windAudioSource != null)
+            // Play impact sound (heavy thud, sub boom, crunch, debris rattle)
+            if (enableSound && sfxAudioSource != null && impactClip != null)
             {
-                windAudioSource.volume = Mathf.Lerp(0.9f, 1.0f, u);
-                windAudioSource.pitch = Mathf.Lerp(1.3f, 1.45f, u);
+                sfxAudioSource.PlayOneShot(impactClip, 1.0f);
             }
 
-            yield return null;
+            // Near-white flash for 2 to 3 frames
+            if (flashOverlay != null)
+            {
+                flashOverlay.color = new Color(0.98f, 0.98f, 1f, 0.96f);
+            }
+            if (blackOverlay != null) blackOverlay.alpha = 0f;
+
+            for (int f = 0; f < flashFrames; f++)
+            {
+                yield return null;
+            }
+
+            // Cut to solid black
+            currentStage = CutsceneStage.ImpactBlack;
+            if (flashOverlay != null)
+            {
+                flashOverlay.color = new Color(1f, 1f, 1f, 0f);
+            }
+            if (blackOverlay != null) blackOverlay.alpha = 1.0f;
+            if (EyelidBlink.Instance != null) EyelidBlink.Instance.SetOpenImmediate(0f);
+
+            // Muffle the world with low-pass filter
+            if (enableSound && listenerLowPass != null)
+            {
+                listenerLowPass.enabled = true;
+                listenerLowPass.cutoffFrequency = initialMuffleCutoff; // ~450 Hz
+            }
+
+            // Start high-pitched tinnitus ringing
+            if (enableSound && tinnitusAudioSource != null && tinnitusClip != null)
+            {
+                tinnitusAudioSource.clip = tinnitusClip;
+                tinnitusAudioSource.volume = 0.75f;
+                tinnitusAudioSource.Play();
+            }
+
+            // Start slow heavy heartbeat
+            if (enableSound && heartbeatAudioSource != null && heartbeatSlowClip != null)
+            {
+                heartbeatAudioSource.clip = heartbeatSlowClip;
+                heartbeatAudioSource.volume = 0.7f;
+                heartbeatAudioSource.Play();
+            }
+
+            // Silence with tinnitus and slow heartbeat in darkness (~1.5s)
+            yield return new WaitForSeconds(1.5f);
+
+            // Fade black overlay out; eyelids remain closed to handle the opening
+            if (blackOverlay != null) blackOverlay.alpha = 0f;
+
+            // Start fading tinnitus ringing and opening listener low-pass over 7 seconds
+            if (enableSound)
+            {
+                StartCoroutine(FadeTinnitusAndClearLowPass(tinnitusDuration));
+            }
         }
-
-        // ---------------------------------------------------------------------
-        // PHASE 3: THE IMPACT (Hard cut, 2-3 frames near-white flash, then black)
-        // ---------------------------------------------------------------------
-        currentStage = CutsceneStage.ImpactFlash;
-
-        // Instantly stop fall audio & particles
-        if (windAudioSource != null) windAudioSource.Stop();
-        if (clothAudioSource != null) clothAudioSource.Stop();
-        if (hissAudioSource != null) hissAudioSource.Stop();
-        if (heartbeatAudioSource != null) heartbeatAudioSource.Stop();
-        if (dustParticles != null) dustParticles.Stop();
-
-        // Snap camera in one single frame to ground pose (Land_Lying) - NO BOUNCE OR FLOAT
-        Vector3 lyingPos = landLyingPose != null ? landLyingPose.position : new Vector3(25.31f, 0.22f, 9.62f);
-        Quaternion lyingRot = landLyingPose != null ? landLyingPose.rotation : Quaternion.Euler(-65f, 90f, 7f);
-
-        if (mainCamera != null)
-        {
-            mainCamera.transform.position = lyingPos;
-            mainCamera.transform.rotation = lyingRot;
-        }
-
-        // Play impact sound (heavy thud, sub boom, crunch, debris rattle)
-        if (sfxAudioSource != null && impactClip != null)
-        {
-            sfxAudioSource.PlayOneShot(impactClip, 1.0f);
-        }
-
-        // Near-white flash for 2 to 3 frames
-        if (flashOverlay != null)
-        {
-            flashOverlay.color = new Color(0.98f, 0.98f, 1f, 0.96f);
-        }
-        if (blackOverlay != null) blackOverlay.alpha = 0f;
-
-        for (int f = 0; f < flashFrames; f++)
-        {
-            yield return null;
-        }
-
-        // Cut to solid black
-        currentStage = CutsceneStage.ImpactBlack;
-        if (flashOverlay != null)
-        {
-            flashOverlay.color = new Color(1f, 1f, 1f, 0f);
-        }
-        if (blackOverlay != null) blackOverlay.alpha = 1.0f;
-        if (EyelidBlink.Instance != null) EyelidBlink.Instance.SetOpenImmediate(0f);
-
-        // Muffle the world with low-pass filter
-        if (listenerLowPass != null)
-        {
-            listenerLowPass.enabled = true;
-            listenerLowPass.cutoffFrequency = initialMuffleCutoff; // ~450 Hz
-        }
-
-        // Start high-pitched tinnitus ringing
-        if (tinnitusAudioSource != null && tinnitusClip != null)
-        {
-            tinnitusAudioSource.clip = tinnitusClip;
-            tinnitusAudioSource.volume = 0.75f;
-            tinnitusAudioSource.Play();
-        }
-
-        // Start slow heavy heartbeat
-        if (heartbeatAudioSource != null && heartbeatSlowClip != null)
-        {
-            heartbeatAudioSource.clip = heartbeatSlowClip;
-            heartbeatAudioSource.volume = 0.7f;
-            heartbeatAudioSource.Play();
-        }
-
-        // Silence with tinnitus and slow heartbeat in darkness (~1.5s)
-        yield return new WaitForSeconds(1.5f);
-
-        // Fade black overlay out; eyelids remain closed to handle the opening
-        if (blackOverlay != null) blackOverlay.alpha = 0f;
-
-        // Start fading tinnitus ringing and opening listener low-pass over 7 seconds
-        StartCoroutine(FadeTinnitusAndClearLowPass(tinnitusDuration));
 
         // ---------------------------------------------------------------------
         // PHASE 4: LYING DAZED (Eyelid blinks: 10%, 40%, 100%)
@@ -923,7 +967,7 @@ public class FallCutscene : MonoBehaviour
         }
 
         // Quiet pained exhale
-        if (sfxAudioSource != null && raggedExhaleClip != null)
+        if (enableSound && sfxAudioSource != null && raggedExhaleClip != null)
         {
             sfxAudioSource.PlayOneShot(raggedExhaleClip, 0.75f);
         }
@@ -931,7 +975,7 @@ public class FallCutscene : MonoBehaviour
         yield return StartCoroutine(LyingBreathMotion(lyingPos, lyingRot, blink1RestDuration));
 
         // Cough or ragged sound
-        if (sfxAudioSource != null && coughClip != null)
+        if (enableSound && sfxAudioSource != null && coughClip != null)
         {
             sfxAudioSource.PlayOneShot(coughClip, 0.8f);
         }
@@ -963,33 +1007,37 @@ public class FallCutscene : MonoBehaviour
         // PHASE 5: GETTING UP (Realistic multi-stage motion)
         // ---------------------------------------------------------------------
 
+        Vector3 standCamPos = landStandingPose != null ? landStandingPose.position : (player != null ? player.transform.position + Vector3.up * 1.75f : new Vector3(25.31f, 1.75f, 9.62f));
+        Quaternion standRot = landStandingPose != null ? landStandingPose.rotation : (player != null ? player.transform.rotation : Quaternion.identity);
+        float baseYaw = standRot.eulerAngles.y;
+        Quaternion yawRot = Quaternion.Euler(0f, baseYaw, 0f);
+
         // 1. Roll: camera rolls from lying on back to side, with strained grunt
         currentStage = CutsceneStage.Rolling;
-        if (sfxAudioSource != null && strainedGruntClip != null)
+        if (enableSound && sfxAudioSource != null && strainedGruntClip != null)
         {
             sfxAudioSource.PlayOneShot(strainedGruntClip, 0.85f);
         }
 
-        Vector3 rollPos = lyingPos + new Vector3(0.05f, 0.06f, 0f);
-        // From roll +7 deg to roll -40 deg (rolling onto right side/shoulder)
-        Quaternion rollRot = Quaternion.Euler(-25f, 95f, -40f);
+        Vector3 rollPos = lyingPos + yawRot * new Vector3(0.05f, 0.06f, 0f);
+        Quaternion rollRot = Quaternion.Euler(-25f, baseYaw + 5f, -40f);
         yield return StartCoroutine(AnimateMotionStep(lyingPos, lyingRot, rollPos, rollRot, rollDuration, easeInOutCurve));
 
         // 2. Push up: camera lifts to hand height, wobbles, slips down slightly, then pushes up firmly
         currentStage = CutsceneStage.PushingUp;
-        if (sfxAudioSource != null && handScrapeClip != null)
+        if (enableSound && sfxAudioSource != null && handScrapeClip != null)
         {
             sfxAudioSource.PlayOneShot(handScrapeClip, 0.8f);
         }
 
-        Vector3 pushTarget = lyingPos + new Vector3(0.12f, 0.42f, 0f);
-        Quaternion pushRot = Quaternion.Euler(15f, 92f, -15f);
+        Vector3 pushTarget = lyingPos + yawRot * new Vector3(0.12f, 0.42f, 0f);
+        Quaternion pushRot = Quaternion.Euler(15f, baseYaw + 2f, -15f);
         yield return StartCoroutine(AnimatePushUpWithSlip(rollPos, rollRot, pushTarget, pushRot, pushUpDuration));
 
         // 3. Kneel: rises to Land_Kneeling, head hanging low, pause with small sway as if dizzy
         currentStage = CutsceneStage.Kneeling;
-        Vector3 kneelPos = landKneelingPose != null ? landKneelingPose.position : new Vector3(25.31f, 0.90f, 9.62f);
-        Quaternion kneelRot = landKneelingPose != null ? landKneelingPose.rotation : Quaternion.Euler(28f, 88f, 2f);
+        Vector3 kneelPos = landKneelingPose != null ? landKneelingPose.position : (lyingPos + Vector3.up * 0.68f);
+        Quaternion kneelRot = landKneelingPose != null ? landKneelingPose.rotation : Quaternion.Euler(28f, baseYaw - 2f, 2f);
 
         yield return StartCoroutine(AnimateMotionStep(pushTarget, pushRot, kneelPos, kneelRot, kneelDuration * 0.6f, easeInOutCurve));
         // Pause and dizzy sway in kneeling position
@@ -997,9 +1045,6 @@ public class FallCutscene : MonoBehaviour
 
         // 4. Stand: slow rise with stumble/step correction, settling bob, looks up and around once
         currentStage = CutsceneStage.Standing;
-        Vector3 standCamPos = landStandingPose != null ? landStandingPose.position : new Vector3(25.31f, 1.75f, 9.62f);
-        Quaternion standRot = landStandingPose != null ? landStandingPose.rotation : Quaternion.Euler(0f, 90f, 0f);
-
         yield return StartCoroutine(AnimateStandWithStumble(kneelPos, kneelRot, standCamPos, standRot, standDuration));
 
         // 5. Hand off control
@@ -1281,11 +1326,12 @@ public class FallCutscene : MonoBehaviour
             yield return EyelidBlink.Instance.OpenSlow(1.0f, 1.2f);
         }
 
-        Vector3 kneelPos = landKneelingPose != null ? landKneelingPose.position : new Vector3(25.31f, 0.90f, 9.62f);
-        Quaternion kneelRot = landKneelingPose != null ? landKneelingPose.rotation : Quaternion.Euler(28f, 88f, 2f);
+        Vector3 standCamPos = landStandingPose != null ? landStandingPose.position : (player != null ? player.transform.position + Vector3.up * 1.75f : new Vector3(25.31f, 1.75f, 9.62f));
+        Quaternion standRot = landStandingPose != null ? landStandingPose.rotation : (player != null ? player.transform.rotation : Quaternion.identity);
+        float baseYaw = standRot.eulerAngles.y;
 
-        Vector3 standCamPos = landStandingPose != null ? landStandingPose.position : new Vector3(25.31f, 1.75f, 9.62f);
-        Quaternion standRot = landStandingPose != null ? landStandingPose.rotation : Quaternion.Euler(0f, 90f, 0f);
+        Vector3 kneelPos = landKneelingPose != null ? landKneelingPose.position : (lyingPos + Vector3.up * 0.68f);
+        Quaternion kneelRot = landKneelingPose != null ? landKneelingPose.rotation : Quaternion.Euler(28f, baseYaw - 2f, 2f);
 
         yield return StartCoroutine(AnimateMotionStep(lyingPos, lyingRot, kneelPos, kneelRot, 1.0f, easeInOutCurve));
         yield return StartCoroutine(AnimateMotionStep(kneelPos, kneelRot, standCamPos, standRot, 1.4f, easeInOutCurve));
@@ -1365,6 +1411,7 @@ public class FallCutscene : MonoBehaviour
             fpc.SnapViewRotation(Quaternion.Euler(0f, standRot.eulerAngles.y, 0f));
 
             fpc.enabled = true;
+            fpc.SetControlLocked(false);
             fpc.playerCanMove = true;
             fpc.cameraCanMove = true;
             fpc.SetCrosshairVisible(true);
@@ -1397,6 +1444,12 @@ public class FallCutscene : MonoBehaviour
 
     private void ShowCutsceneObjective()
     {
+        if (MetroStorySequenceController.Instance != null)
+        {
+            MetroStorySequenceController.Instance.SetObjective("obj_find_teddy", "Find Teddy...");
+            return;
+        }
+
         string objectiveKey = "fall_objective_find_way_out";
         string fallbackText = "Find a way out";
         string locText = fallbackText;

@@ -281,6 +281,12 @@ public class MetroStorySequenceController : MonoBehaviour
         if (fpsController != null)
         {
             fpsController.SetControlLocked(false);
+            fpsController.lockCursor = true;
+            if (!Application.isMobilePlatform)
+            {
+                Cursor.lockState = CursorLockMode.Locked;
+                Cursor.visible = false;
+            }
             if (fpsController.playerCamera != null)
             {
                 fpsController.playerCamera.transform.localPosition = Vector3.zero;
