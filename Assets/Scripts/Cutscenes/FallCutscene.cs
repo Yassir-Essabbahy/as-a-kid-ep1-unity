@@ -43,6 +43,22 @@ public class FallCutscene : MonoBehaviour
     [Tooltip("If false, all sound effects, audio sources, and listener low-pass filters are disabled completely.")]
     public bool enableSound = true;
 
+    [Header("Armature Getting Up Configuration")]
+    [Tooltip("If true, spawns the Getting Up.fbx armature and binds the camera to its face socket for realistic animation.")]
+    public bool useArmatureGettingUp = true;
+    [Tooltip("The Getting Up FBX model prefab containing the character rig.")]
+    public GameObject gettingUpPrefab;
+    [Tooltip("The AnimatorController that plays the Getting Up animation clip.")]
+    public RuntimeAnimatorController gettingUpController;
+    [Tooltip("Duration in seconds for the smooth fade-in from black at the start (no blinking).")]
+    public float fadeInDuration = 2.0f;
+    [Tooltip("Whether to hide the mannequin mesh renderers on the spawned armature so no geometry clips into the camera.")]
+    public bool hideArmatureMeshes = true;
+    [Tooltip("Local offset from mixamorig:Head to the face/eyes.")]
+    public Vector3 faceSocketLocalPos = new Vector3(0f, 0.08f, 0.14f);
+    [Tooltip("Local rotation offset for the face socket.")]
+    public Vector3 faceSocketLocalRot = Vector3.zero;
+
     [Header("Current State")]
     [SerializeField] private CutsceneStage currentStage = CutsceneStage.Inactive;
     public CutsceneStage CurrentStage => currentStage;
@@ -154,6 +170,12 @@ public class FallCutscene : MonoBehaviour
     private bool mobileSkipButtonVisible = false;
     private float mobileSkipTimer = 0f;
 
+    // Armature cutscene runtime tracking
+    private GameObject spawnedArmatureInstance;
+    private Transform faceSocket;
+    private bool isArmatureTracking = false;
+    private Transform cameraJoint;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -261,6 +283,25 @@ public class FallCutscene : MonoBehaviour
         }
     }
 
+    private void LateUpdate()
+    {
+        if (isCinematicActive && isArmatureTracking && faceSocket != null && mainCamera != null)
+        {
+            mainCamera.transform.position = faceSocket.position;
+            mainCamera.transform.rotation = faceSocket.rotation;
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (spawnedArmatureInstance != null)
+        {
+            Destroy(spawnedArmatureInstance);
+            spawnedArmatureInstance = null;
+            faceSocket = null;
+        }
+    }
+
     public void ShowMobileSkipButton(float duration)
     {
         if (skipButtonUI != null)
@@ -307,8 +348,28 @@ public class FallCutscene : MonoBehaviour
         if (mainCamera == null)
             mainCamera = Camera.main;
 
+        if (cameraJoint == null && player != null)
+        {
+            cameraJoint = player.transform.Find("Joint");
+        }
+        if (cameraJoint == null && mainCamera != null && mainCamera.transform.parent != null)
+        {
+            cameraJoint = mainCamera.transform.parent;
+        }
+
         if (objectiveUI == null)
             objectiveUI = FindAnyObjectByType<ObjectiveUI>();
+
+#if UNITY_EDITOR
+        if (gettingUpPrefab == null)
+        {
+            gettingUpPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Animations/Character/Getting Up.fbx");
+        }
+        if (gettingUpController == null)
+        {
+            gettingUpController = UnityEditor.AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>("Assets/Animations/Character/GettingUp_Controller.controller");
+        }
+#endif
 
         // Auto load audio clips if not serialized
 #if UNITY_EDITOR
@@ -692,6 +753,13 @@ public class FallCutscene : MonoBehaviour
 
         if (skipFallSequence)
         {
+            if (useArmatureGettingUp && gettingUpPrefab != null)
+            {
+                Quaternion standRotTarget = landStandingPose != null ? landStandingPose.rotation : (player != null ? player.transform.rotation : Quaternion.identity);
+                yield return StartCoroutine(PlayArmatureGettingUpRoutine(lyingPos, standRotTarget));
+                yield break;
+            }
+
             // Direct ground wake-up: place camera on ground pose in black
             currentStage = CutsceneStage.LyingDazed;
             if (mainCamera != null)
@@ -950,8 +1018,15 @@ public class FallCutscene : MonoBehaviour
         }
 
         // ---------------------------------------------------------------------
-        // PHASE 4: LYING DAZED (Eyelid blinks: 10%, 40%, 100%)
+        // PHASE 4: GETTING UP (Armature FBX Driven vs Procedural)
         // ---------------------------------------------------------------------
+        if (useArmatureGettingUp && gettingUpPrefab != null)
+        {
+            Quaternion standRotTarget = landStandingPose != null ? landStandingPose.rotation : (player != null ? player.transform.rotation : Quaternion.identity);
+            yield return StartCoroutine(PlayArmatureGettingUpRoutine(lyingPos, standRotTarget));
+            yield break;
+        }
+
         currentStage = CutsceneStage.LyingDazed;
 
         // BLINK 1: Thin slit (10%) onto blurry tilted ground (5-8 deg roll), then close
@@ -1280,11 +1355,272 @@ public class FallCutscene : MonoBehaviour
     }
 
     // -------------------------------------------------------------------------
+    // ARMATURE GETTING UP ANIMATION ROUTINE (FBX Driven + Fade In + No Blinks)
+    // -------------------------------------------------------------------------
+
+    private IEnumerator PlayArmatureGettingUpRoutine(Vector3 lyingGroundPos, Quaternion targetYawRot)
+    {
+        isCinematicActive = true;
+
+        // 1. Ensure eyelids are 100% open so NO blinks occur
+        if (EyelidBlink.Instance != null)
+        {
+            EyelidBlink.Instance.SetOpenImmediate(1.0f);
+        }
+
+        // 2. Start fully black
+        if (blackOverlay != null)
+        {
+            blackOverlay.alpha = 1.0f;
+            blackOverlay.blocksRaycasts = false;
+        }
+
+        // 3. Determine ground height and player's target standing spot
+        Vector3 playerBasePos = player != null ? player.transform.position : lyingGroundPos;
+        float baseYaw = targetYawRot.eulerAngles.y;
+        float groundY = playerBasePos.y - 1.0f;
+        if (Physics.Raycast(playerBasePos + Vector3.up * 1f, Vector3.down, out RaycastHit hit, 10f))
+        {
+            groundY = hit.point.y;
+        }
+
+        Vector3 targetStandPos = new Vector3(playerBasePos.x, groundY, playerBasePos.z);
+        // Socket offset when standing at t = 7.6s in Getting Up.fbx
+        Vector3 standingOffset = new Vector3(0f, 1.67f, -0.62f);
+        Vector3 spawnPos = targetStandPos - (Quaternion.Euler(0f, baseYaw, 0f) * new Vector3(standingOffset.x, 0f, standingOffset.z));
+        Quaternion spawnRot = Quaternion.Euler(0f, baseYaw, 0f);
+
+        // 4. Spawn armature instance
+        if (gettingUpPrefab != null)
+        {
+            spawnedArmatureInstance = Instantiate(gettingUpPrefab, spawnPos, spawnRot);
+            spawnedArmatureInstance.name = "GettingUp_CutsceneArmature";
+
+            // Hide mannequin mesh renderers if configured so camera doesn't clip
+            if (hideArmatureMeshes)
+            {
+                var renderers = spawnedArmatureInstance.GetComponentsInChildren<Renderer>(true);
+                foreach (var r in renderers)
+                {
+                    r.enabled = false;
+                }
+            }
+
+            var anim = spawnedArmatureInstance.GetComponent<Animator>();
+            if (anim != null)
+            {
+                anim.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+                anim.applyRootMotion = true;
+                if (gettingUpController != null)
+                {
+                    anim.runtimeAnimatorController = gettingUpController;
+                }
+                anim.Rebind();
+                anim.Play("mixamo_com", 0, 0f);
+            }
+
+            // Find head bone
+            Transform headBone = spawnedArmatureInstance.transform.Find("mixamorig:Hips/mixamorig:Spine/mixamorig:Spine1/mixamorig:Spine2/mixamorig:Neck/mixamorig:Head");
+            if (headBone == null)
+            {
+                var allTransforms = spawnedArmatureInstance.GetComponentsInChildren<Transform>(true);
+                foreach (var t in allTransforms)
+                {
+                    if (t.name.EndsWith("Head", System.StringComparison.OrdinalIgnoreCase))
+                    {
+                        headBone = t;
+                        break;
+                    }
+                }
+            }
+
+            // Create CameraFaceSocket
+            GameObject socketGo = new GameObject("CameraFaceSocket");
+            faceSocket = socketGo.transform;
+            faceSocket.SetParent(headBone != null ? headBone : spawnedArmatureInstance.transform, false);
+            faceSocket.localPosition = faceSocketLocalPos;
+            faceSocket.localRotation = Quaternion.Euler(faceSocketLocalRot);
+
+            if (mainCamera != null)
+            {
+                mainCamera.transform.position = faceSocket.position;
+                mainCamera.transform.rotation = faceSocket.rotation;
+            }
+            isArmatureTracking = true;
+        }
+
+        currentStage = CutsceneStage.LyingDazed;
+
+        // 5. Smooth fade in from black (NO BLINKS!)
+        float fadeElapsed = 0f;
+        float animDuration = 7.6f;
+        float animTimer = 0f;
+
+        while (animTimer < animDuration)
+        {
+            animTimer += Time.deltaTime;
+
+            if (animTimer < 1.8f) currentStage = CutsceneStage.LyingDazed;
+            else if (animTimer < 3.2f) currentStage = CutsceneStage.Rolling;
+            else if (animTimer < 4.8f) currentStage = CutsceneStage.PushingUp;
+            else if (animTimer < 6.2f) currentStage = CutsceneStage.Kneeling;
+            else currentStage = CutsceneStage.Standing;
+
+            if (fadeElapsed < fadeInDuration)
+            {
+                fadeElapsed += Time.deltaTime;
+                if (blackOverlay != null)
+                {
+                    blackOverlay.alpha = Mathf.Clamp01(1f - (fadeElapsed / fadeInDuration));
+                }
+            }
+            else
+            {
+                if (blackOverlay != null && blackOverlay.alpha > 0f)
+                {
+                    blackOverlay.alpha = 0f;
+                }
+            }
+
+            yield return null;
+        }
+
+        if (blackOverlay != null) blackOverlay.alpha = 0f;
+
+        // 6. Complete and handover control
+        FinishAndHandoverControlArmature(groundY);
+    }
+
+    public void FinishAndHandoverControlArmature(float groundY)
+    {
+        isArmatureTracking = false;
+
+        Vector3 finalCamPos = faceSocket != null ? faceSocket.position : (mainCamera != null ? mainCamera.transform.position : player.transform.position + Vector3.up * 1.75f);
+        Quaternion finalCamRot = faceSocket != null ? faceSocket.rotation : (mainCamera != null ? mainCamera.transform.rotation : Quaternion.identity);
+
+        float finalYaw = finalCamRot.eulerAngles.y;
+        float finalPitch = finalCamRot.eulerAngles.x;
+        if (finalPitch > 180f) finalPitch -= 360f;
+
+        // 1. Position player capsule on ground
+        if (player != null)
+        {
+            player.transform.position = new Vector3(finalCamPos.x, groundY + 1.0f, finalCamPos.z);
+            player.transform.rotation = Quaternion.Euler(0f, finalYaw, 0f);
+        }
+
+        // 2. Restore camera
+        if (mainCamera != null)
+        {
+            mainCamera.nearClipPlane = originalNearClip;
+            mainCamera.fieldOfView = originalFOV;
+            if (cameraJoint != null)
+            {
+                mainCamera.transform.SetParent(cameraJoint, false);
+            }
+            mainCamera.transform.localPosition = Vector3.zero;
+            mainCamera.transform.localRotation = Quaternion.Euler(finalPitch, 0f, 0f);
+        }
+
+        // 3. Synchronize controller yaw and pitch in internal variables
+        if (fpc != null)
+        {
+            fpc.SetViewAngles(finalYaw, finalPitch);
+            fpc.SnapViewRotation(Quaternion.Euler(0f, finalYaw, 0f));
+
+            fpc.enabled = true;
+            fpc.SetControlLocked(false);
+            fpc.playerCanMove = true;
+            fpc.cameraCanMove = true;
+            fpc.SetCrosshairVisible(true);
+        }
+
+        // 4. Overlays & HUD
+        if (blackOverlay != null) blackOverlay.alpha = 0f;
+        if (flashOverlay != null) flashOverlay.color = new Color(1f, 1f, 1f, 0f);
+        if (EyelidBlink.Instance != null) EyelidBlink.Instance.SetOpenImmediate(1f);
+
+        var crosshairCanvas = GameObject.Find("CrosshairAndStamina");
+        if (crosshairCanvas != null) crosshairCanvas.SetActive(true);
+
+        if (mobileControlsCanvas != null)
+            mobileControlsCanvas.gameObject.SetActive(true);
+
+        if (skipButtonUI != null)
+            skipButtonUI.SetActive(false);
+
+        if (!Application.isMobilePlatform && !Story.MobileUIAdapter.IsMobile)
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
+
+        // 5. Objective
+        ShowCutsceneObjective();
+
+        // 6. Clean up temporary spawned armature
+        if (spawnedArmatureInstance != null)
+        {
+            Destroy(spawnedArmatureInstance);
+            spawnedArmatureInstance = null;
+            faceSocket = null;
+        }
+
+        isCinematicActive = false;
+        currentStage = CutsceneStage.Completed;
+        HasSeenCutsceneThisSession = true;
+    }
+
+    // -------------------------------------------------------------------------
     // SHORT VERSION ROUTINE (If seen this session)
     // -------------------------------------------------------------------------
 
     private IEnumerator ShortCutsceneRoutine()
     {
+        if (useArmatureGettingUp)
+        {
+            isCinematicActive = true;
+            currentStage = CutsceneStage.Standing;
+
+            if (fpc != null)
+            {
+                fpc.enabled = false;
+                fpc.playerCanMove = false;
+                fpc.cameraCanMove = false;
+                fpc.SetCrosshairVisible(false);
+            }
+
+            var crosshairCanvas = GameObject.Find("CrosshairAndStamina");
+            if (crosshairCanvas != null) crosshairCanvas.SetActive(false);
+
+            if (mobileControlsCanvas != null)
+                mobileControlsCanvas.gameObject.SetActive(false);
+
+            if (EyelidBlink.Instance != null) EyelidBlink.Instance.SetOpenImmediate(1f);
+
+            if (blackOverlay != null)
+            {
+                blackOverlay.alpha = 1f;
+                float t = 0f;
+                while (t < 0.8f)
+                {
+                    t += Time.deltaTime;
+                    blackOverlay.alpha = Mathf.Clamp01(1f - (t / 0.8f));
+                    yield return null;
+                }
+                blackOverlay.alpha = 0f;
+            }
+
+            float groundY = player != null ? player.transform.position.y - 1.0f : 0f;
+            if (Physics.Raycast((player != null ? player.transform.position : Vector3.zero) + Vector3.up * 1f, Vector3.down, out RaycastHit hit, 10f))
+            {
+                groundY = hit.point.y;
+            }
+
+            FinishAndHandoverControlArmature(groundY);
+            yield break;
+        }
+
         isCinematicActive = true;
         currentStage = CutsceneStage.LyingDazed;
 
@@ -1296,8 +1632,8 @@ public class FallCutscene : MonoBehaviour
             fpc.SetCrosshairVisible(false);
         }
 
-        var crosshairCanvas = GameObject.Find("CrosshairAndStamina");
-        if (crosshairCanvas != null) crosshairCanvas.SetActive(false);
+        var crosshairCanvasFallback = GameObject.Find("CrosshairAndStamina");
+        if (crosshairCanvasFallback != null) crosshairCanvasFallback.SetActive(false);
 
         if (mobileControlsCanvas != null)
             mobileControlsCanvas.gameObject.SetActive(false);
@@ -1365,10 +1701,22 @@ public class FallCutscene : MonoBehaviour
             listenerLowPass.enabled = false;
         }
 
-        Vector3 standCamPos = landStandingPose != null ? landStandingPose.position : new Vector3(25.31f, 1.75f, 9.62f);
-        Quaternion standRot = landStandingPose != null ? landStandingPose.rotation : Quaternion.Euler(0f, 90f, 0f);
+        if (useArmatureGettingUp)
+        {
+            float groundY = player != null ? player.transform.position.y - 1.0f : 0f;
+            if (Physics.Raycast((player != null ? player.transform.position : Vector3.zero) + Vector3.up * 1f, Vector3.down, out RaycastHit hit, 10f))
+            {
+                groundY = hit.point.y;
+            }
+            FinishAndHandoverControlArmature(groundY);
+        }
+        else
+        {
+            Vector3 standCamPos = landStandingPose != null ? landStandingPose.position : new Vector3(25.31f, 1.75f, 9.62f);
+            Quaternion standRot = landStandingPose != null ? landStandingPose.rotation : Quaternion.Euler(0f, 90f, 0f);
+            FinishAndHandoverControl(standCamPos, standRot);
+        }
 
-        FinishAndHandoverControl(standCamPos, standRot);
         yield break;
     }
 
