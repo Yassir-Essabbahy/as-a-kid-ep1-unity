@@ -348,6 +348,9 @@ public class FallCutscene : MonoBehaviour
         if (mainCamera == null)
             mainCamera = Camera.main;
 
+        if (mainCamera != null)
+            mainCamera.useOcclusionCulling = false;
+
         if (cameraJoint == null && player != null)
         {
             cameraJoint = player.transform.Find("Joint");
@@ -1512,6 +1515,7 @@ public class FallCutscene : MonoBehaviour
         // 2. Restore camera
         if (mainCamera != null)
         {
+            mainCamera.useOcclusionCulling = false;
             mainCamera.nearClipPlane = originalNearClip;
             mainCamera.fieldOfView = originalFOV;
             if (cameraJoint != null)
@@ -1746,6 +1750,7 @@ public class FallCutscene : MonoBehaviour
         // 3. Restore camera transform and lens properties
         if (mainCamera != null)
         {
+            mainCamera.useOcclusionCulling = false;
             mainCamera.nearClipPlane = originalNearClip;
             mainCamera.fieldOfView = originalFOV;
             mainCamera.transform.localPosition = Vector3.zero;
