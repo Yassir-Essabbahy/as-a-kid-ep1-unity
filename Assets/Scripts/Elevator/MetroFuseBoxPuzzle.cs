@@ -11,10 +11,19 @@ public class MetroFuseBoxPuzzle : MonoBehaviour
     public static MetroFuseBoxPuzzle Instance => _instance;
     public static bool IsAnyInspecting => _instance != null && _instance.isInspecting;
 
+    public event System.Action OnPowerRestoredSolved;
+    public event System.Action OnPostSolveInspectionClosed;
+
+    public bool IsLockedBeforeBlackout =>
+        WaitingPlatformLoopController.Instance != null &&
+        !WaitingPlatformLoopController.Instance.IsFuseBoxTaskUnlocked;
+
+    private bool _pendingPostSolveCloseEvent = false;
+
     [Header("Cabinet Model & Door")]
     public Transform cabinetDoorTransform; // Cube.001_1
-    public Vector3 doorClosedLocalEuler = new Vector3(0f, 0f, 240f);
-    public Vector3 doorOpenLocalEuler = new Vector3(0f, 0f, 130f);
+    public Vector3 doorClosedLocalEuler = new Vector3(0f, 0f, 0f);
+    public Vector3 doorOpenLocalEuler = new Vector3(0f, 0f, -115f);
 
     [Header("Switch Triggers (Physical 3D Switches)")]
     public SwitchTrigger[] switchTriggers = new SwitchTrigger[5];
@@ -91,12 +100,6 @@ public class MetroFuseBoxPuzzle : MonoBehaviour
     [Range(0f, 1f)] public float doorOpenVolume = 0.85f;
     [Range(0f, 1f)] public float doorCloseVolume = 0.85f;
 
-    // Procedural Audio Clips (Fallback)
-    private AudioClip switchSnapClip;
-    private AudioClip doorCreakClip;
-    private AudioClip procPowerSurgeClip;
-    private AudioClip humLoopClip;
-
     [System.Serializable]
     public class SwitchTrigger
     {
@@ -107,8 +110,11 @@ public class MetroFuseBoxPuzzle : MonoBehaviour
         [HideInInspector] public Coroutine rotateRoutine;
     }
 
-    private string GetLocalizedPrompt()
+    public string GetLocalizedPrompt()
     {
+        if (IsLockedBeforeBlackout)
+            return LocalizationManager.Resolve("prompt_fusebox_online", "Fuse Box (Power Online)");
+
         return isPowerRestored
             ? LocalizationManager.Resolve("prompt_fusebox_powered", promptPoweredText)
             : LocalizationManager.Resolve("prompt_open_fusebox", promptOpenText);
@@ -122,8 +128,6 @@ public class MetroFuseBoxPuzzle : MonoBehaviour
             return;
         }
         _instance = this;
-
-        GenerateProceduralAudio();
     }
 
     private void Start()
@@ -133,11 +137,14 @@ public class MetroFuseBoxPuzzle : MonoBehaviour
         InitializeDoor();
         HookMobileButtons();
 
+        if (mobileUIRoot != null) mobileUIRoot.SetActive(false);
         if (mobileOpenButton != null) mobileOpenButton.gameObject.SetActive(false);
         if (mobileCloseButton != null) mobileCloseButton.gameObject.SetActive(false);
 
-        // Resume state & hum if power was already restored in this session
-        if (MetroStorySequenceController.Instance != null && MetroStorySequenceController.Instance.isPowerRestored)
+        // Resume state & hum if power was already restored in this session (legacy mode only)
+        if (WaitingPlatformLoopController.Instance == null &&
+            MetroStorySequenceController.Instance != null &&
+            MetroStorySequenceController.Instance.isPowerRestored)
         {
             isPowerRestored = true;
             for (int i = 0; i < switchTriggers.Length; i++)
@@ -152,15 +159,27 @@ public class MetroFuseBoxPuzzle : MonoBehaviour
         }
     }
 
-    public void ResetPuzzle()
+    public void PrepareForNextLoopBlackout(bool skipTeddyHint = true)
     {
+        if (activeDoorCoroutine != null)
+        {
+            StopCoroutine(activeDoorCoroutine);
+            activeDoorCoroutine = null;
+        }
+        if (activeTransitionCoroutine != null)
+        {
+            StopCoroutine(activeTransitionCoroutine);
+            activeTransitionCoroutine = null;
+        }
+
         isPowerRestored = false;
         isInspecting = false;
         isTransitioning = false;
         isCompleting = false;
+        _pendingPostSolveCloseEvent = false;
+        hasTeddyHintPlayed = skipTeddyHint;
 
-        AudioClip humClip = electricityHumClip != null ? electricityHumClip : humLoopClip;
-        if (audioSource != null && audioSource.isPlaying && audioSource.clip == humClip)
+        if (audioSource != null && audioSource.isPlaying)
         {
             audioSource.Stop();
         }
@@ -168,6 +187,27 @@ public class MetroFuseBoxPuzzle : MonoBehaviour
         InitializeSwitches();
         InitializeDoor();
 
+        if (mobileUIRoot != null) mobileUIRoot.SetActive(false);
+        if (mobileOpenButton != null) mobileOpenButton.gameObject.SetActive(false);
+        if (mobileCloseButton != null) mobileCloseButton.gameObject.SetActive(false);
+    }
+
+    public void ResetPuzzle()
+    {
+        isPowerRestored = false;
+        isInspecting = false;
+        isTransitioning = false;
+        isCompleting = false;
+
+        if (audioSource != null && audioSource.isPlaying && audioSource.clip == electricityHumClip)
+        {
+            audioSource.Stop();
+        }
+
+        InitializeSwitches();
+        InitializeDoor();
+
+        if (mobileUIRoot != null) mobileUIRoot.SetActive(false);
         if (mobileOpenButton != null) mobileOpenButton.gameObject.SetActive(false);
         if (mobileCloseButton != null) mobileCloseButton.gameObject.SetActive(false);
     }
@@ -203,6 +243,24 @@ public class MetroFuseBoxPuzzle : MonoBehaviour
         {
             var lGo = GameObject.Find("PointRoom2 1 (1)");
             if (lGo != null) cabinetLight = lGo.GetComponent<Light>();
+        }
+
+        if (mobileUIRoot == null)
+        {
+            var canvas = GameObject.Find("Canvas");
+            if (canvas != null)
+            {
+                var t = canvas.transform.Find("MobileFuseBoxUI");
+                if (t != null) mobileUIRoot = t.gameObject;
+            }
+        }
+
+        if (mobileCloseButton == null && mobileUIRoot != null)
+        {
+            var closeT = mobileUIRoot.transform.Find("CloseButton");
+            mobileCloseButton = closeT != null
+                ? closeT.GetComponent<Button>()
+                : mobileUIRoot.GetComponentInChildren<Button>(true);
         }
 
         if (audioSource == null)
@@ -323,19 +381,24 @@ public class MetroFuseBoxPuzzle : MonoBehaviour
 
         if (inRange)
         {
-            if (NpcDialogueManager.Instance == null || !NpcDialogueManager.Instance.IsDialogueRunning)
+            bool blocked = (NpcDialogueManager.Instance != null && NpcDialogueManager.Instance.IsDialogueRunning) ||
+                           AsAKid.Conversation.ConversationUI.IsAnyActive ||
+                           (Story.MobilePauseMenu.Instance != null && Story.MobilePauseMenu.Instance.isPaused);
+
+            if (!blocked)
             {
                 string prompt = GetLocalizedPrompt();
                 if (NpcInteractionText.Instance != null)
                 {
-                    NpcInteractionText.Instance.SetPrompt(prompt);
+                    NpcInteractionText.Instance.SetPrompt(prompt, IsLockedBeforeBlackout ? null : (System.Action)OpenInspection);
                 }
                 else if (interactUI != null)
                 {
                     LocalizationManager.ApplyText(interactUI, prompt, preserveAlignment: true);
                 }
 
-                if (Input.GetKeyDown(KeyCode.E) || ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame)
+                if (!IsLockedBeforeBlackout &&
+                    (Input.GetKeyDown(KeyCode.E) || ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame))
                 {
                     OpenInspection();
                 }
@@ -453,8 +516,8 @@ public class MetroFuseBoxPuzzle : MonoBehaviour
         ApplySwitchRotation(sw, sw.isOn, instant: false);
 
         AudioClip clipToPlay = sw.isOn
-            ? (fuseDownClip != null ? fuseDownClip : (switchSnapClip != null ? switchSnapClip : fuseUpClip))
-            : (fuseUpClip != null ? fuseUpClip : (switchSnapClip != null ? switchSnapClip : fuseDownClip));
+            ? (fuseDownClip != null ? fuseDownClip : fuseUpClip)
+            : (fuseUpClip != null ? fuseUpClip : fuseDownClip);
 
         PlayClip(clipToPlay, switchVolume);
 
@@ -535,6 +598,8 @@ public class MetroFuseBoxPuzzle : MonoBehaviour
     {
         isCompleting = true;
         isPowerRestored = true;
+        _pendingPostSolveCloseEvent = true;
+        OnPowerRestoredSolved?.Invoke();
 
         // Ensure ticket exists in a station trash can
         TrashTicketSource.EnsureTicketExists();
@@ -552,8 +617,7 @@ public class MetroFuseBoxPuzzle : MonoBehaviour
             MetroStorySequenceController.Instance.OnPowerRestored();
         }
 
-        AudioClip surge = powerSurgeClip != null ? powerSurgeClip : procPowerSurgeClip;
-        PlayClip(surge, 1.0f);
+        PlayClip(powerSurgeClip, 1.0f);
 
         // Flash cabinet light to simulate power surge
         if (cabinetLight != null && Application.isPlaying)
@@ -581,12 +645,13 @@ public class MetroFuseBoxPuzzle : MonoBehaviour
 
     public void OpenInspection()
     {
-        if (isInspecting || isTransitioning) return;
+        if (isInspecting || isTransitioning || IsLockedBeforeBlackout) return;
         isInspecting = true;
 
         if (interactUI != null) interactUI.text = "";
         if (NpcInteractionText.Instance != null) NpcInteractionText.Instance.ClearPrompt();
 
+        if (mobileUIRoot != null) mobileUIRoot.SetActive(true);
         if (mobileOpenButton != null) mobileOpenButton.gameObject.SetActive(false);
 
         // Hide close button if dialogue is about to play; otherwise show it immediately
@@ -596,13 +661,13 @@ public class MetroFuseBoxPuzzle : MonoBehaviour
         if (fpsController != null)
         {
             fpsController.SetControlLocked(true);
+            fpsController.SetCrosshairVisible(false);
         }
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
-        AudioClip openSound = doorOpenClip != null ? doorOpenClip : doorCreakClip;
-        PlayClip(openSound, doorOpenVolume);
+        PlayClip(doorOpenClip, doorOpenVolume);
 
         // Animate door open
         if (activeDoorCoroutine != null) StopCoroutine(activeDoorCoroutine);
@@ -667,9 +732,9 @@ public class MetroFuseBoxPuzzle : MonoBehaviour
         isInspecting = false;
 
         if (mobileCloseButton != null) mobileCloseButton.gameObject.SetActive(false);
+        if (mobileUIRoot != null) mobileUIRoot.SetActive(false);
 
-        AudioClip closeSound = doorCloseClip != null ? doorCloseClip : doorCreakClip;
-        PlayClip(closeSound, doorCloseVolume);
+        PlayClip(doorCloseClip, doorCloseVolume);
 
         // Animate door close
         if (activeDoorCoroutine != null) StopCoroutine(activeDoorCoroutine);
@@ -775,23 +840,32 @@ public class MetroFuseBoxPuzzle : MonoBehaviour
             }
         }
 
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        if (!Application.isMobilePlatform)
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
 
         if (fpsController != null)
         {
             fpsController.SetControlLocked(false);
+            fpsController.SetCrosshairVisible(true);
         }
 
         isTransitioning = false;
+
+        if (_pendingPostSolveCloseEvent)
+        {
+            _pendingPostSolveCloseEvent = false;
+            OnPostSolveInspectionClosed?.Invoke();
+        }
     }
 
     private void StartElectricalHum()
     {
-        AudioClip humClip = electricityHumClip != null ? electricityHumClip : humLoopClip;
-        if (audioSource != null && humClip != null)
+        if (audioSource != null && electricityHumClip != null)
         {
-            audioSource.clip = humClip;
+            audioSource.clip = electricityHumClip;
             audioSource.loop = true;
             audioSource.volume = electricityHumVolume;
             audioSource.Play();
@@ -810,103 +884,4 @@ public class MetroFuseBoxPuzzle : MonoBehaviour
             AudioSource.PlayClipAtPoint(clip, transform.position, volume);
         }
     }
-
-    #region Procedural PSX Audio Synthesis
-    private void GenerateProceduralAudio()
-    {
-        switchSnapClip = CreateClickClip();
-        doorCreakClip = CreateDoorCreakClip();
-        procPowerSurgeClip = CreatePowerUpClip();
-        humLoopClip = CreateHumLoopClip();
-    }
-
-    private AudioClip CreateClickClip()
-    {
-        int sampleRate = 44100;
-        float duration = 0.07f;
-        int samples = (int)(sampleRate * duration);
-        float[] data = new float[samples];
-
-        for (int i = 0; i < samples; i++)
-        {
-            float t = (float)i / samples;
-            float freq = Mathf.Lerp(1600f, 240f, t);
-            float env = Mathf.Exp(-t * 22f);
-            float noise = (Random.value * 2f - 1f) * 0.45f;
-            float tone = Mathf.Sin(2f * Mathf.PI * freq * ((float)i / sampleRate));
-            data[i] = (tone * 0.75f + noise) * env;
-        }
-
-        var clip = AudioClip.Create("PSX_BreakerSnap", samples, 1, sampleRate, false);
-        clip.SetData(data, 0);
-        return clip;
-    }
-
-    private AudioClip CreateDoorCreakClip()
-    {
-        int sampleRate = 44100;
-        float duration = 0.35f;
-        int samples = (int)(sampleRate * duration);
-        float[] data = new float[samples];
-
-        for (int i = 0; i < samples; i++)
-        {
-            float t = (float)i / sampleRate;
-            float normT = (float)i / samples;
-            float wobble = Mathf.Sin(2f * Mathf.PI * 45f * t) * 0.4f;
-            float creak = Mathf.Sin(2f * Mathf.PI * (320f + wobble * 60f) * t) * 0.5f;
-            float latch = normT < 0.15f ? (Random.value * 2f - 1f) * 0.6f * Mathf.Exp(-normT * 30f) : 0f;
-            float env = Mathf.Sin(normT * Mathf.PI);
-            data[i] = (creak * 0.6f + latch) * env * 0.5f;
-        }
-
-        var clip = AudioClip.Create("PSX_CabinetHinge", samples, 1, sampleRate, false);
-        clip.SetData(data, 0);
-        return clip;
-    }
-
-    private AudioClip CreatePowerUpClip()
-    {
-        int sampleRate = 44100;
-        float duration = 1.5f;
-        int samples = (int)(sampleRate * duration);
-        float[] data = new float[samples];
-
-        for (int i = 0; i < samples; i++)
-        {
-            float t = (float)i / samples;
-            float freq = Mathf.Lerp(45f, 110f, Mathf.Pow(t, 1.4f));
-            float tone1 = Mathf.Sin(2f * Mathf.PI * freq * ((float)i / sampleRate));
-            float tone2 = Mathf.Sin(2f * Mathf.PI * (freq * 2f) * ((float)i / sampleRate)) * 0.45f;
-            float noise = (Random.value * 2f - 1f) * Mathf.Lerp(0.3f, 0.02f, t);
-            float env = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t * 5f)) * (t > 0.8f ? Mathf.Lerp(1f, 0.7f, (t - 0.8f) / 0.2f) : 1f);
-            data[i] = (tone1 + tone2 + noise) * env * 0.65f;
-        }
-
-        var clip = AudioClip.Create("PSX_PowerSurge", samples, 1, sampleRate, false);
-        clip.SetData(data, 0);
-        return clip;
-    }
-
-    private AudioClip CreateHumLoopClip()
-    {
-        int sampleRate = 44100;
-        float duration = 2.0f;
-        int samples = (int)(sampleRate * duration);
-        float[] data = new float[samples];
-
-        for (int i = 0; i < samples; i++)
-        {
-            float t = (float)i / sampleRate;
-            float h1 = Mathf.Sin(2f * Mathf.PI * 60f * t) * 0.65f;
-            float h2 = Mathf.Sin(2f * Mathf.PI * 120f * t) * 0.25f;
-            float h3 = Mathf.Sin(2f * Mathf.PI * 180f * t) * 0.1f;
-            data[i] = (h1 + h2 + h3) * 0.35f;
-        }
-
-        var clip = AudioClip.Create("PSX_ElectricalHum", samples, 1, sampleRate, false);
-        clip.SetData(data, 0);
-        return clip;
-    }
-    #endregion
 }

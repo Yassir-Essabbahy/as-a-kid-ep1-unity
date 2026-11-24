@@ -43,24 +43,35 @@ namespace AsAKid.Conversation
         [SerializeField] private TMP_Text leaveButtonLabel;
 
         [Header("Behavior & Styling")]
-        [SerializeField] private float typewriterCharactersPerSecond = 28f;
-        [SerializeField] private bool forceBoldFonts = true;
-        [SerializeField] private bool forceUpperCase = true;
-        [SerializeField, Range(0.25f, 1f)] private float characterTextAlpha = 0.92f;
-        [SerializeField] private bool showTextBackdropStrip = true;
+        [SerializeField] private bool playDoudouInnerVoice = false;
+        [SerializeField] private float typewriterCharactersPerSecond = 25f;
+        [SerializeField] private bool forceBoldFonts = false;
+        [SerializeField] private bool forceUpperCase = false;
+        [SerializeField, Range(0.25f, 1f)] private float characterTextAlpha = 1f;
+        [SerializeField] private bool showTextBackdropStrip = false;
         [SerializeField, Range(0f, 1f)] private float backdropAlpha = 0.88f;
         [SerializeField, Range(0f, 0.5f)] private float backdropCharacterTint = 0f;
         [SerializeField] private Vector2 backdropPadding = new Vector2(14f, 4f);
-        [SerializeField] private Color activeQuestionTextColor = new Color(1f, 1f, 1f, 0.94f);
+        [SerializeField] private Color activeQuestionTextColor = Color.white;
         [SerializeField] private Color askedQuestionTextColor = new Color(0.62f, 0.62f, 0.62f, 0.55f);
-        [SerializeField] private Color activeButtonBgColor = new Color(0f, 0f, 0f, 0f);
-        [SerializeField] private Color askedButtonBgColor = new Color(0f, 0f, 0f, 0f);
+        [SerializeField] private Color activeButtonBgColor = new Color(0f, 0f, 0f, 1f);
+        [SerializeField] private Color askedButtonBgColor = new Color(0f, 0f, 0f, 0.55f);
+
+        [Header("Cinematic Letterbox Bands")]
+        [SerializeField] private bool showCinematicBands = true;
+        [SerializeField] private RectTransform topBand;
+        [SerializeField] private RectTransform bottomBand;
+        [SerializeField] private float topBandHeight = 140f;
+        [SerializeField] private float bottomBandHeight = 220f;
+        [SerializeField] private float bandSlideDuration = 0.45f;
 
         private ConversationState _state = ConversationState.Closed;
         private NpcQuestionSet _currentNpc;
         private NpcLookAt _currentLookAt;
         private int _currentQuestionIndex = -1;
         private Coroutine _flowCoroutine;
+        private Coroutine _bandSlideCoroutine;
+        private string _currentSpeakerDisplayName = "";
 
         // Cached references so Update() performs zero allocations
         private FirstPersonController _lockedController;
@@ -105,6 +116,8 @@ namespace AsAKid.Conversation
             }
 
             Instance = this;
+            EnsureCinematicBands();
+            SnapBandsOffscreen(deactivate: true);
             BindButtonListeners();
             EnsureEventSystemExists();
             ApplyBoldStyling();
@@ -139,7 +152,11 @@ namespace AsAKid.Conversation
 
             if (_state != ConversationState.Closed)
             {
-                ForceCloseWithoutEvents();
+                ForceCloseWithoutEvents(animateBandsOut: false);
+            }
+            else if (showCinematicBands)
+            {
+                SnapBandsOffscreen(deactivate: true);
             }
         }
 
@@ -147,7 +164,7 @@ namespace AsAKid.Conversation
         {
             if (_state != ConversationState.Closed)
             {
-                ForceCloseWithoutEvents();
+                ForceCloseWithoutEvents(animateBandsOut: false);
             }
 
             if (Instance == this)
@@ -209,7 +226,11 @@ namespace AsAKid.Conversation
         {
             if (_state != ConversationState.Closed)
             {
-                ForceCloseWithoutEvents();
+                ForceCloseWithoutEvents(animateBandsOut: false);
+            }
+            else if (showCinematicBands)
+            {
+                SnapBandsOffscreen(deactivate: true);
             }
         }
 
@@ -262,6 +283,13 @@ namespace AsAKid.Conversation
             LocalizationManager.EnsureArabicFallbackFont();
             EnsureEventSystemExists();
 
+            if (lookAt == null)
+            {
+                lookAt = npc.GetComponent<NpcLookAt>()
+                         ?? npc.GetComponentInChildren<NpcLookAt>(true)
+                         ?? npc.GetComponentInParent<NpcLookAt>();
+            }
+
             _currentNpc = npc;
             _currentLookAt = lookAt;
             _currentQuestionIndex = -1;
@@ -271,6 +299,17 @@ namespace AsAKid.Conversation
             if (_currentLookAt != null)
             {
                 _currentLookAt.IKActive = true;
+            }
+
+            EnsureCinematicBands();
+            if (showCinematicBands)
+            {
+                if ((topBand != null && !topBand.gameObject.activeSelf) ||
+                    (bottomBand != null && !bottomBand.gameObject.activeSelf))
+                {
+                    SnapBandsOffscreen(deactivate: false);
+                }
+                SlideBands(true);
             }
 
             if (panelRoot != null)
@@ -293,7 +332,7 @@ namespace AsAKid.Conversation
                 _state = ConversationState.Answering;
                 _flowCoroutine = StartCoroutine(PlayDoneOnlyRoutine());
             }
-            else if (_currentNpc.HasGreeting() || (!_currentNpc.HasPlayedDoudouWhisper && _currentNpc.HasDoudouWhisper()))
+            else if (_currentNpc.HasGreeting() || (playDoudouInnerVoice && !_currentNpc.HasPlayedDoudouWhisper && _currentNpc.HasDoudouWhisper()))
             {
                 _state = ConversationState.Greeting;
                 _flowCoroutine = StartCoroutine(PlayGreetingRoutine());
@@ -315,7 +354,7 @@ namespace AsAKid.Conversation
                 return;
 
             NpcQuestionSet finishedNpc = _currentNpc;
-            ForceCloseWithoutEvents();
+            ForceCloseWithoutEvents(animateBandsOut: isActiveAndEnabled);
 
             if (finishedNpc != null)
             {
@@ -323,7 +362,7 @@ namespace AsAKid.Conversation
             }
         }
 
-        private void ForceCloseWithoutEvents()
+        private void ForceCloseWithoutEvents(bool animateBandsOut = false)
         {
             if (_flowCoroutine != null)
             {
@@ -336,6 +375,11 @@ namespace AsAKid.Conversation
             _currentQuestionIndex = -1;
             _currentRawLine = "";
             HideAnswerBackdrops();
+
+            if (continueHintText != null)
+            {
+                continueHintText.gameObject.SetActive(false);
+            }
 
             if (panelRoot != null)
             {
@@ -350,6 +394,195 @@ namespace AsAKid.Conversation
 
             _currentNpc = null;
             ReleasePlayerControlLock();
+
+            if (showCinematicBands)
+            {
+                if (animateBandsOut && isActiveAndEnabled)
+                {
+                    SlideBands(false);
+                }
+                else
+                {
+                    SnapBandsOffscreen(deactivate: true);
+                }
+            }
+        }
+
+        private void EnsureCinematicBands()
+        {
+            if (!showCinematicBands)
+                return;
+
+            topBand = EnsureBandRect(topBand, "TopBand", true, topBandHeight, 0);
+            bottomBand = EnsureBandRect(bottomBand, "BottomBand", false, bottomBandHeight, 1);
+        }
+
+        private RectTransform EnsureBandRect(RectTransform existing, string bandName, bool isTop, float height, int siblingIndex)
+        {
+            if (existing == null)
+            {
+                Transform found = transform.Find(bandName);
+                if (found != null)
+                {
+                    existing = found as RectTransform;
+                }
+                else
+                {
+                    var go = new GameObject(bandName, typeof(RectTransform), typeof(Image));
+                    go.layer = gameObject.layer;
+                    go.transform.SetParent(transform, false);
+                    existing = go.GetComponent<RectTransform>();
+                }
+            }
+
+            if (existing != null)
+            {
+                if (isTop)
+                {
+                    existing.anchorMin = new Vector2(0f, 1f);
+                    existing.anchorMax = new Vector2(1f, 1f);
+                    existing.pivot = new Vector2(0.5f, 1f);
+                }
+                else
+                {
+                    existing.anchorMin = new Vector2(0f, 0f);
+                    existing.anchorMax = new Vector2(1f, 0f);
+                    existing.pivot = new Vector2(0.5f, 0f);
+                }
+                existing.sizeDelta = new Vector2(0f, height);
+                existing.SetSiblingIndex(Mathf.Clamp(siblingIndex, 0, Mathf.Max(0, transform.childCount - 1)));
+
+                var img = existing.GetComponent<Image>() ?? existing.gameObject.AddComponent<Image>();
+                img.sprite = null;
+                img.color = Color.black;
+                img.raycastTarget = false;
+            }
+
+            return existing;
+        }
+
+        private void SnapBandsOffscreen(bool deactivate)
+        {
+            if (_bandSlideCoroutine != null)
+            {
+                StopCoroutine(_bandSlideCoroutine);
+                _bandSlideCoroutine = null;
+            }
+
+            if (topBand != null)
+            {
+                topBand.sizeDelta = new Vector2(topBand.sizeDelta.x, topBandHeight);
+                topBand.anchoredPosition = new Vector2(0f, topBandHeight);
+                topBand.gameObject.SetActive(!deactivate && showCinematicBands);
+            }
+
+            if (bottomBand != null)
+            {
+                bottomBand.sizeDelta = new Vector2(bottomBand.sizeDelta.x, bottomBandHeight);
+                bottomBand.anchoredPosition = new Vector2(0f, -bottomBandHeight);
+                bottomBand.gameObject.SetActive(!deactivate && showCinematicBands);
+            }
+        }
+
+        private void SlideBands(bool slideIn)
+        {
+            if (!showCinematicBands)
+                return;
+
+            EnsureCinematicBands();
+            if (_bandSlideCoroutine != null)
+            {
+                StopCoroutine(_bandSlideCoroutine);
+                _bandSlideCoroutine = null;
+            }
+
+            if (topBand == null || bottomBand == null)
+                return;
+
+            if (slideIn)
+            {
+                topBand.gameObject.SetActive(true);
+                bottomBand.gameObject.SetActive(true);
+            }
+
+            if (!isActiveAndEnabled)
+            {
+                SnapBandsOffscreen(deactivate: !slideIn);
+                return;
+            }
+
+            _bandSlideCoroutine = StartCoroutine(SlideBandsRoutine(slideIn));
+        }
+
+        private IEnumerator SlideBandsRoutine(bool slideIn)
+        {
+            Vector2 topStart = topBand.anchoredPosition;
+            Vector2 topEnd = slideIn ? Vector2.zero : new Vector2(0f, topBandHeight);
+
+            Vector2 botStart = bottomBand.anchoredPosition;
+            Vector2 botEnd = slideIn ? Vector2.zero : new Vector2(0f, -bottomBandHeight);
+
+            float elapsed = 0f;
+            float duration = Mathf.Max(0.05f, bandSlideDuration);
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float t = Mathf.Clamp01(elapsed / duration);
+                float smooth = Mathf.SmoothStep(0f, 1f, t);
+                if (topBand != null) topBand.anchoredPosition = Vector2.Lerp(topStart, topEnd, smooth);
+                if (bottomBand != null) bottomBand.anchoredPosition = Vector2.Lerp(botStart, botEnd, smooth);
+                yield return null;
+            }
+
+            if (topBand != null)
+            {
+                topBand.anchoredPosition = topEnd;
+                if (!slideIn) topBand.gameObject.SetActive(false);
+            }
+            if (bottomBand != null)
+            {
+                bottomBand.anchoredPosition = botEnd;
+                if (!slideIn) bottomBand.gameObject.SetActive(false);
+            }
+
+            _bandSlideCoroutine = null;
+        }
+
+        private void ApplyPanelRectForMode(bool isQuestionMenu)
+        {
+            if (!showCinematicBands || panelRoot == null)
+                return;
+
+            RectTransform panelRt = panelRoot.GetComponent<RectTransform>();
+            if (panelRt == null)
+                return;
+
+            if (isQuestionMenu)
+            {
+                panelRt.anchorMin = new Vector2(0.22f, 0.25f);
+                panelRt.anchorMax = new Vector2(0.78f, 0.55f);
+            }
+            else
+            {
+                panelRt.anchorMin = new Vector2(0.08f, 0.045f);
+                panelRt.anchorMax = new Vector2(0.86f, 0.185f);
+
+                if (answerContainer != null)
+                {
+                    RectTransform ansContRt = answerContainer.GetComponent<RectTransform>();
+                    if (ansContRt != null)
+                    {
+                        ansContRt.anchorMin = Vector2.zero;
+                        ansContRt.anchorMax = Vector2.one;
+                        ansContRt.offsetMin = Vector2.zero;
+                        ansContRt.offsetMax = Vector2.zero;
+                    }
+                }
+            }
+
+            panelRt.offsetMin = Vector2.zero;
+            panelRt.offsetMax = Vector2.zero;
+            Canvas.ForceUpdateCanvases();
         }
 
         private IEnumerator PlayGreetingRoutine()
@@ -365,14 +598,33 @@ namespace AsAKid.Conversation
             if (_currentNpc.HasGreeting())
             {
                 RefreshSpeakerHeader(_currentNpc.GetDisplayName(), _currentNpc.NpcId);
-                _currentRawLine = _currentNpc.GetGreetingText();
+                string greetingLine = _currentNpc.GetGreetingText();
+
+                var storyCtrl = MetroStorySequenceController.Instance;
+                if (string.Equals(_currentNpc.NpcId, "neighbor", System.StringComparison.OrdinalIgnoreCase) &&
+                    storyCtrl != null &&
+                    storyCtrl.fuseBoxInspected &&
+                    storyCtrl.neighborGaveAdvice &&
+                    !storyCtrl.isPowerRestored)
+                {
+                    string reminder = LocalizationManager.Resolve("neighbor_fuse_reminder_01", "");
+                    if (!string.IsNullOrEmpty(reminder))
+                    {
+                        int colonIdx = reminder.IndexOf(':');
+                        greetingLine = (colonIdx >= 0 && colonIdx + 1 < reminder.Length)
+                            ? reminder.Substring(colonIdx + 1).TrimStart()
+                            : reminder;
+                    }
+                }
+
+                _currentRawLine = greetingLine;
                 yield return RunLineDisplayRoutine(_currentRawLine);
 
                 if (_state != ConversationState.Greeting || _currentNpc == null)
                     yield break;
             }
 
-            if (!_currentNpc.HasPlayedDoudouWhisper && _currentNpc.HasDoudouWhisper())
+            if (playDoudouInnerVoice && !_currentNpc.HasPlayedDoudouWhisper && _currentNpc.HasDoudouWhisper())
             {
                 _currentNpc.MarkDoudouWhisperPlayed();
                 RefreshSpeakerHeader(MetroStorySequenceController.TeddyName, "doudou");
@@ -420,6 +672,7 @@ namespace AsAKid.Conversation
             _currentQuestionIndex = -1;
             _wasTypewriterRunning = false;
             HideAnswerBackdrops();
+            ApplyPanelRectForMode(isQuestionMenu: true);
 
             if (answerContainer != null)
             {
@@ -491,7 +744,7 @@ namespace AsAKid.Conversation
                         yield break;
                 }
 
-                if (!_currentNpc.HasPlayedDoudouReaction && _currentNpc.HasDoudouReaction())
+                if (playDoudouInnerVoice && !_currentNpc.HasPlayedDoudouReaction && _currentNpc.HasDoudouReaction())
                 {
                     _currentNpc.MarkDoudouReactionPlayed();
                     RefreshSpeakerHeader(MetroStorySequenceController.TeddyName, "doudou");
@@ -510,8 +763,27 @@ namespace AsAKid.Conversation
             ShowQuestionMenu();
         }
 
+        private string FormatLineWithSpeaker(string rawLine)
+        {
+            string line = rawLine ?? "";
+            if (string.IsNullOrEmpty(_currentSpeakerDisplayName))
+                return line;
+
+            string trimmed = line.TrimStart();
+            int colonIdx = trimmed.IndexOf(':');
+            if (trimmed.StartsWith(_currentSpeakerDisplayName + ":", System.StringComparison.OrdinalIgnoreCase) ||
+                (colonIdx > 0 && colonIdx < 25))
+            {
+                return line;
+            }
+
+            return $"{_currentSpeakerDisplayName}: {line}";
+        }
+
         private IEnumerator RunLineDisplayRoutine(string rawLine)
         {
+            ApplyPanelRectForMode(isQuestionMenu: false);
+
             if (questionsContainer != null)
             {
                 questionsContainer.SetActive(false);
@@ -529,26 +801,41 @@ namespace AsAKid.Conversation
 
             if (answerText != null)
             {
-                answerText.characterSpacing = LocalizationManager.ContainsArabic(rawLine) ? 0f : 2f;
+                string displayLine = FormatLineWithSpeaker(rawLine);
+                bool isArabic = LocalizationManager.ContainsArabic(displayLine);
+
+                answerText.enableAutoSizing = false;
+                answerText.fontSize = NpcDialogueManager.STANDARD_FONT_SIZE;
+                answerText.characterSpacing = 0f;
+                answerText.alignment = isArabic ? TextAlignmentOptions.MidlineRight : TextAlignmentOptions.MidlineLeft;
+                answerText.isRightToLeftText = isArabic;
+                answerText.textWrappingMode = TextWrappingModes.Normal;
                 Canvas.ForceUpdateCanvases();
                 HideAnswerBackdrops();
 
                 _wasTypewriterRunning = true;
                 yield return DialogueTypewriterUtility.TypeTextRoutine(
                     answerText,
-                    rawLine ?? "",
+                    displayLine,
                     typewriterCharactersPerSecond,
                     allowSkip: true,
                     externalSkipCheck: null,
                     ignorePointerOverButton: leaveButton,
                     preserveAlignment: true,
-                    onVisibleCharactersChanged: (visible, _) =>
-                        SyncPerLineBackdrops(_answerLineBackdrops, answerText, visible, _currentBackdropColor));
+                    onVisibleCharactersChanged: showTextBackdropStrip
+                        ? (visible, _) => SyncPerLineBackdrops(_answerLineBackdrops, answerText, visible, _currentBackdropColor)
+                        : null);
                 _wasTypewriterRunning = false;
             }
 
             // Wait one frame so a skip tap doesn't also dismiss the completed line on the exact same frame
             yield return null;
+
+            if ((_state == ConversationState.Greeting || _state == ConversationState.Answering) && continueHintText != null)
+            {
+                RefreshContinueHint();
+                continueHintText.gameObject.SetActive(true);
+            }
 
             while (_state == ConversationState.Greeting || _state == ConversationState.Answering)
             {
@@ -592,11 +879,25 @@ namespace AsAKid.Conversation
 
                 if (!_wasTypewriterRunning)
                 {
-                    answerText.characterSpacing = LocalizationManager.ContainsArabic(_currentRawLine) ? 0f : 2f;
-                    LocalizationManager.ApplyText(answerText, _currentRawLine, preserveAlignment: true);
+                    string displayLine = FormatLineWithSpeaker(_currentRawLine);
+                    bool isArabic = LocalizationManager.ContainsArabic(displayLine);
+
+                    answerText.enableAutoSizing = false;
+                    answerText.fontSize = NpcDialogueManager.STANDARD_FONT_SIZE;
+                    answerText.characterSpacing = 0f;
+                    answerText.alignment = isArabic ? TextAlignmentOptions.MidlineRight : TextAlignmentOptions.MidlineLeft;
+                    answerText.isRightToLeftText = isArabic;
+                    LocalizationManager.ApplyText(answerText, displayLine, preserveAlignment: true);
                     answerText.maxVisibleCharacters = int.MaxValue;
                     answerText.ForceMeshUpdate();
-                    SyncPerLineBackdrops(_answerLineBackdrops, answerText, int.MaxValue, _currentBackdropColor);
+                    if (showTextBackdropStrip)
+                    {
+                        SyncPerLineBackdrops(_answerLineBackdrops, answerText, int.MaxValue, _currentBackdropColor);
+                    }
+                    else
+                    {
+                        HideAnswerBackdrops();
+                    }
                 }
             }
         }
@@ -616,6 +917,8 @@ namespace AsAKid.Conversation
 
         private void RefreshSpeakerHeader(string speakerDisplayName, string speakerIdFallback)
         {
+            _currentSpeakerDisplayName = speakerDisplayName ?? "";
+
             Color c = NpcDialogueManager.GetSpeakerColor(speakerDisplayName);
             if (c == Color.white && !string.IsNullOrEmpty(speakerIdFallback))
             {
@@ -853,15 +1156,58 @@ namespace AsAKid.Conversation
 
         private void ApplyBoldStyling()
         {
+            TMP_FontAsset defaultFont = NpcDialogueManager.DefaultDialogueFont;
+
             EnsureBold(npcNameText);
             EnsureBold(answerText);
             EnsureBold(continueHintText);
             EnsureBold(leaveButtonLabel);
 
+            if (answerText != null)
+            {
+                if (defaultFont != null)
+                    answerText.font = defaultFont;
+                answerText.enableAutoSizing = false;
+                answerText.fontSize = NpcDialogueManager.STANDARD_FONT_SIZE;
+                answerText.textWrappingMode = TextWrappingModes.Normal;
+            }
+
+            if (continueHintText != null)
+            {
+                if (defaultFont != null)
+                    continueHintText.font = defaultFont;
+
+                if (bottomBand != null)
+                {
+                    if (continueHintText.transform.parent != bottomBand)
+                    {
+                        continueHintText.transform.SetParent(bottomBand, false);
+                    }
+
+                    RectTransform hintRt = continueHintText.rectTransform;
+                    hintRt.anchorMin = new Vector2(1f, 0f);
+                    hintRt.anchorMax = new Vector2(1f, 0f);
+                    hintRt.pivot = new Vector2(1f, 0f);
+                    hintRt.anchoredPosition = new Vector2(-50f, 20f);
+                    hintRt.sizeDelta = new Vector2(180f, 44f);
+                }
+
+                continueHintText.enableAutoSizing = false;
+                continueHintText.fontSize = 20f;
+                continueHintText.alignment = TextAlignmentOptions.MidlineRight;
+                continueHintText.color = Color.white;
+                continueHintText.raycastTarget = false;
+                continueHintText.gameObject.SetActive(false);
+            }
+
             if (questionLabels != null)
             {
                 for (int i = 0; i < questionLabels.Length; i++)
                 {
+                    if (questionLabels[i] != null && defaultFont != null)
+                    {
+                        questionLabels[i].font = defaultFont;
+                    }
                     EnsureBold(questionLabels[i]);
                 }
             }
@@ -872,15 +1218,15 @@ namespace AsAKid.Conversation
             if (label == null)
                 return;
 
-            if (forceBoldFonts && (label.fontStyle & FontStyles.Bold) == 0)
-            {
+            if (forceBoldFonts)
                 label.fontStyle |= FontStyles.Bold;
-            }
+            else
+                label.fontStyle &= ~FontStyles.Bold;
 
-            if (forceUpperCase && (label.fontStyle & FontStyles.UpperCase) == 0)
-            {
+            if (forceUpperCase)
                 label.fontStyle |= FontStyles.UpperCase;
-            }
+            else
+                label.fontStyle &= ~FontStyles.UpperCase;
         }
 
         private void RefreshContinueHint()
@@ -888,7 +1234,9 @@ namespace AsAKid.Conversation
             if (continueHintText == null)
                 return;
 
-            string hint = LocalizationManager.Resolve("ui_continue", "Continue");
+            string hint = LocalizationManager.Resolve("ui_continue", "CONTINUE >");
+            EnsureBold(continueHintText);
+            continueHintText.color = Color.white;
             LocalizationManager.ApplyText(continueHintText, hint, preserveAlignment: true);
         }
 
@@ -897,6 +1245,7 @@ namespace AsAKid.Conversation
             if (_currentNpc == null || questionButtons == null)
                 return;
 
+            TMP_FontAsset defaultFont = NpcDialogueManager.DefaultDialogueFont;
             string askedTag = LocalizationManager.Resolve("ui_conv_asked", "(Asked)");
 
             for (int i = 0; i < NpcQuestionSet.QuestionCount; i++)
@@ -910,25 +1259,61 @@ namespace AsAKid.Conversation
                 bool asked = _currentNpc.HasAsked(i);
                 btn.interactable = !asked;
 
-                if (btn.targetGraphic != null)
+                var outline = btn.GetComponent<Outline>();
+                if (outline != null)
                 {
-                    btn.targetGraphic.color = asked ? askedButtonBgColor : activeButtonBgColor;
+                    outline.enabled = false;
                 }
+
+                var img = btn.GetComponent<Image>() ?? btn.targetGraphic as Image;
+                if (img != null)
+                {
+                    img.sprite = null;
+                    img.type = Image.Type.Simple;
+                    img.color = asked ? askedButtonBgColor : activeButtonBgColor;
+                    btn.targetGraphic = img;
+                }
+
+                btn.transition = Selectable.Transition.ColorTint;
+                ColorBlock cb = btn.colors;
+                cb.normalColor = Color.white;
+                cb.highlightedColor = new Color(0.85f, 0.85f, 0.85f, 1f);
+                cb.pressedColor = new Color(0.6f, 0.6f, 0.6f, 1f);
+                cb.selectedColor = new Color(0.96f, 0.96f, 0.96f, 1f);
+                cb.disabledColor = new Color(0.3f, 0.3f, 0.3f, 0.5f);
+                cb.colorMultiplier = 1f;
+                cb.fadeDuration = 0.1f;
+                btn.colors = cb;
 
                 if (label != null)
                 {
+                    if (defaultFont != null)
+                        label.font = defaultFont;
+
                     string questionLine = _currentNpc.GetQuestionText(i);
                     string formatted = asked ? $"{questionLine}  {askedTag}" : questionLine;
                     label.color = asked ? askedQuestionTextColor : activeQuestionTextColor;
-                    label.characterSpacing = LocalizationManager.ContainsArabic(formatted) ? 0f : 2f;
+                    label.fontSize = 22f;
+                    label.enableAutoSizing = true;
+                    label.fontSizeMin = 15f;
+                    label.fontSizeMax = 22f;
+                    label.characterSpacing = 0f;
                     EnsureBold(label);
                     label.alignment = TextAlignmentOptions.Center;
                     LocalizationManager.ApplyText(label, formatted, preserveAlignment: true);
 
                     if (i < _questionBackdrops.Length)
                     {
-                        float bgAlpha = asked ? backdropAlpha * 0.45f : backdropAlpha;
-                        SyncBackdrop(_questionBackdrops[i], label, label.text, new Color(0f, 0f, 0f, bgAlpha));
+                        if (!showTextBackdropStrip)
+                        {
+                            if (_questionBackdrops[i] != null)
+                                _questionBackdrops[i].enabled = false;
+                        }
+                        else
+                        {
+                            float bgAlpha = asked ? backdropAlpha * 0.45f : backdropAlpha;
+                            SyncBackdrop(_questionBackdrops[i], label, label.text, new Color(0f, 0f, 0f, bgAlpha));
+                        }
                     }
                 }
             }

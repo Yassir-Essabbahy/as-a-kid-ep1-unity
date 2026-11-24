@@ -4,7 +4,10 @@ using TMPro;
 public class DoorInteractable : MonoBehaviour
 {
     [Header("Settings")]
-    public float interactionDistance = 4f;
+    public float interactionDistance = 4.5f;
+    public float aimHeightOffset = 1.35f;
+    public bool autoTriggerOnApproach = true;
+    public float autoTriggerDistance = 1.65f;
     public TextMeshProUGUI interactText;
     public KeyCode interactKey = KeyCode.E;
 
@@ -28,57 +31,96 @@ public class DoorInteractable : MonoBehaviour
         }
     }
 
+    private void ShowDoorPrompt()
+    {
+        playerInRange = true;
+        string doorPrompt = LocalizationManager.Resolve("prompt_open_door_f3", "Tap to open door");
+        if (NpcInteractionText.Instance != null)
+        {
+            NpcInteractionText.Instance.SetPrompt(doorPrompt, InteractWithDoor);
+        }
+        else if (interactText != null)
+        {
+            interactText.gameObject.SetActive(true);
+            LocalizationManager.ApplyText(interactText, Story.MobileUIAdapter.AdaptPrompt(doorPrompt), preserveAlignment: true);
+        }
+    }
+
+    private void ClearDoorPrompt()
+    {
+        playerInRange = false;
+        if (NpcInteractionText.Instance != null) NpcInteractionText.Instance.ClearPrompt();
+        if (interactText != null) { interactText.text = ""; interactText.gameObject.SetActive(false); }
+    }
+
     private void Update()
     {
-        if (MetroStorySequenceController.Instance == null) return;
-        if (MetroStorySequenceController.Instance.currentPhase != MetroStorySequenceController.StoryPhase.DoorWaiting)
+        var storyCtrl = MetroStorySequenceController.Instance;
+        if (storyCtrl == null || storyCtrl.currentPhase != MetroStorySequenceController.StoryPhase.DoorWaiting)
         {
-            if (playerInRange)
-            {
-                playerInRange = false;
-                if (NpcInteractionText.Instance != null) NpcInteractionText.Instance.ClearPrompt();
-                if (interactText != null) { interactText.text = ""; interactText.gameObject.SetActive(false); }
-            }
+            if (playerInRange) ClearDoorPrompt();
             return;
         }
 
-        Transform cam = Camera.main != null ? Camera.main.transform : null;
-        if (cam == null) return;
+        if ((NpcDialogueManager.Instance != null && NpcDialogueManager.Instance.IsDialogueRunning) ||
+            AsAKid.Conversation.ConversationUI.IsAnyActive ||
+            MetroFuseBoxPuzzle.IsAnyInspecting ||
+            (WaitingPlatformLoopController.Instance != null && WaitingPlatformLoopController.Instance.IsJumpscareRunning))
+        {
+            if (playerInRange) ClearDoorPrompt();
+            return;
+        }
 
-        float dist = Vector3.Distance(transform.position, cam.position);
+        Camera activeCam = Camera.main;
+        if (activeCam == null && FirstPersonController.ActiveInstance != null)
+        {
+            activeCam = FirstPersonController.ActiveInstance.playerCamera;
+        }
+        if (activeCam == null) return;
+
+        Transform cam = activeCam.transform;
+        Vector3 doorCenter = transform.position + Vector3.up * aimHeightOffset;
+        float dist = Vector3.Distance(doorCenter, cam.position);
+        float horizDist = Vector2.Distance(
+            new Vector2(transform.position.x, transform.position.z),
+            new Vector2(cam.position.x, cam.position.z)
+        );
+        float vertDelta = Mathf.Abs(cam.position.y - doorCenter.y);
+
+        if (autoTriggerOnApproach && horizDist <= autoTriggerDistance && vertDelta <= 2.2f)
+        {
+            InteractWithDoor();
+            return;
+        }
+
         if (dist <= interactionDistance)
         {
             Ray ray = new Ray(cam.position, cam.forward);
             bool isLookingAtDoor = false;
-            if (Physics.Raycast(ray, out RaycastHit hit, interactionDistance))
+            if (Physics.Raycast(ray, out RaycastHit hit, interactionDistance, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore))
             {
-                if (hit.collider.gameObject == gameObject || 
-                    hit.collider.transform.IsChildOf(transform) || 
+                if (hit.collider.gameObject == gameObject ||
+                    hit.collider.transform.IsChildOf(transform) ||
                     hit.collider.name.ToLower().Contains("door"))
                 {
                     isLookingAtDoor = true;
                 }
             }
-            if (!isLookingAtDoor && Vector3.Dot(cam.forward, (transform.position - cam.position).normalized) > 0.6f)
+            if (!isLookingAtDoor && Vector3.Dot(cam.forward, (doorCenter - cam.position).normalized) > 0.45f)
             {
                 isLookingAtDoor = true;
             }
 
             if (isLookingAtDoor)
             {
-                playerInRange = true;
-                string doorPrompt = LocalizationManager.Resolve("prompt_open_door_f3", "Tap to open door");
-                if (NpcInteractionText.Instance != null)
-                {
-                    NpcInteractionText.Instance.SetPrompt(doorPrompt, InteractWithDoor);
-                }
-                else if (interactText != null)
-                {
-                    interactText.gameObject.SetActive(true);
-                    LocalizationManager.ApplyText(interactText, Story.MobileUIAdapter.AdaptPrompt(doorPrompt), preserveAlignment: true);
-                }
+                ShowDoorPrompt();
 
-                if (Input.GetKeyDown(interactKey) || ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame)
+                bool desktopClick = !Application.isMobilePlatform &&
+                                    Cursor.lockState == CursorLockMode.Locked &&
+                                    Input.GetMouseButtonDown(0);
+                if (Input.GetKeyDown(interactKey) ||
+                    ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame ||
+                    desktopClick)
                 {
                     InteractWithDoor();
                 }
@@ -88,9 +130,7 @@ public class DoorInteractable : MonoBehaviour
 
         if (playerInRange)
         {
-            playerInRange = false;
-            if (NpcInteractionText.Instance != null) NpcInteractionText.Instance.ClearPrompt();
-            if (interactText != null) { interactText.text = ""; interactText.gameObject.SetActive(false); }
+            ClearDoorPrompt();
         }
     }
 
@@ -102,8 +142,7 @@ public class DoorInteractable : MonoBehaviour
             return;
         }
 
-        if (NpcInteractionText.Instance != null) NpcInteractionText.Instance.ClearPrompt();
-        if (interactText != null) { interactText.text = ""; interactText.gameObject.SetActive(false); }
+        ClearDoorPrompt();
         MetroStorySequenceController.Instance.OnDoorInteracted();
     }
 
@@ -113,23 +152,13 @@ public class DoorInteractable : MonoBehaviour
         if (MetroStorySequenceController.Instance == null) return;
         if (MetroStorySequenceController.Instance.currentPhase == MetroStorySequenceController.StoryPhase.DoorWaiting)
         {
-            string doorPrompt = LocalizationManager.Resolve("prompt_open_door_f3", "Tap to open door");
-            if (NpcInteractionText.Instance != null)
-            {
-                NpcInteractionText.Instance.SetPrompt(doorPrompt, InteractWithDoor);
-            }
-            else if (interactText != null)
-            {
-                interactText.gameObject.SetActive(true);
-                LocalizationManager.ApplyText(interactText, Story.MobileUIAdapter.AdaptPrompt(doorPrompt), preserveAlignment: true);
-            }
+            ShowDoorPrompt();
         }
     }
 
     private void OnTriggerExit(Collider other)
     {
         if (!other.CompareTag("Player")) return;
-        if (NpcInteractionText.Instance != null) NpcInteractionText.Instance.ClearPrompt();
-        if (interactText != null) { interactText.text = ""; interactText.gameObject.SetActive(false); }
+        ClearDoorPrompt();
     }
 }

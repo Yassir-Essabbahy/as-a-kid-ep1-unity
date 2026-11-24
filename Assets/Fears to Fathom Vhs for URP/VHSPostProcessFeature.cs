@@ -12,6 +12,7 @@ public class VHSRendererFeature : ScriptableRendererFeature
     public class Settings
     {
         public Material material;
+        public Material retroVhsMaterial;
         public RenderPassEvent renderPassEvent = RenderPassEvent.AfterRenderingPostProcessing;
     }
 
@@ -20,7 +21,14 @@ public class VHSRendererFeature : ScriptableRendererFeature
 
     public override void Create()
     {
+        m_ScriptablePass?.Dispose();
         m_ScriptablePass = new VHSRenderPass(settings);
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        m_ScriptablePass?.Dispose();
+        m_ScriptablePass = null;
     }
 
     public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
@@ -38,13 +46,28 @@ public class VHSRendererFeature : ScriptableRendererFeature
 
     private class VHSRenderPass : ScriptableRenderPass
     {
+        private static readonly int s_ScanlineIntensityId = Shader.PropertyToID("_ScanlineIntensity");
+        private static readonly int s_ScanlineCountId = Shader.PropertyToID("_ScanlineCount");
+        private static readonly int s_ChromaticBleedId = Shader.PropertyToID("_ChromaticBleed");
+        private static readonly int s_EdgeChromaticId = Shader.PropertyToID("_EdgeChromatic");
+        private static readonly int s_TapeWobbleId = Shader.PropertyToID("_TapeWobble");
+        private static readonly int s_TrackingStrengthId = Shader.PropertyToID("_TrackingStrength");
+        private static readonly int s_GrainIntensityId = Shader.PropertyToID("_GrainIntensity");
+        private static readonly int s_VignetteIntensityId = Shader.PropertyToID("_VignetteIntensity");
+        private static readonly int s_FisheyeBendId = Shader.PropertyToID("_FisheyeBend");
+        private static readonly int s_BlackBordersId = Shader.PropertyToID("_BlackBorders");
+        private static readonly int s_ShadowTintId = Shader.PropertyToID("_ShadowTint");
+
         private Material m_Material;
+        private Material m_RetroBaseMaterial;
+        private Material m_RetroRuntimeMaterial;
         private int m_TempRTid;
         private static Material s_CopyMaterial;
 
         public VHSRenderPass(Settings settings)
         {
             m_Material = settings.material;
+            m_RetroBaseMaterial = settings.retroVhsMaterial;
             renderPassEvent = settings.renderPassEvent;
             m_TempRTid = Shader.PropertyToID("_VHSTempRT");
 
@@ -71,9 +94,55 @@ public class VHSRendererFeature : ScriptableRendererFeature
             }
         }
 
+        public void Dispose()
+        {
+            if (m_RetroRuntimeMaterial != null)
+            {
+                CoreUtils.Destroy(m_RetroRuntimeMaterial);
+                m_RetroRuntimeMaterial = null;
+            }
+        }
+
+        private Material ResolveActiveMaterial()
+        {
+            var retroVol = VolumeManager.instance.stack.GetComponent<RetroVHSVolumeComponent>();
+            if (retroVol == null || !retroVol.IsActive())
+                return m_Material;
+
+            if (m_RetroRuntimeMaterial == null)
+            {
+                if (m_RetroBaseMaterial != null)
+                {
+                    m_RetroRuntimeMaterial = new Material(m_RetroBaseMaterial);
+                }
+                else
+                {
+                    Shader s = Shader.Find("Custom/RetroVHS_URP");
+                    if (s == null) return m_Material;
+                    m_RetroRuntimeMaterial = new Material(s);
+                }
+                m_RetroRuntimeMaterial.hideFlags = HideFlags.HideAndDontSave;
+            }
+
+            m_RetroRuntimeMaterial.SetFloat(s_ScanlineIntensityId, retroVol.scanlineIntensity.value);
+            m_RetroRuntimeMaterial.SetFloat(s_ScanlineCountId, retroVol.scanlineCount.value);
+            m_RetroRuntimeMaterial.SetFloat(s_ChromaticBleedId, retroVol.chromaticBleed.value);
+            m_RetroRuntimeMaterial.SetFloat(s_EdgeChromaticId, retroVol.edgeChromatic.value);
+            m_RetroRuntimeMaterial.SetFloat(s_TapeWobbleId, retroVol.tapeWobble.value);
+            m_RetroRuntimeMaterial.SetFloat(s_TrackingStrengthId, retroVol.trackingStrength.value);
+            m_RetroRuntimeMaterial.SetFloat(s_GrainIntensityId, retroVol.grainIntensity.value);
+            m_RetroRuntimeMaterial.SetFloat(s_VignetteIntensityId, retroVol.vignetteIntensity.value);
+            m_RetroRuntimeMaterial.SetFloat(s_FisheyeBendId, retroVol.fisheyeBend.value);
+            m_RetroRuntimeMaterial.SetFloat(s_BlackBordersId, retroVol.blackBorders.value ? 1f : 0f);
+            m_RetroRuntimeMaterial.SetColor(s_ShadowTintId, retroVol.shadowTint.value);
+            return m_RetroRuntimeMaterial;
+        }
+
 #if UNITY_6000_0_OR_NEWER
         public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
         {
+            Material activeMaterial = ResolveActiveMaterial();
+            if (activeMaterial == null) return;
             UniversalResourceData resourceData = frameData.Get<UniversalResourceData>();
             TextureHandle cameraColor = resourceData.activeColorTexture;
 
@@ -114,7 +183,7 @@ public class VHSRendererFeature : ScriptableRendererFeature
             {
                 passData.source = tempTex;
                 passData.copyMaterial = null;
-                passData.material = m_Material;
+                passData.material = activeMaterial;
                 builder.UseTexture(tempTex, AccessFlags.Read);
                 builder.SetRenderAttachment(cameraColor, 0, AccessFlags.Write);
                 builder.SetRenderFunc(static (PassData data, RasterGraphContext ctx) =>
@@ -133,7 +202,8 @@ public class VHSRendererFeature : ScriptableRendererFeature
 #else
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
-            if (m_Material == null) return;
+            Material activeMaterial = ResolveActiveMaterial();
+            if (activeMaterial == null) return;
 
             CommandBuffer cmd = CommandBufferPool.Get("VHS Effect");
 
@@ -148,7 +218,7 @@ public class VHSRendererFeature : ScriptableRendererFeature
             cmd.Blit(cameraColorTarget, m_TempRTid);
 
             cmd.SetGlobalTexture("_BlitTexture", m_TempRTid);
-            cmd.Blit(m_TempRTid, cameraColorTarget, m_Material);
+            cmd.Blit(m_TempRTid, cameraColorTarget, activeMaterial);
 
             cmd.ReleaseTemporaryRT(m_TempRTid);
             context.ExecuteCommandBuffer(cmd);

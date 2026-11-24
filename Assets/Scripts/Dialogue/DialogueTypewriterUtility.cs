@@ -42,7 +42,9 @@ public static class DialogueTypewriterUtility
             }
         }
 
-        if (Input.mousePresent && RectTransformUtility.RectangleContainsScreenPoint(rt, Input.mousePosition, uiCam))
+        if (Cursor.lockState != CursorLockMode.Locked &&
+            Input.mousePresent &&
+            RectTransformUtility.RectangleContainsScreenPoint(rt, Input.mousePosition, uiCam))
         {
             return true;
         }
@@ -60,6 +62,8 @@ public static class DialogueTypewriterUtility
 
         if (Input.GetKeyDown(KeyCode.Space) ||
             Input.GetKeyDown(KeyCode.E) ||
+            Input.GetKeyDown(KeyCode.Return) ||
+            Input.GetKeyDown(KeyCode.KeypadEnter) ||
             ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame)
         {
             return true;

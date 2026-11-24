@@ -159,8 +159,13 @@ public class TrashTicketSource : MonoBehaviour
 
     private void Update()
     {
-        if (minigameUI != null && minigameUI.IsActive)
+        if ((minigameUI != null && minigameUI.IsActive) ||
+            AsAKid.Conversation.ConversationUI.IsAnyActive ||
+            MetroFuseBoxPuzzle.IsAnyInspecting ||
+            (WaitingPlatformLoopController.Instance != null && WaitingPlatformLoopController.Instance.IsJumpscareRunning) ||
+            (Story.MobilePauseMenu.Instance != null && Story.MobilePauseMenu.Instance.isPaused))
         {
+            if (_playerInRange) _playerInRange = false;
             UnhookPromptButton();
             ClearPromptIfOurs();
             return;
@@ -208,11 +213,11 @@ public class TrashTicketSource : MonoBehaviour
 
             _playerInRange = true;
             string promptText = GetPromptString();
-            SetPrompt(promptText);
 
             bool alreadyDone = isSearched || (MetroStorySequenceController.Instance != null && MetroStorySequenceController.Instance.transitPassCollected);
             if (!alreadyDone)
             {
+                SetPrompt(promptText, Interact);
                 HookPromptButton();
 
                 // Handle Input (PC / Gamepad / Mobile)
@@ -223,6 +228,7 @@ public class TrashTicketSource : MonoBehaviour
             }
             else
             {
+                SetPrompt(promptText, null);
                 UnhookPromptButton();
             }
         }
@@ -243,6 +249,11 @@ public class TrashTicketSource : MonoBehaviour
             Input.GetKeyDown(KeyCode.Return) ||
             Input.GetKeyDown(KeyCode.JoystickButton0) ||
             ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame)
+        {
+            return true;
+        }
+
+        if (!Application.isMobilePlatform && Cursor.lockState == CursorLockMode.Locked && Input.GetMouseButtonDown(0))
         {
             return true;
         }
@@ -585,6 +596,14 @@ public class TrashTicketSource : MonoBehaviour
         if (NpcInteractionText.Instance != null)
         {
             NpcInteractionText.Instance.SetPrompt(text);
+        }
+    }
+
+    private void SetPrompt(string text, System.Action onClick)
+    {
+        if (NpcInteractionText.Instance != null)
+        {
+            NpcInteractionText.Instance.SetPrompt(text, onClick);
         }
     }
 

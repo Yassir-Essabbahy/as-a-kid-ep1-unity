@@ -132,18 +132,25 @@ MonoBehaviour:
   - {fileID: 639}
   leaveButton: {fileID: 425}
   leaveButtonLabel: {fileID: 433}
-  typewriterCharactersPerSecond: 28
-  forceBoldFonts: 1
-  forceUpperCase: 1
-  characterTextAlpha: 0.92
-  showTextBackdropStrip: 1
+  playDoudouInnerVoice: 0
+  typewriterCharactersPerSecond: 25
+  forceBoldFonts: 0
+  forceUpperCase: 0
+  characterTextAlpha: 1
+  showTextBackdropStrip: 0
   backdropAlpha: 0.88
   backdropCharacterTint: 0
   backdropPadding: {x: 14, y: 4}
-  activeQuestionTextColor: {r: 1, g: 1, b: 1, a: 0.94}
+  activeQuestionTextColor: {r: 1, g: 1, b: 1, a: 1}
   askedQuestionTextColor: {r: 0.62, g: 0.62, b: 0.62, a: 0.55}
-  activeButtonBgColor: {r: 0, g: 0, b: 0, a: 0}
-  askedButtonBgColor: {r: 0, g: 0, b: 0, a: 0}
+  activeButtonBgColor: {r: 0, g: 0, b: 0, a: 1}
+  askedButtonBgColor: {r: 0, g: 0, b: 0, a: 0.55}
+  showCinematicBands: 1
+  topBand: {fileID: 0}
+  bottomBand: {fileID: 0}
+  topBandHeight: 140
+  bottomBandHeight: 220
+  bandSlideDuration: 0.45
 --- !u!1 &200
 GameObject:
   m_ObjectHideFlags: 0

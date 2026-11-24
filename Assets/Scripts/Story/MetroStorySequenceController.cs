@@ -272,7 +272,10 @@ public class MetroStorySequenceController : MonoBehaviour
             LocalizationManager.Instance.OnLanguageChanged -= HandleLanguageChanged;
             LocalizationManager.Instance.OnLanguageChanged += HandleLanguageChanged;
         }
-        SetObjective("obj_find_teddy", "Find Teddy...");
+        if (WaitingPlatformLoopController.Instance == null)
+        {
+            SetObjective("obj_find_teddy", "Find Teddy...");
+        }
 
         ResetCinematicCameras();
         if (cinemachineBrain != null)
@@ -457,6 +460,8 @@ public class MetroStorySequenceController : MonoBehaviour
                 neighborConversation.lineKeys = new string[] {
                     "neighbor_fuse_reminder_01"
                 };
+                neighborConversation.HasPlayed = false;
+                neighborConversation.playOnce = false;
             }
         }
 
@@ -481,6 +486,7 @@ public class MetroStorySequenceController : MonoBehaviour
                 "neighbor_fuse_advice_05"
             };
             neighborConversation.HasPlayed = false;
+            neighborConversation.playOnce = false;
         }
     }
     private void HandleShopOwnerFinished() => OnNpcSpoken(1);
@@ -570,6 +576,11 @@ public class MetroStorySequenceController : MonoBehaviour
                 dtz.MarkTriggered();
                 dtz.enabled = false;
             }
+        }
+
+        if (WaitingPlatformLoopController.Instance != null)
+        {
+            return;
         }
 
         if (IsElevatorUnlocked)
@@ -977,6 +988,15 @@ public class MetroStorySequenceController : MonoBehaviour
         Debug.Log("[MetroStory] Teddy's turn finished. Door trigger active!");
     }
 
+    public void PrepareDoorWaiting(GameObject targetDoorObject, BoxCollider targetDoorTrigger)
+    {
+        if (targetDoorObject != null) doorObject = targetDoorObject;
+        if (targetDoorTrigger != null) doorTrigger = targetDoorTrigger;
+        if (doorTrigger != null) doorTrigger.enabled = true;
+        sequenceBusy = false;
+        currentPhase = StoryPhase.DoorWaiting;
+    }
+
     public void OnDoorInteracted()
     {
         if (currentPhase != StoryPhase.DoorWaiting || sequenceBusy) return;
@@ -995,17 +1015,20 @@ public class MetroStorySequenceController : MonoBehaviour
         }
 
         var allAudio = UnityEngine.Object.FindObjectsByType<AudioSource>(FindObjectsInactive.Include);
-        var behindRoom = GameObject.Find("BehindDoorRoom") ?? GameObject.Find("interrogation");
+        var behindRoom = GameObject.Find("BehindDoorRoom");
+        if (behindRoom == null) behindRoom = GameObject.Find("interrogation");
+        var upstairsRoom = GameObject.Find("UpstairsMeetingRoom");
 
         foreach (var audio in allAudio)
         {
             if (audio == null) continue;
 
-            // Preserve character dialogue/voice audio sources and any audio inside BehindDoorRoom
+            // Preserve character dialogue/voice audio sources and any audio inside BehindDoorRoom / UpstairsMeetingRoom
             if (teacherTransform != null && audio.transform.IsChildOf(teacherTransform)) continue;
             if (motherTransform != null && audio.transform.IsChildOf(motherTransform)) continue;
             if (fatherTransform != null && audio.transform.IsChildOf(fatherTransform)) continue;
             if (behindRoom != null && audio.transform.IsChildOf(behindRoom.transform)) continue;
+            if (upstairsRoom != null && audio.transform.IsChildOf(upstairsRoom.transform)) continue;
 
             audio.mute = true;
             audio.Stop();
@@ -1064,15 +1087,19 @@ public class MetroStorySequenceController : MonoBehaviour
             crosshairAndStamina.SetActive(false);
         }
 
-        // Ensure Floor 1 station meshes are hidden so Floor 3 interrogation room renders cleanly
+        // Hide Floor1 only when interrogation room is not nested under Floor1
         var f1 = GameObject.Find("Floor1");
-        if (f1 != null && f1.activeSelf) f1.SetActive(false);
+        if (f1 != null && f1.activeSelf && (doorObject == null || !doorObject.transform.IsChildOf(f1.transform)))
+        {
+            f1.SetActive(false);
+        }
 
         // Silence outside ambience completely upon room entry
         SilenceOutsideAmbience();
 
         // Establish initial interrogation camera (Teacher or Wide)
-        SwitchDialogueCamera(interrogationTeacherVCam ?? behindDoorVcam);
+        CinemachineCamera initialInterrogCam = interrogationTeacherVCam != null ? interrogationTeacherVCam : behindDoorVcam;
+        SwitchDialogueCamera(initialInterrogCam);
 
         string[] cinematicLines = new string[] {
             GetLoc("cinematic_01"),
@@ -1102,7 +1129,7 @@ public class MetroStorySequenceController : MonoBehaviour
     public void SwitchDialogueCamera(CinemachineCamera targetVcam)
     {
         if (targetVcam == null)
-            targetVcam = interrogationWideVCam ?? behindDoorVcam;
+            targetVcam = interrogationWideVCam != null ? interrogationWideVCam : behindDoorVcam;
 
         if (targetVcam == null) return;
 
@@ -1194,7 +1221,14 @@ public class MetroStorySequenceController : MonoBehaviour
         }
 
         ResetCinematicCameras();
-        if (darkRoomObject != null) darkRoomObject.SetActive(true);
+        if (darkRoomObject != null)
+        {
+            foreach (var tr in darkRoomObject.GetComponentsInChildren<Transform>(true))
+            {
+                tr.gameObject.layer = 3;
+            }
+            darkRoomObject.SetActive(true);
+        }
 
         if (darkRoomVcam != null)
         {
@@ -1235,6 +1269,15 @@ public class MetroStorySequenceController : MonoBehaviour
 
         currentPhase = StoryPhase.MoroccanBeach_Transition;
         Debug.Log("[MetroStory] Dark room dialogue finished. Teddy takes the kid to the Moroccan Beach. Transitioning to MoroccanBeach...");
+
+        if (WaitingPlatformLoopController.Instance != null)
+        {
+            WaitingPlatformLoopController.Instance.NotifyBeachTransitionTriggered();
+            if (WaitingPlatformLoopController.Instance.SkipSceneLoadForTesting)
+            {
+                yield break;
+            }
+        }
 
         if (screenFader != null)
         {

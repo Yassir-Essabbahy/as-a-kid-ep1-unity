@@ -77,12 +77,14 @@ namespace AsAKid.Conversation
         public static event Action<string> OnAnyConversationEnded;
 
         private readonly bool[] _asked = new bool[QuestionCount];
+        private bool _hasInteracted = false;
         private bool _allAnsweredFired = false;
         private bool _doudouWhisperPlayed = false;
         private bool _doudouReactionPlayed = false;
 
         public bool HasPlayedDoudouWhisper => _doudouWhisperPlayed;
         public bool HasPlayedDoudouReaction => _doudouReactionPlayed;
+        public bool HasInteracted => _hasInteracted || AskedCount > 0;
 
         public string NpcId => string.IsNullOrWhiteSpace(npcId) ? gameObject.name : npcId.Trim();
         public bool IncludeInProgress => includeInProgress;
@@ -325,13 +327,24 @@ namespace AsAKid.Conversation
             OnAnyNpcCompleted?.Invoke(NpcId);
         }
 
+        public void MarkInteracted()
+        {
+            bool changed = !_hasInteracted;
+            _hasInteracted = true;
+            if (changed)
+            {
+                ConversationProgress.NotifyNpcChanged(this);
+            }
+        }
+
         internal void NotifyConversationStarted()
         {
             OnAnyConversationStarted?.Invoke(NpcId);
         }
 
-        internal void NotifyConversationEnded()
+        public void NotifyConversationEnded()
         {
+            MarkInteracted();
             FinalizeCompletionIfAllAsked();
             OnAnyConversationEnded?.Invoke(NpcId);
         }
@@ -345,10 +358,36 @@ namespace AsAKid.Conversation
             {
                 _asked[i] = false;
             }
+            _hasInteracted = false;
             _allAnsweredFired = false;
             _doudouWhisperPlayed = false;
             _doudouReactionPlayed = false;
             ConversationProgress.NotifyNpcChanged(this);
+        }
+
+        /// <summary>
+        /// Replaces this NPC's greeting, done line, and 3 question/answer pairs at runtime (e.g. for Loop 2),
+        /// optionally resetting session asked flags so the NPC can be interviewed again.
+        /// </summary>
+        public void ApplyQuestionSet(string newGreetingKey, string newDoneKey, QuestionEntry[] newQuestions, bool resetAskedState = true)
+        {
+            greetingKey = newGreetingKey ?? string.Empty;
+            doneKey = newDoneKey ?? string.Empty;
+
+            EnsureQuestionArraySize();
+            if (newQuestions != null)
+            {
+                int count = Mathf.Min(QuestionCount, newQuestions.Length);
+                for (int i = 0; i < count; i++)
+                {
+                    questions[i] = newQuestions[i];
+                }
+            }
+
+            if (resetAskedState)
+            {
+                ResetSessionState();
+            }
         }
     }
 }

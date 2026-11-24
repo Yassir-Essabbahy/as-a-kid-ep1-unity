@@ -27,6 +27,7 @@ namespace AsAKid.Conversation
         /// </summary>
         public static event Action OnAllCompleted;
 
+        public static bool RequireAllQuestions { get; set; } = false;
         public static int DoneCount { get; private set; }
         public static int TotalCount { get; private set; }
         public static bool AllDone => TotalCount > 0 && DoneCount >= TotalCount;
@@ -38,6 +39,7 @@ namespace AsAKid.Conversation
             s_RegisteredNpcs.Clear();
             s_LastDoneCount = -1;
             s_LastTotalCount = -1;
+            RequireAllQuestions = false;
             DoneCount = 0;
             TotalCount = 0;
             OnProgressChanged = null;
@@ -137,7 +139,7 @@ namespace AsAKid.Conversation
                     continue;
 
                 total++;
-                if (npc.AreAllAsked)
+                if (RequireAllQuestions ? npc.AreAllAsked : npc.HasInteracted)
                 {
                     done++;
                 }

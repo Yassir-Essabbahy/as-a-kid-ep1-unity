@@ -15,6 +15,7 @@ MonoBehaviour:
   m_Active: 1
   settings:
     material: {fileID: 2100000, guid: 755f7a2b5162a1644a43bc1364294cc4, type: 2}
+    retroVhsMaterial: {fileID: 2100000, guid: 8c744870188f7974da2df51d9571258e, type: 2}
     renderPassEvent: 600
 --- !u!114 &-330607613943743824
 MonoBehaviour:

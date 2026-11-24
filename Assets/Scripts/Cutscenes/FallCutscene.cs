@@ -175,6 +175,12 @@ public class FallCutscene : MonoBehaviour
     private Transform faceSocket;
     private bool isArmatureTracking = false;
     private Transform cameraJoint;
+    private Vector3 initialPlayerPosition;
+    private Quaternion initialPlayerRotation;
+    private bool hasCapturedInitialPose = false;
+    private bool suppressDefaultObjectiveOnNextFinish = false;
+
+    public event Action OnCutsceneCompleted;
 
     private void Awake()
     {
@@ -193,6 +199,12 @@ public class FallCutscene : MonoBehaviour
         }
 
         FindSceneReferences();
+        if (player != null)
+        {
+            initialPlayerPosition = player.transform.position;
+            initialPlayerRotation = player.transform.rotation;
+            hasCapturedInitialPose = true;
+        }
         EnsurePoseTransforms();
         EnsureCutsceneUI();
         EnsureAudioSources();
@@ -1573,6 +1585,7 @@ public class FallCutscene : MonoBehaviour
         isCinematicActive = false;
         currentStage = CutsceneStage.Completed;
         HasSeenCutsceneThisSession = true;
+        OnCutsceneCompleted?.Invoke();
     }
 
     // -------------------------------------------------------------------------
@@ -1793,10 +1806,77 @@ public class FallCutscene : MonoBehaviour
         isCinematicActive = false;
         currentStage = CutsceneStage.Completed;
         HasSeenCutsceneThisSession = true;
+        OnCutsceneCompleted?.Invoke();
+    }
+
+    public void SetBlackOverlayAlpha(float alpha)
+    {
+        EnsureCutsceneUI();
+        if (blackOverlay != null)
+        {
+            blackOverlay.alpha = Mathf.Clamp01(alpha);
+        }
+    }
+
+    public void SetFlashOverlayColor(Color color)
+    {
+        EnsureCutsceneUI();
+        if (flashOverlay != null)
+        {
+            flashOverlay.color = color;
+        }
+    }
+
+    public void ReplayWakeUpFromStart(bool suppressDefaultObjective = true)
+    {
+        if (activeCoroutine != null)
+        {
+            StopCoroutine(activeCoroutine);
+            activeCoroutine = null;
+        }
+
+        if (spawnedArmatureInstance != null)
+        {
+            Destroy(spawnedArmatureInstance);
+            spawnedArmatureInstance = null;
+            faceSocket = null;
+        }
+        isArmatureTracking = false;
+
+        if (player != null && hasCapturedInitialPose)
+        {
+            var rb = player.GetComponent<Rigidbody>();
+            if (rb != null)
+            {
+                rb.linearVelocity = Vector3.zero;
+                rb.angularVelocity = Vector3.zero;
+            }
+            player.transform.SetPositionAndRotation(initialPlayerPosition, initialPlayerRotation);
+        }
+
+        if (mainCamera != null && cameraJoint != null)
+        {
+            mainCamera.transform.SetParent(cameraJoint, false);
+            mainCamera.transform.localPosition = Vector3.zero;
+            mainCamera.transform.localRotation = Quaternion.identity;
+        }
+
+        EnsureCutsceneUI();
+        SetBlackOverlayAlpha(1f);
+
+        skipFallSequence = true;
+        suppressDefaultObjectiveOnNextFinish = suppressDefaultObjective;
+        activeCoroutine = StartCoroutine(FullCutsceneRoutine());
     }
 
     private void ShowCutsceneObjective()
     {
+        if (suppressDefaultObjectiveOnNextFinish)
+        {
+            suppressDefaultObjectiveOnNextFinish = false;
+            return;
+        }
+
         if (MetroStorySequenceController.Instance != null)
         {
             MetroStorySequenceController.Instance.SetObjective("obj_find_teddy", "Find Teddy...");

@@ -208,7 +208,8 @@ public class NpcInteractionText : MonoBehaviour
     private void SetPromptInternal(string text, bool isInternal, System.Action onClick)
     {
         if ((NpcDialogueManager.Instance != null && NpcDialogueManager.Instance.IsDialogueRunning) ||
-            ConversationUI.IsAnyActive)
+            ConversationUI.IsAnyActive ||
+            MetroFuseBoxPuzzle.IsAnyInspecting)
         {
             ClearPrompt();
             return;
@@ -408,9 +409,11 @@ public class NpcInteractionText : MonoBehaviour
 
     void Update()
     {
-        // Keep the prompt box hidden whenever any dialogue or conversation UI is running
+        // Keep the prompt box hidden whenever any dialogue, conversation UI, fusebox inspection, or loop jumpscare is running
         if ((NpcDialogueManager.Instance != null && NpcDialogueManager.Instance.IsDialogueRunning) ||
-            ConversationUI.IsAnyActive)
+            ConversationUI.IsAnyActive ||
+            MetroFuseBoxPuzzle.IsAnyInspecting ||
+            (WaitingPlatformLoopController.Instance != null && WaitingPlatformLoopController.Instance.IsJumpscareRunning))
         {
             lastDialogueFrame = Time.frameCount;
             ClearPrompt();
@@ -499,12 +502,53 @@ public class NpcInteractionText : MonoBehaviour
             var questionSet = hit.collider.GetComponent<NpcQuestionSet>() ?? hit.collider.GetComponentInParent<NpcQuestionSet>();
             if (questionSet != null && questionSet.isActiveAndEnabled)
             {
+                var storyCtrl = MetroStorySequenceController.Instance;
+                bool shouldPlayNeighborFuseDialogue =
+                    storyCtrl != null &&
+                    storyCtrl.fuseBoxInspected &&
+                    !storyCtrl.isPowerRestored &&
+                    string.Equals(questionSet.NpcId, "neighbor", System.StringComparison.OrdinalIgnoreCase) &&
+                    (!storyCtrl.neighborGaveAdvice || questionSet.AreAllAsked);
+
+                if (shouldPlayNeighborFuseDialogue)
+                {
+                    var neighborConv = hit.collider.GetComponent<NpcConversation>()
+                                       ?? questionSet.GetComponent<NpcConversation>()
+                                       ?? storyCtrl.neighborConversation;
+                    if (neighborConv != null)
+                    {
+                        neighborConv.HasPlayed = false;
+                        neighborConv.playOnce = false;
+                        currentPlaceholder = null;
+                        currentFindable = null;
+                        currentInteractable = null;
+                        currentNpcQuestionSet = null;
+                        currentIsTeddy = false;
+                        currentCarryable = null;
+                        currentHitCol = hit.collider;
+                        currentHitPoint = hit.point;
+                        currentNpcConv = neighborConv;
+                        currentNpcLook = hit.collider.GetComponent<NpcLookAt>()
+                                         ?? hit.collider.GetComponentInParent<NpcLookAt>()
+                                         ?? questionSet.GetComponentInChildren<NpcLookAt>(true);
+                        SetInternalPrompt(LocalizationManager.Resolve("prompt_tap_talk", "Tap to talk"));
+
+                        if (IsInteractTriggeredThisFrame())
+                        {
+                            TriggerCurrentInteraction();
+                        }
+                        return;
+                    }
+                }
+
                 currentPlaceholder = null;
                 currentFindable = null;
                 currentInteractable = null;
                 currentNpcConv = null;
                 currentNpcQuestionSet = questionSet;
-                currentNpcLook = hit.collider.GetComponent<NpcLookAt>() ?? hit.collider.GetComponentInParent<NpcLookAt>();
+                currentNpcLook = hit.collider.GetComponent<NpcLookAt>()
+                                 ?? hit.collider.GetComponentInParent<NpcLookAt>()
+                                 ?? questionSet.GetComponentInChildren<NpcLookAt>(true);
                 currentHitCol = hit.collider;
                 currentHitPoint = hit.point;
 
@@ -536,7 +580,9 @@ public class NpcInteractionText : MonoBehaviour
                     currentIsTeddy = isTeddyObj;
                     currentCarryable = carryableObj;
                     currentNpcConv = npcConv;
-                    currentNpcLook = hit.collider.GetComponent<NpcLookAt>();
+                    currentNpcLook = hit.collider.GetComponent<NpcLookAt>()
+                                     ?? hit.collider.GetComponentInParent<NpcLookAt>()
+                                     ?? hit.collider.GetComponentInChildren<NpcLookAt>(true);
 
                     string prompt = (currentIsTeddy && !isCarried) ? LocalizationManager.Resolve("prompt_tap_interact", "Tap to interact") : LocalizationManager.Resolve("prompt_tap_talk", "Tap to talk");
                     SetInternalPrompt(prompt);
@@ -557,12 +603,10 @@ public class NpcInteractionText : MonoBehaviour
             currentNpcConv = null;
             currentNpcQuestionSet = null;
             currentInteractable = null;
-            string prompt = MetroFuseBoxPuzzle.Instance.isPowerRestored
-                ? MetroFuseBoxPuzzle.Instance.promptPoweredText
-                : MetroFuseBoxPuzzle.Instance.promptOpenText;
+            string prompt = MetroFuseBoxPuzzle.Instance.GetLocalizedPrompt();
             SetInternalPrompt(prompt);
 
-            if (Input.GetKeyDown(KeyCode.E) || ModularFirstPersonController.MobileTouchControls.IsInteractTriggeredThisFrame)
+            if (IsInteractTriggeredThisFrame())
             {
                 TriggerCurrentInteraction();
             }
@@ -573,6 +617,17 @@ public class NpcInteractionText : MonoBehaviour
         currentNpcConv = null;
         currentNpcQuestionSet = null;
         currentInteractable = null;
+        if (!promptOwnedInternally &&
+            externalPromptClickAction != null &&
+            Time.frameCount <= lastExternalPromptFrame + 1)
+        {
+            if (IsInteractTriggeredThisFrame())
+            {
+                TriggerCurrentInteraction();
+            }
+            return;
+        }
+
         if (promptOwnedInternally || Time.frameCount > lastExternalPromptFrame + 1)
         {
             ClearPrompt();
