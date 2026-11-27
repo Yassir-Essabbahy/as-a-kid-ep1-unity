@@ -52,10 +52,21 @@ namespace AsAKid.Conversation
         [SerializeField, Range(0f, 1f)] private float backdropAlpha = 0.88f;
         [SerializeField, Range(0f, 0.5f)] private float backdropCharacterTint = 0f;
         [SerializeField] private Vector2 backdropPadding = new Vector2(14f, 4f);
-        [SerializeField] private Color activeQuestionTextColor = Color.white;
-        [SerializeField] private Color askedQuestionTextColor = new Color(0.62f, 0.62f, 0.62f, 0.55f);
-        [SerializeField] private Color activeButtonBgColor = new Color(0f, 0f, 0f, 1f);
-        [SerializeField] private Color askedButtonBgColor = new Color(0f, 0f, 0f, 0.55f);
+        [SerializeField] private Color activeQuestionTextColor = new Color(0.76f, 0.78f, 0.82f, 0.94f);
+        [SerializeField] private Color askedQuestionTextColor = new Color(0.44f, 0.46f, 0.49f, 0.58f);
+        [SerializeField] private Color activeButtonBgColor = new Color(0f, 0f, 0f, 0f);
+        [SerializeField] private Color askedButtonBgColor = new Color(0f, 0f, 0f, 0f);
+
+        private const float ChoiceFontSize = 16.5f;
+        private const float ChoiceFontSizeMin = 12f;
+        private static readonly Color ChoiceNormalColor = new Color(0.76f, 0.78f, 0.82f, 0.94f);
+        private static readonly Color ChoiceHighlightedColor = new Color(0.97f, 0.97f, 1.00f, 1.00f);
+        private static readonly Color ChoicePressedColor = new Color(0.60f, 0.62f, 0.66f, 1.00f);
+        private static readonly Color ChoiceDisabledColor = new Color(0.44f, 0.46f, 0.49f, 0.58f);
+        private static readonly Color ChoiceUnderlayColor = new Color(0f, 0f, 0f, 0.78f);
+        private static readonly Vector2 ChoiceUnderlayOffset = new Vector2(0.6f, -0.6f);
+        private const float ChoiceUnderlayDilate = 0.15f;
+        private const float ChoiceUnderlaySoftness = 0.18f;
 
         [Header("Cinematic Letterbox Bands")]
         [SerializeField] private bool showCinematicBands = true;
@@ -116,6 +127,8 @@ namespace AsAKid.Conversation
             }
 
             Instance = this;
+            activeButtonBgColor = Color.clear;
+            askedButtonBgColor = Color.clear;
             EnsureCinematicBands();
             SnapBandsOffscreen(deactivate: true);
             BindButtonListeners();
@@ -559,8 +572,20 @@ namespace AsAKid.Conversation
 
             if (isQuestionMenu)
             {
-                panelRt.anchorMin = new Vector2(0.22f, 0.25f);
-                panelRt.anchorMax = new Vector2(0.78f, 0.55f);
+                panelRt.anchorMin = new Vector2(0.24f, 0.30f);
+                panelRt.anchorMax = new Vector2(0.76f, 0.50f);
+
+                if (questionsContainer != null)
+                {
+                    RectTransform qContRt = questionsContainer.GetComponent<RectTransform>();
+                    if (qContRt != null)
+                    {
+                        qContRt.anchorMin = Vector2.zero;
+                        qContRt.anchorMax = Vector2.one;
+                        qContRt.offsetMin = new Vector2(16f, 8f);
+                        qContRt.offsetMax = new Vector2(-16f, -8f);
+                    }
+                }
             }
             else
             {
@@ -672,6 +697,8 @@ namespace AsAKid.Conversation
             _currentQuestionIndex = -1;
             _wasTypewriterRunning = false;
             HideAnswerBackdrops();
+            HideQuestionBackdrops();
+            ClearQuestionButtonSelection();
             ApplyPanelRectForMode(isQuestionMenu: true);
 
             if (answerContainer != null)
@@ -691,6 +718,25 @@ namespace AsAKid.Conversation
             }
 
             RefreshQuestionButtons();
+        }
+
+        private void ClearQuestionButtonSelection()
+        {
+            if (EventSystem.current == null || questionButtons == null)
+                return;
+
+            GameObject selected = EventSystem.current.currentSelectedGameObject;
+            if (selected == null)
+                return;
+
+            for (int i = 0; i < questionButtons.Length; i++)
+            {
+                if (questionButtons[i] != null && questionButtons[i].gameObject == selected)
+                {
+                    EventSystem.current.SetSelectedGameObject(null);
+                    return;
+                }
+            }
         }
 
         public void SelectQuestion(int index)
@@ -952,16 +998,23 @@ namespace AsAKid.Conversation
 
         private void EnsureTextBackdrops()
         {
+            HideQuestionBackdrops();
+
             if (!showTextBackdropStrip)
                 return;
 
             EnsureAnswerStripPoolSize(1);
+        }
 
-            if (questionLabels != null)
+        private void HideQuestionBackdrops()
+        {
+            for (int i = 0; i < _questionBackdrops.Length; i++)
             {
-                for (int i = 0; i < questionLabels.Length && i < _questionBackdrops.Length; i++)
+                if (_questionBackdrops[i] != null)
                 {
-                    _questionBackdrops[i] = CreateOrReuseBackdrop(questionLabels[i], $"Backdrop_Question_{i + 1}", _questionBackdrops[i]);
+                    _questionBackdrops[i].color = Color.clear;
+                    _questionBackdrops[i].enabled = false;
+                    _questionBackdrops[i].gameObject.SetActive(false);
                 }
             }
         }
@@ -1010,35 +1063,6 @@ namespace AsAKid.Conversation
             img.raycastTarget = false;
             img.color = Color.clear;
             return img;
-        }
-
-        private void SyncBackdrop(Image backdrop, TMP_Text label, string measuredText, Color bgColor)
-        {
-            if (backdrop == null || label == null)
-                return;
-
-            if (!showTextBackdropStrip || string.IsNullOrWhiteSpace(measuredText))
-            {
-                backdrop.enabled = false;
-                return;
-            }
-
-            RectTransform labelRt = label.rectTransform;
-            float availW = labelRt.rect.width > 10f ? labelRt.rect.width : 1100f;
-            Vector2 pref = label.GetPreferredValues(measuredText, availW, 0f);
-            float w = Mathf.Min(availW, Mathf.Max(20f, pref.x)) + backdropPadding.x * 2f;
-            float h = Mathf.Max(26f, pref.y) + backdropPadding.y * 2f;
-
-            RectTransform rt = backdrop.rectTransform;
-            Vector2 midAnchor = (labelRt.anchorMin + labelRt.anchorMax) * 0.5f;
-            rt.anchorMin = midAnchor;
-            rt.anchorMax = midAnchor;
-            rt.pivot = new Vector2(0.5f, 0.5f);
-            rt.anchoredPosition = (labelRt.offsetMin + labelRt.offsetMax) * 0.5f;
-            rt.sizeDelta = new Vector2(w, h);
-
-            backdrop.color = bgColor;
-            backdrop.enabled = true;
         }
 
         private void SyncPerLineBackdrops(List<Image> stripPool, TMP_Text label, int visibleCount, Color bgColor)
@@ -1200,16 +1224,14 @@ namespace AsAKid.Conversation
                 continueHintText.gameObject.SetActive(false);
             }
 
-            if (questionLabels != null)
+            int choiceCount = Mathf.Max(
+                questionButtons != null ? questionButtons.Length : 0,
+                questionLabels != null ? questionLabels.Length : 0);
+            for (int i = 0; i < choiceCount; i++)
             {
-                for (int i = 0; i < questionLabels.Length; i++)
-                {
-                    if (questionLabels[i] != null && defaultFont != null)
-                    {
-                        questionLabels[i].font = defaultFont;
-                    }
-                    EnsureBold(questionLabels[i]);
-                }
+                Button btn = (questionButtons != null && i < questionButtons.Length) ? questionButtons[i] : null;
+                TMP_Text label = (questionLabels != null && i < questionLabels.Length) ? questionLabels[i] : null;
+                ApplyChoiceButtonVisuals(btn, label, btn == null || btn.interactable);
             }
         }
 
@@ -1240,12 +1262,109 @@ namespace AsAKid.Conversation
             LocalizationManager.ApplyText(continueHintText, hint, preserveAlignment: true);
         }
 
+        private void ApplyChoiceButtonVisuals(Button btn, TMP_Text label, bool interactable)
+        {
+            if (label != null)
+            {
+                TMP_FontAsset defaultFont = NpcDialogueManager.DefaultDialogueFont;
+                if (defaultFont != null && label.font != defaultFont)
+                {
+                    label.font = defaultFont;
+                }
+
+                label.color = Color.white;
+                label.fontSize = ChoiceFontSize;
+                label.enableAutoSizing = true;
+                label.fontSizeMin = ChoiceFontSizeMin;
+                label.fontSizeMax = ChoiceFontSize;
+                label.characterSpacing = 0f;
+                label.textWrappingMode = TextWrappingModes.Normal;
+                EnsureBold(label);
+                label.alignment = TextAlignmentOptions.Center;
+                ApplyChoiceUnderlay(label);
+            }
+
+            if (btn == null)
+                return;
+
+            Outline outline = btn.GetComponent<Outline>();
+            if (outline != null)
+            {
+                outline.enabled = false;
+            }
+
+            Image img = btn.GetComponent<Image>();
+            if (img == null)
+            {
+                img = btn.targetGraphic as Image;
+            }
+            if (img != null)
+            {
+                img.sprite = null;
+                img.type = Image.Type.Simple;
+                img.color = Color.clear;
+                img.raycastTarget = true;
+                img.enabled = true;
+            }
+
+            btn.transition = Selectable.Transition.ColorTint;
+            ColorBlock cb = btn.colors;
+            cb.normalColor = ChoiceNormalColor;
+            cb.highlightedColor = ChoiceHighlightedColor;
+            cb.pressedColor = ChoicePressedColor;
+            cb.selectedColor = ChoiceHighlightedColor;
+            cb.disabledColor = ChoiceDisabledColor;
+            cb.colorMultiplier = 1f;
+            cb.fadeDuration = 0.1f;
+            btn.colors = cb;
+
+            if (label != null)
+            {
+                btn.targetGraphic = label;
+            }
+            else if (img != null)
+            {
+                btn.targetGraphic = img;
+            }
+
+            btn.interactable = interactable;
+        }
+
+        private static void ApplyChoiceUnderlay(TMP_Text label)
+        {
+            if (!Application.isPlaying || label == null)
+                return;
+
+            // Use the runtime-instanced fontMaterial so shared .mat/.asset font files stay untouched.
+            Material mat = label.fontMaterial;
+            if (mat == null)
+                return;
+
+            ShaderUtilities.GetShaderPropertyIDs();
+            mat.EnableKeyword(ShaderUtilities.Keyword_Underlay);
+            if (mat.HasProperty(ShaderUtilities.ID_UnderlayColor))
+                mat.SetColor(ShaderUtilities.ID_UnderlayColor, ChoiceUnderlayColor);
+            if (mat.HasProperty(ShaderUtilities.ID_UnderlayOffsetX))
+                mat.SetFloat(ShaderUtilities.ID_UnderlayOffsetX, ChoiceUnderlayOffset.x);
+            if (mat.HasProperty(ShaderUtilities.ID_UnderlayOffsetY))
+                mat.SetFloat(ShaderUtilities.ID_UnderlayOffsetY, ChoiceUnderlayOffset.y);
+            if (mat.HasProperty(ShaderUtilities.ID_UnderlayDilate))
+                mat.SetFloat(ShaderUtilities.ID_UnderlayDilate, ChoiceUnderlayDilate);
+            if (mat.HasProperty(ShaderUtilities.ID_UnderlaySoftness))
+                mat.SetFloat(ShaderUtilities.ID_UnderlaySoftness, ChoiceUnderlaySoftness);
+
+            label.UpdateMeshPadding();
+            label.havePropertiesChanged = true;
+            label.SetVerticesDirty();
+            label.SetMaterialDirty();
+        }
+
         private void RefreshQuestionButtons()
         {
             if (_currentNpc == null || questionButtons == null)
                 return;
 
-            TMP_FontAsset defaultFont = NpcDialogueManager.DefaultDialogueFont;
+            HideQuestionBackdrops();
             string askedTag = LocalizationManager.Resolve("ui_conv_asked", "(Asked)");
 
             for (int i = 0; i < NpcQuestionSet.QuestionCount; i++)
@@ -1257,64 +1376,13 @@ namespace AsAKid.Conversation
                     continue;
 
                 bool asked = _currentNpc.HasAsked(i);
-                btn.interactable = !asked;
-
-                var outline = btn.GetComponent<Outline>();
-                if (outline != null)
-                {
-                    outline.enabled = false;
-                }
-
-                var img = btn.GetComponent<Image>() ?? btn.targetGraphic as Image;
-                if (img != null)
-                {
-                    img.sprite = null;
-                    img.type = Image.Type.Simple;
-                    img.color = asked ? askedButtonBgColor : activeButtonBgColor;
-                    btn.targetGraphic = img;
-                }
-
-                btn.transition = Selectable.Transition.ColorTint;
-                ColorBlock cb = btn.colors;
-                cb.normalColor = Color.white;
-                cb.highlightedColor = new Color(0.85f, 0.85f, 0.85f, 1f);
-                cb.pressedColor = new Color(0.6f, 0.6f, 0.6f, 1f);
-                cb.selectedColor = new Color(0.96f, 0.96f, 0.96f, 1f);
-                cb.disabledColor = new Color(0.3f, 0.3f, 0.3f, 0.5f);
-                cb.colorMultiplier = 1f;
-                cb.fadeDuration = 0.1f;
-                btn.colors = cb;
+                ApplyChoiceButtonVisuals(btn, label, !asked);
 
                 if (label != null)
                 {
-                    if (defaultFont != null)
-                        label.font = defaultFont;
-
                     string questionLine = _currentNpc.GetQuestionText(i);
                     string formatted = asked ? $"{questionLine}  {askedTag}" : questionLine;
-                    label.color = asked ? askedQuestionTextColor : activeQuestionTextColor;
-                    label.fontSize = 22f;
-                    label.enableAutoSizing = true;
-                    label.fontSizeMin = 15f;
-                    label.fontSizeMax = 22f;
-                    label.characterSpacing = 0f;
-                    EnsureBold(label);
-                    label.alignment = TextAlignmentOptions.Center;
                     LocalizationManager.ApplyText(label, formatted, preserveAlignment: true);
-
-                    if (i < _questionBackdrops.Length)
-                    {
-                        if (!showTextBackdropStrip)
-                        {
-                            if (_questionBackdrops[i] != null)
-                                _questionBackdrops[i].enabled = false;
-                        }
-                        else
-                        {
-                            float bgAlpha = asked ? backdropAlpha * 0.45f : backdropAlpha;
-                            SyncBackdrop(_questionBackdrops[i], label, label.text, new Color(0f, 0f, 0f, bgAlpha));
-                        }
-                    }
                 }
             }
         }

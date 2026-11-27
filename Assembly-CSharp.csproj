@@ -54,6 +54,7 @@
     <Compile Include="Assets\Scripts\Conversation\ConversationUI.cs" />
     <Compile Include="Assets\House\Scripts\SceneFadeIn.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_TextEventHandler.cs" />
+    <Compile Include="Assets\Scripts\Story\WaitingPlatformLoopController.cs" />
     <Compile Include="Assets\Scripts\Dialogue\DialogueManager.cs" />
     <Compile Include="Assets\Scripts\Dialogue\ClassroomLifeIsStrangeUI.cs" />
     <Compile Include="Assets\House\Scripts\Radio.cs" />
@@ -87,6 +88,7 @@
     <Compile Include="Assets\Scripts\Backrooms\InvestigationLookController.cs" />
     <Compile Include="Assets\Scripts\MainMenu\MenuButtonUI.cs" />
     <Compile Include="Assets\Scripts\Raft\RaftBuildArea.cs" />
+    <Compile Include="Assets\Fears to Fathom Vhs for URP\RetroVHSVolumeComponent.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_ExampleScript_01.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMPro_InstructionOverlay.cs" />
     <Compile Include="Assets\Scripts\Story\MetroStoryVerificationTest.cs" />
@@ -99,9 +101,11 @@
     <Compile Include="Assets\Scripts\Carry\FindableItem.cs" />
     <Compile Include="Assets\House\Scripts\NPCLookAt.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\VertexJitter.cs" />
+    <Compile Include="Assets\Scripts\Story\DarkStalkerHeadTwitch.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_UiFrameRateCounter.cs" />
     <Compile Include="Assets\House\Scripts\DoorController.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\VertexZoom.cs" />
+    <Compile Include="Assets\Scripts\Cutscenes\FallCutscene.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_TextSelector_B.cs" />
     <Compile Include="Assets\Scripts\Credits\CreditsRaftBobber.cs" />
     <Compile Include="Assets\Scripts\Story\InteractivePlaceholderItem.cs" />
@@ -141,6 +145,7 @@
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\Benchmark01.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TextMeshSpawner.cs" />
     <Compile Include="Assets\Scripts\Elevator\ElevatorZone.cs" />
+    <Compile Include="Assets\Scripts\Cutscenes\FallCutsceneVerificationRunner.cs" />
     <Compile Include="Assets\Scripts\Story\ClassroomEndingController.cs" />
     <Compile Include="Assets\Scripts\Backrooms\DiscoColor.cs" />
     <Compile Include="Assets\MoroccanBeach\Scripts\PSXUnderwaterEffect.cs" />
@@ -223,8 +228,10 @@
     <None Include="Assets\TextMesh Pro\Shaders\TMPro_Surface.cginc" />
     <None Include="Assets\MoroccanBeach\Shaders\PSXUnderwaterUIOverlay.shader" />
     <None Include="Assets\Fears to Fathom Vhs for URP\VHS_Mobile_BlackFisheye_URP.shader" />
+    <None Include="Assets\Shaders\RetroVHS_URP.shader" />
     <None Include="Assets\TextMesh Pro\Resources\LineBreaking Following Characters.txt" />
     <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF-Mobile Masking.shader" />
+    <None Include="Assets\Shaders\VolumetricLightCone_URP.shader" />
     <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF Overlay.shader" />
     <None Include="Assets\TextMesh Pro\Shaders\TMP_Bitmap-Mobile.shader" />
     <None Include="Assets\TextMesh Pro\Fonts\LiberationSans - OFL.txt" />

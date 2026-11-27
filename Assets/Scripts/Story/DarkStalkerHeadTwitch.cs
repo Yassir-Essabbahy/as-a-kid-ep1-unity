@@ -13,12 +13,28 @@ public class DarkStalkerHeadTwitch : MonoBehaviour
     public float twitchFrequency = 18f;
     [Range(0f, 1f)] public float lookWeight = 0.92f;
     public bool lockOnTarget = true;
+    public bool isShakingHead = false;
+    public float headShakeAmplitude = 32f;
+    public float headShakeFrequency = 3.2f;
 
     private Animator _animator;
     private Transform _headBone;
     private float _currentRoll;
+    private float _shakeBlend = 0f;
+    private float _shakePhase = 0f;
 
     public Transform HeadBone => _headBone;
+
+    public void SetHeadShake(bool active, float amplitude = 32f, float frequency = 3.2f)
+    {
+        if (active && !isShakingHead)
+        {
+            _shakePhase = 0f;
+        }
+        isShakingHead = active;
+        headShakeAmplitude = amplitude;
+        headShakeFrequency = frequency;
+    }
 
     public Vector3 EyeWorldPosition
     {
@@ -56,6 +72,16 @@ public class DarkStalkerHeadTwitch : MonoBehaviour
         if (!lockOnTarget || _headBone == null || lookTarget == null) return;
 
         _currentRoll = Mathf.Lerp(_currentRoll, neckRollDegrees, Time.deltaTime * 10f);
+        _shakeBlend = Mathf.MoveTowards(_shakeBlend, isShakingHead ? 1f : 0f, Time.deltaTime * 8f);
+
+        float shakeYaw = 0f;
+        float shakeRoll = 0f;
+        if (_shakeBlend > 0.001f)
+        {
+            _shakePhase += Time.deltaTime * headShakeFrequency * Mathf.PI * 2f;
+            shakeYaw = Mathf.Sin(_shakePhase) * headShakeAmplitude * _shakeBlend;
+            shakeRoll = Mathf.Cos(_shakePhase * 0.5f) * 5.5f * _shakeBlend;
+        }
 
         float t = Time.time * twitchFrequency;
         float noiseA = (Mathf.PerlinNoise(t, 1.37f) - 0.5f) * 2f;
@@ -89,9 +115,9 @@ public class DarkStalkerHeadTwitch : MonoBehaviour
         Vector3 toTarget = (flatDir * Mathf.Sqrt(Mathf.Max(0.01f, 1f - vertY * vertY)) + Vector3.up * vertY).normalized;
 
         // Verified Mixamo-in-Blender Humanoid head bone orientation: face points out along -head.right (+90Y from +Z).
-        Quaternion targetWorldRot = Quaternion.AngleAxis(_currentRoll + rollJitter, toTarget)
+        Quaternion targetWorldRot = Quaternion.AngleAxis(_currentRoll + rollJitter + shakeRoll, toTarget)
             * Quaternion.LookRotation(toTarget, Vector3.up)
-            * Quaternion.Euler(pitchJitter, 90f + yawJitter, 0f);
+            * Quaternion.Euler(pitchJitter, 90f + yawJitter + shakeYaw, 0f);
 
         _headBone.rotation = Quaternion.Slerp(_headBone.rotation, targetWorldRot, Mathf.Clamp01(lookWeight));
     }

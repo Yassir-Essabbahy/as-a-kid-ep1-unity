@@ -130,6 +130,11 @@ public class MetroStorySequenceController : MonoBehaviour
     [Header("Current Phase")]
     public StoryPhase currentPhase = StoryPhase.Floor1_Exploration;
 
+    public bool IsTrainSuppressed =>
+        currentPhase == StoryPhase.BehindDoorCinematic ||
+        currentPhase == StoryPhase.DarkRoom_Reveal ||
+        currentPhase == StoryPhase.MoroccanBeach_Transition;
+
     [Header("Floor 1 Exploration Tasks")]
     public bool transitPassCollected = false;
     public bool vendingMachineInspected = false;
@@ -562,14 +567,14 @@ public class MetroStorySequenceController : MonoBehaviour
         isPowerRestored = true;
         Debug.Log("[MetroStory] Elevator power restored via fuse box puzzle!");
 
-        // 1. Randomly place ticket in one trash can
-        TrashTicketSource.SetupRandomTicketLocation();
-
-        // 2. Activate TeddyFindQuest if present and suppress its duplicate DialogueTriggerZone
+        // Suppress any legacy ticket-quest trigger zone so it never fires after power restoration
         var tfq = FindAnyObjectByType<TeddyFindQuest>();
         if (tfq != null)
         {
-            tfq.questActive = true;
+            if (WaitingPlatformLoopController.Instance == null)
+            {
+                tfq.questActive = true;
+            }
             var dtz = tfq.GetComponent<DialogueTriggerZone>();
             if (dtz != null)
             {
@@ -610,7 +615,7 @@ public class MetroStorySequenceController : MonoBehaviour
         }
 
         // Set objective
-        SetObjective("objective_search_trash", "Search the trash cans for a train ticket...");
+        SetObjective("obj_head_upstairs", "Head upstairs...");
 
         // Companion Bear speaks to the player!
         string line1 = GetLoc("teddy_metro_03");
@@ -626,6 +631,7 @@ public class MetroStorySequenceController : MonoBehaviour
 
     public void OnElevatorTicketTriggered()
     {
+        if (WaitingPlatformLoopController.Instance != null) return;
         if (!IsElevatorUnlocked)
         {
             SetObjective("obj_need_ticket", "Need a ticket...");
@@ -922,10 +928,13 @@ public class MetroStorySequenceController : MonoBehaviour
         // After first grounded talk on the bench, pick Teddy up cleanly into the player's hands
         EnsureTeddyCarried();
 
-        if (advanceObjectiveAfterFirstTalk && currentPhase == StoryPhase.Floor1_Exploration && !IsElevatorUnlocked)
+        if (WaitingPlatformLoopController.Instance == null &&
+            advanceObjectiveAfterFirstTalk &&
+            currentPhase == StoryPhase.Floor1_Exploration &&
+            !IsElevatorUnlocked)
         {
             if (isPowerRestored)
-                SetObjective("objective_search_trash", "Search the trash cans for a train ticket...");
+                SetObjective("obj_head_upstairs", "Head upstairs...");
             else if (fuseBoxInspected)
                 SetObjective(neighborGaveAdvice ? "obj_restore_circuit" : "obj_neighbor_knows",
                              neighborGaveAdvice ? "Restore the circuit..." : "The neighbor might know...");

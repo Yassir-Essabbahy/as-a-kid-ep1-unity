@@ -55,6 +55,26 @@ public class TrainArrivalSequence : MonoBehaviour
     public int PassCount => passCount;
     public float TimeUntilNextPass => timeUntilNextPass;
 
+    /// <summary>
+    /// Returns true while station horror sequences or cinematics suppress periodic train passes.
+    /// </summary>
+    public bool IsTrainSuppressed()
+    {
+        WaitingPlatformLoopController loopCtrl = WaitingPlatformLoopController.Instance;
+        if (loopCtrl != null && loopCtrl.IsTrainSuppressed)
+        {
+            return true;
+        }
+
+        MetroStorySequenceController storyCtrl = MetroStorySequenceController.Instance;
+        if (storyCtrl != null && storyCtrl.IsTrainSuppressed)
+        {
+            return true;
+        }
+
+        return false;
+    }
+
     private void Awake()
     {
         // 1. Preload audio clips to guarantee zero main-thread decompression stalls
@@ -74,7 +94,7 @@ public class TrainArrivalSequence : MonoBehaviour
             SnapToPosition(pointA.position);
         }
 
-        if (audioSource != null && arrivalSound != null)
+        if (audioSource != null && arrivalSound != null && !IsTrainSuppressed())
         {
             audioSource.clip = arrivalSound;
             audioSource.loop = false;
@@ -172,18 +192,7 @@ public class TrainArrivalSequence : MonoBehaviour
     private IEnumerator PassSequenceRoutine()
     {
         // First Pass Initial Delay
-        timeUntilNextPass = delayBeforeMove;
-        while (timeUntilNextPass > 0f)
-        {
-            // Give pre-arrival announcement warning 7 seconds before departure
-            if (timeUntilNextPass <= 7f && timeUntilNextPass + Time.deltaTime > 7f)
-            {
-                NotifyPreArrival();
-            }
-
-            yield return null;
-            timeUntilNextPass -= Time.deltaTime;
-        }
+        yield return StartCoroutine(WaitForSecondsRespectingSuppression(delayBeforeMove, 7f, allowImmediatePreArrival: false));
 
         // Execute first pass
         yield return StartCoroutine(ExecuteSinglePass());
@@ -192,32 +201,66 @@ public class TrainArrivalSequence : MonoBehaviour
         while (loopPasses)
         {
             float interval = Random.Range(minIntervalBetweenPasses, maxIntervalBetweenPasses);
-            timeUntilNextPass = interval;
-
-            bool preArrivalFired = false;
-            while (timeUntilNextPass > 0f)
-            {
-                if (!preArrivalFired && timeUntilNextPass <= 8f)
-                {
-                    preArrivalFired = true;
-                    NotifyPreArrival();
-                }
-
-                yield return null;
-                timeUntilNextPass -= Time.deltaTime;
-            }
+            yield return StartCoroutine(WaitForSecondsRespectingSuppression(interval, 8f, allowImmediatePreArrival: true));
 
             yield return StartCoroutine(ExecuteSinglePass());
         }
     }
 
+    private IEnumerator WaitForSecondsRespectingSuppression(float duration, float preArrivalLeadTime, bool allowImmediatePreArrival)
+    {
+        timeUntilNextPass = Mathf.Max(0f, duration);
+        bool preArrivalFired = !allowImmediatePreArrival && duration <= preArrivalLeadTime;
+
+        while (timeUntilNextPass > 0f)
+        {
+            if (IsTrainSuppressed())
+            {
+                yield return null;
+                continue;
+            }
+
+            if (!preArrivalFired && timeUntilNextPass <= preArrivalLeadTime)
+            {
+                preArrivalFired = true;
+                NotifyPreArrival();
+            }
+
+            yield return null;
+            if (!IsTrainSuppressed())
+            {
+                timeUntilNextPass -= Time.deltaTime;
+            }
+        }
+
+        timeUntilNextPass = 0f;
+
+        while (IsTrainSuppressed())
+        {
+            yield return null;
+        }
+    }
+
     private IEnumerator ExecuteSinglePass()
     {
+        while (IsTrainSuppressed())
+        {
+            yield return null;
+        }
+
         if (pointA == null || pointB == null) yield break;
 
         // Snap cleanly to start point offscreen with interpolation cleared so we never streak across the map
         SnapToPosition(pointA.position);
         yield return waitForFixedUpdate;
+
+        while (IsTrainSuppressed())
+        {
+            yield return null;
+        }
+
+        if (pointA == null || pointB == null) yield break;
+
         if (cachedRb != null)
         {
             cachedRb.interpolation = RigidbodyInterpolation.Interpolate;
@@ -234,10 +277,31 @@ public class TrainArrivalSequence : MonoBehaviour
         float totalDistance = Vector3.Distance(pointA.position, pointB.position);
         float midDistance = totalDistance * 0.45f;
         Vector3 currentPos = pointA.position;
+        bool suppressedMidPass = false;
 
         while (isMoving && !hasArrived)
         {
+            if (IsTrainSuppressed())
+            {
+                isMoving = false;
+                suppressedMidPass = true;
+                break;
+            }
+
             yield return waitForFixedUpdate;
+
+            if (IsTrainSuppressed())
+            {
+                isMoving = false;
+                suppressedMidPass = true;
+                break;
+            }
+
+            if (pointA == null || pointB == null)
+            {
+                isMoving = false;
+                break;
+            }
 
             currentPos = Vector3.MoveTowards(currentPos, pointB.position, speed * Time.fixedDeltaTime);
             if (cachedRb != null)
@@ -266,11 +330,18 @@ public class TrainArrivalSequence : MonoBehaviour
             }
         }
 
-        // Stop audio with smooth fade-out
+        // Stop audio with smooth fade-out (and immediately silence horn if aborted by suppression)
         StopMoveAudio();
+        if (suppressedMidPass)
+        {
+            StopHornAudio();
+        }
 
         // Snap back to Point A deep in tunnel so train is hidden during the wait
-        SnapToPosition(pointA.position);
+        if (pointA != null)
+        {
+            SnapToPosition(pointA.position);
+        }
     }
 
     private void StartMoveAudio()
@@ -284,15 +355,34 @@ public class TrainArrivalSequence : MonoBehaviour
 
     private void StopMoveAudio()
     {
+        if (audioFadeCoroutine != null)
+        {
+            StopCoroutine(audioFadeCoroutine);
+            audioFadeCoroutine = null;
+        }
+
         if (audioSource != null && audioSource.isPlaying)
         {
-            if (audioFadeCoroutine != null) StopCoroutine(audioFadeCoroutine);
             audioFadeCoroutine = StartCoroutine(FadeAudio(audioSource, null, audioSource.volume, 0f, 1.5f));
+        }
+    }
+
+    private void StopHornAudio()
+    {
+        if (hornAudioSource != null && hornAudioSource.isPlaying)
+        {
+            hornAudioSource.Stop();
         }
     }
 
     private IEnumerator FadeAudio(AudioSource src, AudioClip clip, float startVol, float targetVol, float duration)
     {
+        if (src == null)
+        {
+            audioFadeCoroutine = null;
+            yield break;
+        }
+
         if (clip != null)
         {
             src.clip = clip;
@@ -303,16 +393,26 @@ public class TrainArrivalSequence : MonoBehaviour
         float elapsed = 0f;
         while (elapsed < duration)
         {
+            if (src == null)
+            {
+                audioFadeCoroutine = null;
+                yield break;
+            }
             elapsed += Time.deltaTime;
             src.volume = Mathf.Lerp(startVol, targetVol, elapsed / duration);
             yield return null;
         }
 
-        src.volume = targetVol;
-        if (targetVol <= 0.001f)
+        if (src != null)
         {
-            src.Stop();
+            src.volume = targetVol;
+            if (targetVol <= 0.001f)
+            {
+                src.Stop();
+            }
         }
+
+        audioFadeCoroutine = null;
     }
 
     private void PlayHorn()

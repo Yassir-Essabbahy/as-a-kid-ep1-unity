@@ -1,9 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using AsAKid.Conversation;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 /// <summary>
 /// Orchestrates the 3-loop Waiting Platform psychological horror sequence across Story 2 / Story 1:
@@ -43,6 +45,16 @@ public class WaitingPlatformLoopController : MonoBehaviour
         currentPhase == LoopPhase.Loop1_Blackout_FuseBox ||
         currentPhase == LoopPhase.Loop2_Blackout_FuseBox;
     public bool IsJumpscareRunning => _jumpscareRunning;
+    public bool AreStationLightsOff => _stationLightsOff;
+    public bool IsTrainSuppressed =>
+        _jumpscareRunning ||
+        _stationLightsOff ||
+        currentPhase == LoopPhase.Loop1_Blackout_FuseBox ||
+        currentPhase == LoopPhase.Loop1_JumpscareCollapse ||
+        currentPhase == LoopPhase.Loop2_WakeUp ||
+        currentPhase == LoopPhase.Loop2_Blackout_FuseBox ||
+        currentPhase == LoopPhase.Loop2_JumpscareCollapse ||
+        currentPhase == LoopPhase.Loop3_WakeUp;
     public bool DidTriggerLoop3HallwayScare { get; private set; } = false;
     public bool DidTriggerBeachTransition { get; private set; } = false;
     public bool SkipSceneLoadForTesting { get; set; } = false;
@@ -94,8 +106,18 @@ public class WaitingPlatformLoopController : MonoBehaviour
         public bool IsUpperGuide;
     }
 
+    private class LightConeSnapshot
+    {
+        public GameObject ConeObject;
+        public bool InitialActive;
+        public bool IsUpperGuide;
+    }
+
     private readonly List<LightSnapshot> _stationLights = new List<LightSnapshot>();
+    private readonly List<LightConeSnapshot> _stationLightCones = new List<LightConeSnapshot>();
     private LightSnapshot _loop2FlickerLight;
+    private GameObject _loop2FlickerCone;
+    private GameObject _scareCaptionRoot;
     private readonly List<NpcQuestionSet> _loop1Npcs = new List<NpcQuestionSet>();
     private readonly List<NpcLookAt> _loop1LookAts = new List<NpcLookAt>();
     private readonly Dictionary<Transform, float> _originalLookSpeeds = new Dictionary<Transform, float>();
@@ -123,6 +145,14 @@ public class WaitingPlatformLoopController : MonoBehaviour
     private bool _loop3HallwayScareTriggered = false;
     private float _flickerTimer = 0f;
 
+    private bool _hasCachedRenderSettings = false;
+    private Color _baseAmbientLight;
+    private Color _baseFogColor;
+    private bool _stationLightsOff = false;
+
+    private static readonly Color BlackoutAmbientColor = new Color(0.015f, 0.015f, 0.022f, 1f);
+    private static readonly Color BlackoutFogColor = new Color(0.012f, 0.012f, 0.018f, 1f);
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -131,6 +161,7 @@ public class WaitingPlatformLoopController : MonoBehaviour
             return;
         }
         Instance = this;
+        CacheRenderSettingsBaseline();
         SetupAudioSources();
     }
 
@@ -142,6 +173,7 @@ public class WaitingPlatformLoopController : MonoBehaviour
     private void Start()
     {
         ResolveSceneReferences();
+        CacheRenderSettingsBaseline();
         CacheStationLights();
         CacheVhsBaseline();
         CacheLoop1Npcs();
@@ -179,6 +211,8 @@ public class WaitingPlatformLoopController : MonoBehaviour
     {
         UnsubscribeEvents();
         RestoreVhsBaseline();
+        RestoreRenderSettingsBaseline();
+        HideScareCaption();
         if (Instance == this)
         {
             Instance = null;
@@ -197,6 +231,14 @@ public class WaitingPlatformLoopController : MonoBehaviour
             float stutter = (Mathf.Sin(_flickerTimer * 17f) * Mathf.Cos(_flickerTimer * 7f)) > 0.90f ? 0.35f : 1f;
             float mult = currentPhase == LoopPhase.Loop3_BullyOnly ? loop3LightMultiplier : loop2LightMultiplier;
             _loop2FlickerLight.Light.intensity = _loop2FlickerLight.BaseIntensity * mult * Mathf.Lerp(0.75f, 1.05f, wave) * stutter;
+            if (_loop2FlickerCone != null)
+            {
+                bool coneOn = stutter >= 0.5f;
+                if (_loop2FlickerCone.activeSelf != coneOn)
+                {
+                    _loop2FlickerCone.SetActive(coneOn);
+                }
+            }
         }
 
         if (currentPhase == LoopPhase.Loop3_GoUpstairsToRoom && !_loop3HallwayScareTriggered && Application.isPlaying)
@@ -306,41 +348,105 @@ public class WaitingPlatformLoopController : MonoBehaviour
     private void CacheStationLights()
     {
         _stationLights.Clear();
+        _stationLightCones.Clear();
         _loop2FlickerLight = null;
+        _loop2FlickerCone = null;
 
         GameObject floor1 = GameObject.Find("Floor1");
         if (floor1 == null) return;
 
         Light cabinetLight = MetroFuseBoxPuzzle.Instance != null ? MetroFuseBoxPuzzle.Instance.cabinetLight : null;
         Transform metroT = floor1.transform.Find("Metro");
-        if (metroT == null) return;
-
-        Light[] lights = metroT.GetComponentsInChildren<Light>(true);
-        float bestMidDist = float.MaxValue;
-
-        foreach (Light l in lights)
+        if (metroT != null)
         {
-            if (l == null || l == cabinetLight) continue;
-            if (!l.gameObject.activeSelf && !l.enabled) continue;
+            Light[] lights = metroT.GetComponentsInChildren<Light>(true);
+            float bestMidDist = float.MaxValue;
 
-            bool isUpper = l.name.Contains("Room2") || l.transform.position.z > 42f;
-            var snap = new LightSnapshot
+            foreach (Light l in lights)
             {
-                Light = l,
-                BaseIntensity = l.intensity,
-                BaseColor = l.color,
-                WasEnabled = l.enabled,
-                IsUpperGuide = isUpper
-            };
-            _stationLights.Add(snap);
+                if (l == null || l == cabinetLight) continue;
+                if (!l.gameObject.activeSelf && !l.enabled) continue;
 
-            if (!isUpper)
-            {
-                float distToMid = Mathf.Abs(l.transform.position.z - 20f);
-                if (distToMid < bestMidDist)
+                bool isUpper = l.name.Contains("Room2") || l.transform.position.z > 42f;
+                var snap = new LightSnapshot
                 {
-                    bestMidDist = distToMid;
-                    _loop2FlickerLight = snap;
+                    Light = l,
+                    BaseIntensity = l.intensity,
+                    BaseColor = l.color,
+                    WasEnabled = l.enabled,
+                    IsUpperGuide = isUpper
+                };
+                _stationLights.Add(snap);
+
+                if (!isUpper)
+                {
+                    float distToMid = Mathf.Abs(l.transform.position.z - 20f);
+                    if (distToMid < bestMidDist)
+                    {
+                        bestMidDist = distToMid;
+                        _loop2FlickerLight = snap;
+                    }
+                }
+            }
+        }
+
+        Transform meetingRoomT = upstairsMeetingRoom != null ? upstairsMeetingRoom.transform : null;
+        var seenCones = new HashSet<GameObject>();
+        Transform[] floor1Transforms = floor1.transform.GetComponentsInChildren<Transform>(true);
+        foreach (Transform tr in floor1Transforms)
+        {
+            if (tr == null || tr == floor1.transform) continue;
+            if (meetingRoomT != null && tr.IsChildOf(meetingRoomT)) continue;
+
+            Renderer rend = tr.GetComponent<Renderer>();
+            bool isNamedCone = tr.name.IndexOf("cone", System.StringComparison.OrdinalIgnoreCase) >= 0 &&
+                               (rend != null || tr.name.Equals("Story1_VolumetricCones", System.StringComparison.OrdinalIgnoreCase));
+
+            bool hasVolMaterial = false;
+            if (!isNamedCone && rend != null)
+            {
+                Material[] mats = rend.sharedMaterials;
+                if (mats != null)
+                {
+                    for (int m = 0; m < mats.Length; m++)
+                    {
+                        Material mat = mats[m];
+                        if (mat == null) continue;
+                        string matName = mat.name;
+                        string shaderName = mat.shader != null ? mat.shader.name : string.Empty;
+                        if (matName.IndexOf("VolumetricLightCone", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+                            matName.IndexOf("Cone_light", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+                            shaderName.IndexOf("VolumetricLightCone", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+                            shaderName.IndexOf("Cone_light", System.StringComparison.OrdinalIgnoreCase) >= 0)
+                        {
+                            hasVolMaterial = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if ((isNamedCone || hasVolMaterial) && seenCones.Add(tr.gameObject))
+            {
+                _stationLightCones.Add(new LightConeSnapshot
+                {
+                    ConeObject = tr.gameObject,
+                    InitialActive = tr.gameObject.activeSelf,
+                    IsUpperGuide = tr.position.z > 42f
+                });
+            }
+        }
+
+        if (_loop2FlickerLight != null && _loop2FlickerLight.Light != null && _loop2FlickerLight.Light.transform.parent != null)
+        {
+            Transform parentT = _loop2FlickerLight.Light.transform.parent;
+            for (int i = 0; i < parentT.childCount; i++)
+            {
+                Transform child = parentT.GetChild(i);
+                if (child != null && child.name.IndexOf("cone", System.StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    _loop2FlickerCone = child.gameObject;
+                    break;
                 }
             }
         }
@@ -877,6 +983,10 @@ public class WaitingPlatformLoopController : MonoBehaviour
         PlayOneShot(_sfxSource, electricShortClip, 0.95f);
         PlayOneShot(_sfxSource, staticBurstClip, 0.70f);
         SetAllStationLights(0f, Color.black, 0f, Color.black);
+        if (EyelidBlink.Instance != null)
+        {
+            EyelidBlink.Instance.SetOpenImmediate(1f);
+        }
 
         if (_loopSfxSource != null && rumbleClip != null)
         {
@@ -1137,14 +1247,22 @@ public class WaitingPlatformLoopController : MonoBehaviour
             yield return null;
         }
 
-        // Beat 5 (~1.35s): Dead Stop Inches Away + Uncanny Neck Snap & Growl
+        // Beat 5A (~0.45s): Dead Stop Inches Away
         if (stalkerAnim != null) stalkerAnim.speed = 0.03f;
-        if (corridorLight != null) corridorLight.intensity = 0.65f;
-        if (_loopSfxSource != null) _loopSfxSource.volume = 0.05f;
+        if (corridorLight != null)
+        {
+            corridorLight.color = new Color(0.68f, 0.78f, 0.96f, 1f);
+            corridorLight.intensity = 2.6f;
+            if (entity != null)
+            {
+                corridorLight.transform.position = entity.transform.position + corridorDir * 1.4f + Vector3.up * 2.2f;
+            }
+        }
+        if (_loopSfxSource != null) _loopSfxSource.volume = 0.04f;
         if (breathSrc != null) breathSrc.volume = 0.95f;
 
         float freezeElapsed = 0f;
-        while (freezeElapsed < 0.95f)
+        while (freezeElapsed < 0.45f)
         {
             freezeElapsed += Time.deltaTime;
             if (playerCam != null)
@@ -1156,13 +1274,94 @@ public class WaitingPlatformLoopController : MonoBehaviour
             yield return null;
         }
 
+        // Beat 5B (~2.30s): Brother's Shadow Head-Shake + "STOP SEARCHING FOR ME"
+        string shadowLine = MetroStorySequenceController.GetLoc("scare2_brother_stop");
+        if (string.IsNullOrEmpty(shadowLine) || shadowLine == "scare2_brother_stop" || shadowLine.StartsWith("["))
+        {
+            shadowLine = "STOP SEARCHING FOR ME";
+        }
+
         if (headTwitch != null)
         {
+            headTwitch.neckRollDegrees = 5f;
+            headTwitch.twitchAmplitude = 1.6f;
+            headTwitch.SetHeadShake(true, amplitude: 30f, frequency: 2.6f);
+        }
+
+        if (_sfxSource != null)
+        {
+            if (horrorGrowlClip != null)
+            {
+                _sfxSource.pitch = 0.72f;
+                PlayOneShot(_sfxSource, horrorGrowlClip, 0.80f);
+                _sfxSource.pitch = 1.0f;
+            }
+            PlayOneShot(_sfxSource, staticBurstClip, 0.20f);
+        }
+
+        CreateScareCaption(shadowLine, out TextMeshProUGUI captionLabel, out RectTransform captionRt);
+
+        const float sayDuration = 2.30f;
+        const float typeDuration = 0.55f;
+        float sayElapsed = 0f;
+        Color captionStartCol = new Color(0.90f, 0.93f, 0.98f, 1f);
+        Color captionEndCol = new Color(0.96f, 0.76f, 0.76f, 1f);
+
+        while (sayElapsed < sayDuration)
+        {
+            sayElapsed += Time.deltaTime;
+            float uSay = Mathf.Clamp01(sayElapsed / sayDuration);
+
+            if (headTwitch != null)
+            {
+                headTwitch.headShakeAmplitude = Mathf.Lerp(30f, 40f, uSay);
+                headTwitch.headShakeFrequency = Mathf.Lerp(2.6f, 4.8f, uSay);
+                headTwitch.twitchAmplitude = Mathf.Lerp(1.6f, 4.5f, uSay);
+            }
+
+            if (captionLabel != null)
+            {
+                float typeT = Mathf.Clamp01(sayElapsed / typeDuration);
+                captionLabel.maxVisibleCharacters = typeT >= 1f
+                    ? int.MaxValue
+                    : Mathf.Clamp(Mathf.CeilToInt(typeT * shadowLine.Length), 0, shadowLine.Length);
+                captionLabel.color = Color.Lerp(captionStartCol, captionEndCol, Mathf.SmoothStep(0f, 1f, uSay));
+            }
+
+            if (captionRt != null)
+            {
+                float jitterPx = Mathf.Lerp(1.5f, 5.0f, uSay);
+                captionRt.anchoredPosition = new Vector2(
+                    Random.Range(-1f, 1f) * jitterPx,
+                    Random.Range(-1f, 1f) * jitterPx
+                );
+            }
+
+            if (playerCam != null)
+            {
+                Vector3 eyeTarget = headTwitch != null ? headTwitch.EyeWorldPosition : (playerPos + corridorDir * stopDist + Vector3.up * 1.95f);
+                AimPlayerCameraAtPoint(fpc, playerCam, eyeTarget, 10f);
+                float tremorAmp = Mathf.Lerp(0.002f, 0.008f, uSay);
+                playerCam.transform.localPosition = camOrigLocalPos + new Vector3(
+                    Random.Range(-1f, 1f) * tremorAmp,
+                    Random.Range(-1f, 1f) * tremorAmp,
+                    0f
+                );
+            }
+
+            yield return null;
+        }
+
+        // Beat 5C (~0.30s): Abrupt silence + neck snap -> Beat 6 lunge
+        HideScareCaption();
+        if (headTwitch != null)
+        {
+            headTwitch.SetHeadShake(false);
             headTwitch.neckRollDegrees = 38f;
             headTwitch.twitchAmplitude = 10f;
         }
-        PlayOneShot(_sfxSource, horrorGrowlClip, 0.92f);
-        yield return new WaitForSeconds(0.40f);
+        PlayOneShot(_sfxSource, horrorGrowlClip, 0.95f);
+        yield return new WaitForSeconds(0.30f);
 
         // Beat 6 (~0.87s lunge + 0.42s collapse + 0.85s black): Violent Close-Up Lunge, Shriek & VHS Tear -> Clean Reset
         if (corridorLight != null) corridorLight.intensity = 0f;
@@ -1267,6 +1466,7 @@ public class WaitingPlatformLoopController : MonoBehaviour
         if (entity != null) Destroy(entity);
         if (corridorLight != null) Destroy(corridorLight.gameObject);
         if (strobeLight != null) Destroy(strobeLight.gameObject);
+        HideScareCaption();
 
         // Violent collapse + IMMEDIATE clean VHS reset
         PlayOneShot(_sfxSource, impactSlamClip, 0.95f);
@@ -1692,8 +1892,102 @@ public class WaitingPlatformLoopController : MonoBehaviour
         }
     }
 
+    private void CacheRenderSettingsBaseline()
+    {
+        if (_hasCachedRenderSettings) return;
+        _baseAmbientLight = RenderSettings.ambientLight;
+        _baseFogColor = RenderSettings.fogColor;
+        _hasCachedRenderSettings = true;
+    }
+
+    private void RestoreRenderSettingsBaseline()
+    {
+        for (int i = 0; i < _stationLightCones.Count; i++)
+        {
+            var c = _stationLightCones[i];
+            if (c.ConeObject != null)
+            {
+                c.ConeObject.SetActive(c.InitialActive);
+            }
+        }
+
+        if (!_hasCachedRenderSettings) return;
+        RenderSettings.ambientLight = _baseAmbientLight;
+        RenderSettings.fogColor = _baseFogColor;
+        _stationLightsOff = false;
+    }
+
+    private void CreateScareCaption(string fullText, out TextMeshProUGUI label, out RectTransform labelRt)
+    {
+        HideScareCaption();
+
+        _scareCaptionRoot = new GameObject("Scare2_BrotherCaptionCanvas");
+        Canvas canvas = _scareCaptionRoot.AddComponent<Canvas>();
+        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        canvas.sortingOrder = 950;
+
+        CanvasScaler scaler = _scareCaptionRoot.AddComponent<CanvasScaler>();
+        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        scaler.referenceResolution = new Vector2(1920f, 1080f);
+        scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+        scaler.matchWidthOrHeight = 0.5f;
+
+        GameObject textGo = new GameObject("CaptionLabel");
+        textGo.transform.SetParent(_scareCaptionRoot.transform, false);
+
+        labelRt = textGo.AddComponent<RectTransform>();
+        labelRt.anchorMin = new Vector2(0.10f, 0.15f);
+        labelRt.anchorMax = new Vector2(0.90f, 0.29f);
+        labelRt.offsetMin = Vector2.zero;
+        labelRt.offsetMax = Vector2.zero;
+
+        label = textGo.AddComponent<TextMeshProUGUI>();
+        if (NpcDialogueManager.DefaultDialogueFont != null)
+        {
+            label.font = NpcDialogueManager.DefaultDialogueFont;
+        }
+        label.alignment = TextAlignmentOptions.Center;
+        label.enableAutoSizing = true;
+        label.fontSizeMin = 24f;
+        label.fontSizeMax = 42f;
+        label.fontSize = 40f;
+        label.characterSpacing = 6f;
+        label.fontStyle = FontStyles.Bold;
+        label.color = new Color(0.90f, 0.93f, 0.98f, 1f);
+        label.raycastTarget = false;
+        label.text = fullText;
+        label.maxVisibleCharacters = 0;
+
+        if (Application.isPlaying)
+        {
+            Material mat = label.fontMaterial;
+            if (mat != null)
+            {
+                mat.EnableKeyword(ShaderUtilities.Keyword_Underlay);
+                mat.SetColor(ShaderUtilities.ID_UnderlayColor, new Color(0.12f, 0f, 0f, 0.92f));
+                mat.SetFloat(ShaderUtilities.ID_UnderlayOffsetX, 0f);
+                mat.SetFloat(ShaderUtilities.ID_UnderlayOffsetY, -1.2f);
+                mat.SetFloat(ShaderUtilities.ID_UnderlayDilate, 0.45f);
+                mat.SetFloat(ShaderUtilities.ID_UnderlaySoftness, 0.55f);
+                label.UpdateMeshPadding();
+                label.SetMaterialDirty();
+            }
+        }
+    }
+
+    private void HideScareCaption()
+    {
+        if (_scareCaptionRoot != null)
+        {
+            Destroy(_scareCaptionRoot);
+            _scareCaptionRoot = null;
+        }
+    }
+
     private void SetAllStationLights(float platformMult, Color platformTint, float upperMult, Color upperTint)
     {
+        CacheRenderSettingsBaseline();
+
         for (int i = 0; i < _stationLights.Count; i++)
         {
             var s = _stationLights[i];
@@ -1708,6 +2002,38 @@ public class WaitingPlatformLoopController : MonoBehaviour
                 s.Light.intensity = s.BaseIntensity * platformMult;
                 s.Light.color = s.BaseColor * platformTint;
             }
+        }
+
+        for (int i = 0; i < _stationLightCones.Count; i++)
+        {
+            var c = _stationLightCones[i];
+            if (c.ConeObject == null) continue;
+            float mult = c.IsUpperGuide ? upperMult : platformMult;
+            bool shouldBeActive = c.InitialActive && mult > 0.15f;
+            if (c.ConeObject.activeSelf != shouldBeActive)
+            {
+                c.ConeObject.SetActive(shouldBeActive);
+            }
+        }
+
+        bool isBlackout = platformMult <= 0.05f && upperMult <= 0.05f;
+        _stationLightsOff = isBlackout;
+
+        if (isBlackout)
+        {
+            RenderSettings.ambientLight = BlackoutAmbientColor;
+            RenderSettings.fogColor = BlackoutFogColor;
+        }
+        else
+        {
+            float avgMult = Mathf.Clamp01((Mathf.Max(0f, platformMult) + Mathf.Max(0f, upperMult)) * 0.5f);
+            float t = Mathf.Clamp01(Mathf.InverseLerp(0.05f, 1.0f, Mathf.Max(avgMult, 0.05f)));
+            if (t <= 0f)
+            {
+                t = Mathf.Clamp01(Mathf.InverseLerp(0.05f, 1.0f, Mathf.Max(platformMult, upperMult)));
+            }
+            RenderSettings.ambientLight = Color.Lerp(BlackoutAmbientColor, _baseAmbientLight, t);
+            RenderSettings.fogColor = Color.Lerp(BlackoutFogColor, _baseFogColor, t);
         }
     }
 

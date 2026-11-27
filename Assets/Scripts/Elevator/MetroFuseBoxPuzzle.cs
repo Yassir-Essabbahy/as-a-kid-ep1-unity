@@ -601,9 +601,6 @@ public class MetroFuseBoxPuzzle : MonoBehaviour
         _pendingPostSolveCloseEvent = true;
         OnPowerRestoredSolved?.Invoke();
 
-        // Ensure ticket exists in a station trash can
-        TrashTicketSource.EnsureTicketExists();
-
         // Notify Elevator Button immediately
         var elevBtn = FindAnyObjectByType<ElevatorButton>();
         if (elevBtn != null)
